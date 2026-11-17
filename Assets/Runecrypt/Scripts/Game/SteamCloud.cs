@@ -19,6 +19,7 @@ namespace Runecrypt.Game
             nextTick = Time.time;
             enemyMask = LayerMask.GetMask("Enemies");
             if (lightSource != null) lightSource.Radius = d.radius;
+            FeedbackPlayer.Play(d.spawnProfile, transform.position);
         }
 
         void Update()

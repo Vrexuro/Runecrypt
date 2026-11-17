@@ -60,6 +60,7 @@ namespace Runecrypt.Tests
                 enemy.Blind(Time.time + 10f);
                 Step(30);
                 hp = player.Health.Current;
+                LogAssert.NoUnexpectedReceived(); // scene tanpa FeedbackPlayer (Review Focus M1.5 #1)
             }
             finally
             {
@@ -97,6 +98,7 @@ namespace Runecrypt.Tests
                 fbGo.SetActive(true);
                 fb.Launch(Vector2.right);
                 Step(30);
+                LogAssert.NoUnexpectedReceived(); // scene tanpa FeedbackPlayer (Review Focus M1.5 #1)
             }
             finally
             {
@@ -106,6 +108,28 @@ namespace Runecrypt.Tests
             yield return new ExitPlayMode();
 
             Assert.AreEqual(1, deaths, "satu bola api hanya boleh mengenai satu sasaran");
+        }
+
+        [UnityTest]
+        public IEnumerator Fireball_KnocksEnemyAway()
+        {
+            yield return new EnterPlayMode();
+            var mode = Physics2D.simulationMode;
+            float x;
+            try
+            {
+                Physics2D.simulationMode = SimulationMode2D.Script;
+                var enemy = MakeEnemy(new Vector2(3f, 0f), Def(100f));   // moveSpeed 0: gerak hanya dari knockback
+                enemy.TakeHit(new HitInfo(3f, Element.Fire, false, new Vector2(2.5f, 0f)));
+                Step(10);
+                x = enemy.transform.position.x;
+            }
+            finally
+            {
+                Physics2D.simulationMode = mode;
+            }
+            yield return new ExitPlayMode();
+            Assert.Greater(x, 3.1f, "bola api mendorong musuh menjauh");
         }
     }
 }

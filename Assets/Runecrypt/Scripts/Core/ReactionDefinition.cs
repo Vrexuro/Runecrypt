@@ -14,6 +14,7 @@ namespace Runecrypt.Core
         public float tickInterval;
         public float blindDuration;
         public GameObject effectPrefab;
+        public FeedbackProfile spawnProfile;
 
         public bool Matches(Element x, Element y) =>
             (x == elementA && y == elementB) || (x == elementB && y == elementA);

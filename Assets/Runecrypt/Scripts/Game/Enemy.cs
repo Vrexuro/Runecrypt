@@ -11,6 +11,9 @@ namespace Runecrypt.Game
         [SerializeField] EnemyDefinition definition;
         [SerializeField] LightRules lightRules;
         [SerializeField] GameObject burnLight;
+        [SerializeField] HitFlash hitFlash;
+        [SerializeField] float knockbackSpeed = 4f;
+        [SerializeField] float knockbackDamping = 12f;
 
         public static event Action<Enemy> AnyDied;
         public EnemyDefinition Definition => definition;
@@ -19,7 +22,7 @@ namespace Runecrypt.Game
         Health health;
         readonly BurnStatus burn = new BurnStatus();
         float blindUntil, nextWanderChange, nextContact;
-        Vector2 wanderDir;
+        Vector2 wanderDir, knock, lastHitPoint;
 
         bool IsLitNow => LightFieldHost.Field.IsLit(body.position);
 
@@ -35,7 +38,12 @@ namespace Runecrypt.Game
         {
             float now = Time.time;
             float burnDamage = burn.Tick(now);
-            if (burnDamage > 0f) health.TakeDamage(lightRules.ApplyDamage(burnDamage, IsLitNow));
+            if (burnDamage > 0f)
+            {
+                float applied = lightRules.ApplyDamage(burnDamage, IsLitNow);
+                DamageNumbers.Show(applied, HitKind.Burn, body.position);
+                health.TakeDamage(applied);
+            }
             bool burning = burn.IsActive(now) && !health.IsDead;
             if (burnLight != null && burnLight.activeSelf != burning) burnLight.SetActive(burning);
         }
@@ -60,13 +68,33 @@ namespace Runecrypt.Game
                     ? ((Vector2)player.transform.position - body.position).normalized
                     : Vector2.zero;
             }
-            body.linearVelocity = dir * definition.moveSpeed * lightRules.SpeedMultiplier(IsLitNow);
+            body.linearVelocity = dir * definition.moveSpeed * lightRules.SpeedMultiplier(IsLitNow) + knock;
+            knock *= Mathf.Exp(-knockbackDamping * Time.fixedDeltaTime);
         }
 
         public void TakeHit(HitInfo hit)
         {
             if (health.IsDead) return;
-            health.TakeDamage(lightRules.ApplyDamage(hit.Damage, IsLitNow));            if (hit.AppliesBurn && !health.IsDead) burn.Apply(Time.time);
+            bool lit = IsLitNow;
+            float applied = lightRules.ApplyDamage(hit.Damage, lit);
+            Vector2 pos = body.position;
+            lastHitPoint = hit.Point;
+            if (hit.Element == Element.Fire)
+            {
+                FeedbackPlayer.Play(lit ? definition.hitLit : definition.hitDark, pos, hitFlash);
+                DamageNumbers.Show(applied, lit ? HitKind.Lit : HitKind.Dark, pos);
+                Vector2 impulse = (pos - hit.Point).normalized * knockbackSpeed;
+                knock += impulse;
+                body.linearVelocity += impulse; // langsung terasa di langkah fisika berikutnya
+            }
+            else
+            {
+                // Tick Uap: kedipan redup dan angka kecil, tanpa knockback (spec §5).
+                if (hitFlash != null) hitFlash.Flash(Color.white, 0.35f, 0.08f);
+                DamageNumbers.Show(applied, HitKind.Steam, pos);
+            }
+            health.TakeDamage(applied);
+            if (hit.AppliesBurn && !health.IsDead) burn.Apply(Time.time);
         }
 
         public void Blind(float until) => blindUntil = Mathf.Max(blindUntil, until);
@@ -83,6 +111,15 @@ namespace Runecrypt.Game
 
         void Die()
         {
+            Vector2 pos = body.position;
+            FeedbackPlayer.Play(definition.deathProfile, pos, hitFlash);
+            if (definition.deathEffect != null)
+            {
+                var fx = Instantiate(definition.deathEffect, pos, Quaternion.identity);
+                var death = fx.GetComponent<DeathEffect>();
+                if (death != null) death.Init(pos - lastHitPoint);
+            }
+            if (definition.remains != null) RemainsRegistry.Add(Instantiate(definition.remains, pos, Quaternion.identity));
             AnyDied?.Invoke(this);
             Destroy(gameObject);
         }

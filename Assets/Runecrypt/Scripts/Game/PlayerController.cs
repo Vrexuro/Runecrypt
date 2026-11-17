@@ -19,6 +19,15 @@ namespace Runecrypt.Game
         [SerializeField] float muzzleOffset = 0.5f;
         [SerializeField] Fireball fireballPrefab;
 
+        [Header("Umpan balik (M1.5)")]
+        [SerializeField] FeedbackProfile shotProfile;
+        [SerializeField] FeedbackProfile hurtProfile;
+        [SerializeField] HitFlash hitFlash;
+        [SerializeField] LightPulse lightPulse;
+        [SerializeField] SpriteRenderer bodySprite;
+
+        const float ShotPulse = 1.3f, ShotPulseTime = 0.05f, BlinkInterval = 0.08f, BlinkAlpha = 0.4f;
+
         public static PlayerController Instance { get; private set; }
         public Health Health { get; private set; }
         public event Action Died;
@@ -29,7 +38,7 @@ namespace Runecrypt.Game
         Cooldown fire, dash;
         Vector2 aim = Vector2.right;
         Vector2 dashVelocity;
-        float dashUntil, invulnerableUntil;
+        float dashUntil, invulnerableUntil, blinkUntil;
 
         void Awake()
         {
@@ -66,8 +75,18 @@ namespace Runecrypt.Game
             if (wantFire && fire.IsReady(now))
             {
                 fire.Start(now);
-                var fb = Instantiate(fireballPrefab, body.position + aim * muzzleOffset, Quaternion.identity);
+                Vector2 muzzle = body.position + aim * muzzleOffset;
+                var fb = Instantiate(fireballPrefab, muzzle, Quaternion.identity);
                 fb.Launch(aim);
+                FeedbackPlayer.Play(shotProfile, muzzle);
+                if (lightPulse != null) lightPulse.Pulse(ShotPulse, ShotPulseTime);
+                FeedbackPlayer.Kick(-aim, 1); // sentakan 1 piksel, bukan guncangan (anti-tujuan spec §2)
+            }
+
+            if (bodySprite != null)
+            {
+                bool dim = now < blinkUntil && (int)((blinkUntil - now) / BlinkInterval) % 2 == 0;
+                SetBodyAlpha(dim ? BlinkAlpha : 1f);
             }
 
             if (g.Dash.WasPressedThisFrame() && dash.IsReady(now))
@@ -94,10 +113,19 @@ namespace Runecrypt.Game
             Health.TakeDamage(hit.Damage);
             // Kebal sesaat setelah kena, supaya dikerubungi tidak berarti mati dalam 2 detik.
             invulnerableUntil = Time.time + hitInvulnerability;
+            blinkUntil = invulnerableUntil;
+            FeedbackPlayer.Play(hurtProfile, body.position, hitFlash);
+        }
+
+        void SetBodyAlpha(float a)
+        {
+            var c = bodySprite.color;
+            if (c.a != a) bodySprite.color = new Color(c.r, c.g, c.b, a);
         }
 
         void OnDied()
         {
+            if (bodySprite != null) SetBodyAlpha(1f); // Update berhenti setelah ini; jangan tertinggal transparan
             body.linearVelocity = Vector2.zero;
             enabled = false;
             Died?.Invoke();
