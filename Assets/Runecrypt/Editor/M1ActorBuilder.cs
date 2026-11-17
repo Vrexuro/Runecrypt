@@ -42,13 +42,28 @@ namespace Runecrypt.EditorTools
             var player = BuildPlayerPrefab(fireball);
             var enemy = BuildEnemyPrefab(tulang, rules);
 
-            foreach (var name in new[] { "TestLight", "SkeletonDummy", "Player", "TulangPenjaga" })
+            // Task 9: Uap + Genangan Beku.
+            Directory.CreateDirectory(DataDir + "Reactions");
+            var steam = BuildSteamPrefab();
+            var uap = LoadOrCreate<ReactionDefinition>(DataDir + "Reactions/Uap.asset", d =>
+            {
+                d.displayName = "Uap";
+                d.elementA = Element.Fire; d.elementB = Element.Ice;
+                d.radius = 2.5f; d.duration = 3f; d.damagePerTick = 2f; d.tickInterval = 0.5f; d.blindDuration = 0.6f;
+            });
+            uap.effectPrefab = steam;
+            EditorUtility.SetDirty(uap);
+            var puddle = BuildPuddlePrefab(uap);
+
+            foreach (var name in new[] { "TestLight", "SkeletonDummy", "Player", "TulangPenjaga", "FrostPuddle" })
                 foreach (var go in Object.FindObjectsByType<GameObject>(FindObjectsSortMode.None).Where(g => g != null && g.name == name && g.transform.parent == null).ToList())
                     Object.DestroyImmediate(go);
 
             Place(player, M1Builder.RoomCenter);
             Place(enemy, new Vector3(6f, 2f, 0f));
             Place(enemy, new Vector3(-7f, -3.5f, 0f));
+            Place(puddle, new Vector3(-2.5f, -3.5f, 0f));
+            Place(puddle, new Vector3(6.5f, -2.5f, 0f));
 
             var scene = SceneManager.GetActiveScene();
             EditorSceneManager.MarkSceneDirty(scene);
@@ -124,6 +139,54 @@ namespace Runecrypt.EditorTools
             Set(enemy, "lightRules", rules);
             Set(enemy, "burnLight", burn.gameObject);
             return SavePrefab(go, "TulangPenjaga");
+        }
+
+        static GameObject BuildSteamPrefab()
+        {
+            var go = new GameObject("SteamCloud");
+            var ps = go.AddComponent<ParticleSystem>();
+            var main = ps.main;
+            main.startLifetime = 1.2f;
+            main.startSpeed = 0.3f;
+            main.startSize = new ParticleSystem.MinMaxCurve(1f, 1.6f);
+            main.startColor = new Color(1f, 1f, 1f, 0.55f);
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            var emission = ps.emission;
+            emission.rateOverTime = 25f;
+            var shape = ps.shape;
+            shape.shapeType = ParticleSystemShapeType.Circle;
+            shape.radius = 2f;
+            var sheet = ps.textureSheetAnimation;
+            sheet.enabled = true;
+            sheet.mode = ParticleSystemAnimationMode.Sprites;
+            sheet.AddSprite(M1Builder.LoadSprite("steam_puff.png"));
+            var psr = go.GetComponent<ParticleSystemRenderer>();
+            psr.sharedMaterial = AssetDatabase.LoadAssetAtPath<Material>("Packages/com.unity.render-pipelines.universal/Runtime/Materials/Sprite-Lit-Default.mat");
+            psr.sortingOrder = 3;
+
+            var light = M1Builder.MakePointLight("Light", go.transform, "#D9D1BD", 2.5f);
+            light.shadowsEnabled = false;
+            var cloud = go.AddComponent<SteamCloud>();
+            Set(cloud, "lightSource", light.GetComponent<LightSourceBehaviour>());
+            return SavePrefab(go, "SteamCloud");
+        }
+
+        static GameObject BuildPuddlePrefab(ReactionDefinition uap)
+        {
+            var go = new GameObject("FrostPuddle") { layer = Layer("Reactives") };
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = M1Builder.LoadSprite("frost_puddle.png");
+            sr.sortingOrder = -5;
+            var box = go.AddComponent<BoxCollider2D>();
+            box.size = new Vector2(0.9f, 0.5f);
+            box.offset = new Vector2(0f, -0.1f);
+            var fp = go.AddComponent<FrostPuddle>();
+            var so = new SerializedObject(fp);
+            var book = so.FindProperty("reactionBook");
+            book.arraySize = 1;
+            book.GetArrayElementAtIndex(0).objectReferenceValue = uap;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return SavePrefab(go, "FrostPuddle");
         }
 
         static void SetSprites(SpriteFlipbook fb, string prefix)

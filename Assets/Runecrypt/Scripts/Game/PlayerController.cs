@@ -60,7 +60,9 @@ namespace Runecrypt.Game
             var aimResult = AimSelector.Select(g.AimStick.ReadValue<Vector2>(), g.AimKeys.ReadValue<Vector2>(), mouseWorld, body.position, aim);
             aim = aimResult.Direction;
 
-            if ((aimResult.AutoFire || g.Fire.IsPressed()) && fire.IsReady(now))
+            // WasPressedThisFrame: klik singkat yang turun-naik di antara dua frame tetap menembak.
+            bool wantFire = aimResult.AutoFire || g.Fire.IsPressed() || g.Fire.WasPressedThisFrame();
+            if (wantFire && fire.IsReady(now))
             {
                 fire.Start(now);
                 var fb = Instantiate(fireballPrefab, body.position + aim * muzzleOffset, Quaternion.identity);
