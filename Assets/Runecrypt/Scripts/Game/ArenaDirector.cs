@@ -26,6 +26,7 @@ namespace Runecrypt.Game
         void Awake()
         {
             GamePause.IsPaused = false; // state statis dari run sebelumnya (ulang dengan R)
+            RemainsRegistry.Clear();
             Time.timeScale = 1f;
             controls = new RunecryptControls();
         }
