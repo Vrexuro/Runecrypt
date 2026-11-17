@@ -408,9 +408,12 @@ Playtest dilakukan minimal sekali seminggu setelah prototipe jalan, terutama di 
 
 | Tanggal | Penguji | Build | Temuan | Perbaikan | Hasil setelah perbaikan |
 |---|---|---|---|---|---|
+| 17 Nov 2026 | User (anggota tim, belum penguji luar) | M1-baseline (`feature/m1-prototipe`, tanpa juice dan SFX), ±5 menit, charger tercolok | (1) 30 detik pertama tidak membingungkan. (2) Tidak ada bagian yang terlalu gelap, tetapi tembok kiri dan kanan sulit dibedakan dari latar, sehingga pemain kadang tersangkut. (3) Mulai bosan karena hanya satu arena, tanpa ruangan berikutnya dan tanpa SFX. (4) Perbedaan musuh terang dan gelap terasa. Pertanyaan "ingin mencoba lagi?" dan "sengaja menembak genangan es?" belum terjawab jelas. | SFX dan efek pukulan: M1.5. Ruangan berikutnya: M2 (generator). Kontras tembok: kandidat perbaikan, misalnya rim light atau tepi terang pada tile tembok. | Dibandingkan pada uji M1.5 (Task 9) |
 | | | | | | |
 
-Pertanyaan tetap untuk penguji: Apa yang membingungkan di 30 detik pertama? Bagian mana yang terlalu gelap? Kapan terasa bosan? Apakah ingin mencoba lagi?
+Pertanyaan tetap untuk penguji: Apa yang membingungkan di 30 detik pertama? Bagian mana yang terlalu gelap? Kapan terasa bosan? Apakah ingin mencoba lagi? Khusus prototipe M1: apakah genangan es sengaja ditembak, dan apakah terasa beda musuh di terang dan di gelap?
+
+Usulan desain dari sesi baseline (belum diputuskan, dibahas lewat brainstorming): peti harta setelah boss dengan isi acak yang bisa kosong (zonk), titik spawn musuh dan boss yang acak dan tidak berulang di satu tempat, pintu ke ruangan berikutnya terbuka setelah musuh habis, dan musuh yang makin kuat (HP dan damage) di setiap tahap berikutnya.
 
 ---
 
