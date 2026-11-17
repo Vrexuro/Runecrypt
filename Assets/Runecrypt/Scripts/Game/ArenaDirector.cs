@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Runecrypt.Core;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -24,6 +25,7 @@ namespace Runecrypt.Game
 
         void Awake()
         {
+            GamePause.IsPaused = false; // state statis dari run sebelumnya (ulang dengan R)
             Time.timeScale = 1f;
             controls = new RunecryptControls();
         }
@@ -102,6 +104,7 @@ namespace Runecrypt.Game
         void OnPlayerDied()
         {
             playerDead = true;
+            GamePause.IsPaused = true; // supaya hit-stop yang sedang berjalan tidak mengembalikan timeScale ke 1
             Time.timeScale = 0f;
         }
 
