@@ -1,0 +1,5 @@
+* text=auto
+*.png binary
+*.wav binary
+*.ogg binary
+*.gif binary

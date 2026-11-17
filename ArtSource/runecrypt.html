@@ -1,0 +1,581 @@
+<title>Runecrypt</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one narrow column like a crypt corridor; a lit "torch" demo near the top, then reference sections. Single dark look by choice. */
+:root {
+  --bg: #0b0d12;
+  --surface: #131720;
+  --line: #262c38;
+  --fg: #e7e1d4;      /* bone */
+  --muted: #959aa6;
+  --fire: #ff8a3d;
+  --ice: #86d6ff;
+  --bolt: #f2e36b;
+  --blood: #e0474c;
+  --font-display: "Pirata One", "Cormorant Garamond", Georgia, serif;
+  --font-head: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.65;
+}
+.wrap {
+  max-width: 860px;
+  margin: 0 auto;
+  padding-block: 48px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid;
+  gap: 64px;
+}
+section { display: grid; gap: 18px; min-width: 0; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+h2 {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: clamp(1.7rem, 4vw, 2.2rem);
+  line-height: 1.15;
+}
+h3 { font-family: var(--font-head); font-weight: 700; font-size: 1.35rem; line-height: 1.2; }
+p { margin: 0; max-width: 65ch; }
+.muted { color: var(--muted); }
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+a { color: var(--ice); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--bolt); outline-offset: 3px; }
+
+/* Hero */
+.hero { gap: 14px; }
+.hero h1 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(3.6rem, 13vw, 6.5rem);
+  line-height: 0.95;
+  letter-spacing: 0.01em;
+  color: var(--fg);
+  text-shadow: 0 0 28px rgba(255, 138, 61, 0.35);
+}
+.hero .tag { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); }
+.pitch { font-family: var(--font-head); font-size: clamp(1.3rem, 3.4vw, 1.65rem); line-height: 1.35; font-weight: 600; max-width: 34ch; }
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 10px 0 0;
+}
+.facts div { background: var(--surface); padding: 12px 14px; display: grid; gap: 2px; }
+.facts dt { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.facts dd { margin: 0; font-weight: 500; }
+
+/* Demo */
+.demo { gap: 12px; }
+.stage {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #050609;
+  aspect-ratio: 16 / 9;
+  max-width: 100%;
+  touch-action: none;
+}
+.stage canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.el-btn {
+  font: 600 0.9rem var(--font-body);
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.el-btn .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 10px var(--c); }
+.el-btn[aria-pressed="true"] { border-color: var(--c); background: #1b2130; }
+.el-btn:hover { border-color: var(--c); }
+.hint { font-size: 0.88rem; color: var(--muted); }
+
+/* Pillars */
+.pillars { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; }
+.pillars > div { display: grid; gap: 6px; align-content: start; min-width: 0; }
+.pillars .k { font-family: var(--font-mono); font-size: 0.75rem; color: var(--bolt); letter-spacing: 0.08em; }
+
+/* Run flow */
+.run { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+@media (max-width: 680px) { .run { grid-template-columns: minmax(0, 1fr); } }
+.steps { margin: 0; padding: 0; list-style: none; counter-reset: s; display: grid; gap: 14px; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 2rem minmax(0, 1fr); gap: 10px; }
+.steps li::before {
+  content: counter(s);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--bg);
+  background: var(--fg);
+  width: 1.7rem; height: 1.7rem;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+.steps b { font-weight: 600; }
+.map-box { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: 14px; display: grid; gap: 10px; }
+.map-box svg { width: 100%; height: auto; display: block; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.8rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+/* Classes */
+.classes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.cls { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 18px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.cls .orb { width: 36px; height: 36px; border-radius: 50%; background: radial-gradient(circle at 40% 40%, #fff 0, var(--c) 35%, transparent 72%); box-shadow: 0 0 22px var(--c); }
+.cls .el { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--c); }
+.cls ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 0.92rem; display: grid; gap: 4px; }
+
+/* Tables */
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; }
+table { border-collapse: collapse; width: 100%; min-width: 520px; font-size: 0.93rem; }
+th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 600; background: var(--surface); }
+tr:last-child td { border-bottom: 0; }
+.mix { white-space: nowrap; font-weight: 600; }
+.f { color: var(--fire); } .i { color: var(--ice); } .b { color: var(--bolt); }
+
+/* Progress */
+.prog { margin: 0; display: grid; gap: 14px; }
+.prog div { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: 12px; }
+@media (max-width: 520px) { .prog div { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
+.prog dt { font-weight: 600; }
+.prog dd { margin: 0; color: var(--muted); }
+
+.bullets { margin: 0; padding-left: 20px; display: grid; gap: 10px; max-width: 65ch; }
+.bullets b { font-weight: 600; color: var(--fg); }
+
+.scope { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.scope > div { border: 1px solid var(--line); border-radius: 6px; padding: 18px; display: grid; gap: 10px; align-content: start; }
+.scope .must { background: var(--surface); }
+.scope ul { margin: 0; padding-left: 18px; display: grid; gap: 5px; }
+
+.open { border: 1px dashed var(--blood); border-radius: 6px; padding: 18px; display: grid; gap: 10px; }
+.open ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+
+footer { font-size: 0.85rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 20px; display: grid; gap: 8px; }
+</style>
+
+<main class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">Konsep game · Proyek akhir Pengembangan Gim</div>
+    <h1>Runecrypt</h1>
+    <div class="tag">judul sementara</div>
+    <p class="pitch">Roguelite dungeon dark fantasy. Makam terkutuk ini menelan cahaya, dan elemen sihirmu satu-satunya penerang.</p>
+    <dl class="facts">
+      <div><dt>Genre</dt><dd>Roguelite action RPG</dd></div>
+      <div><dt>Kamera</dt><dd>3D top-down, low-poly</dd></div>
+      <div><dt>Pemain</dt><dd>1 (co-op 2 jika sempat)</dd></div>
+      <div><dt>Satu run</dt><dd>6–8 menit</dd></div>
+      <div><dt>Engine</dt><dd>Unity 6 LTS, URP</dd></div>
+      <div><dt>Kontrol</dt><dd>Gamepad / keyboard + mouse</dd></div>
+    </dl>
+  </header>
+
+  <section class="demo" aria-labelledby="demo-h">
+    <h2 id="demo-h">Coba intinya</h2>
+    <p class="muted">Gerakkan kursor atau jari di ruangan. Ganti elemen untuk melihat bagaimana cahaya mengubah apa yang bisa kamu lihat. Mata merah itu musuh yang menunggu di gelap.</p>
+    <div class="stage">
+      <canvas id="crypt" role="img" aria-label="Simulasi ruangan makam yang gelap. Cahaya mengikuti kursor dan warnanya berubah sesuai elemen yang dipilih. Musuh hanya terlihat sebagai mata merah sampai terkena cahaya."></canvas>
+    </div>
+    <div class="controls" role="group" aria-label="Pilih elemen">
+      <button class="el-btn" id="btn-fire" type="button" data-el="fire" aria-pressed="true" style="--c: var(--fire)"><span class="dot"></span>Api</button>
+      <button class="el-btn" id="btn-ice" type="button" data-el="ice" aria-pressed="false" style="--c: var(--ice)"><span class="dot"></span>Es</button>
+      <button class="el-btn" id="btn-bolt" type="button" data-el="bolt" aria-pressed="false" style="--c: var(--bolt)"><span class="dot"></span>Petir</button>
+    </div>
+    <p class="hint" id="el-desc">Api: cahaya hangat dan terang, jangkauannya kecil.</p>
+  </section>
+
+  <section aria-labelledby="pillar-h">
+    <h2 id="pillar-h">Tiga pilar desain</h2>
+    <div class="pillars">
+      <div>
+        <span class="k">CAHAYA = SENJATA</span>
+        <h3>Gelap itu musuh pertama</h3>
+        <p class="muted">Ruangan gelap gulita. Setiap elemen memberi cahaya dengan sifat berbeda, jadi memilih elemen berarti memilih cara melihat.</p>
+      </div>
+      <div>
+        <span class="k">CAMPUR ELEMEN</span>
+        <h3>Reaksi berantai</h3>
+        <p class="muted">Musuh yang terkena satu elemen lalu dihantam elemen lain memicu reaksi. Reaksi besar juga menghasilkan ledakan cahaya.</p>
+      </div>
+      <div>
+        <span class="k">RUN PENDEK</span>
+        <h3>Satu run, satu cerita</h3>
+        <p class="muted">Ruangan dan relic diacak tiap run. Dalam 6–8 menit pemain sudah sampai boss, cocok untuk antrean expo.</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="run-h">
+    <h2 id="run-h">Alur satu run</h2>
+    <div class="run">
+      <ol class="steps">
+        <li><span><b>Pilih class.</b> Elemen bawaan class menentukan serangan dan cahaya awal.</span></li>
+        <li><span><b>Ruang tutorial.</b> Prompt kontrol tertulis di lantai. Pengunjung tidak perlu dijelaskan.</span></li>
+        <li><span><b>8–12 ruangan acak.</b> Dirangkai dari prefab buatan tangan. Pintu terkunci sampai musuh habis.</span></li>
+        <li><span><b>Ruang spesial.</b> Treasure (relic), Shop (gold), Shrine (tukar max HP dengan relic terkutuk).</span></li>
+        <li><span><b>Boss 3 fase.</b> Lich atau naga kecil dengan telegraph AoE yang terang di tengah gelap.</span></li>
+        <li><span><b>Hasil.</b> Skor dan waktu masuk leaderboard expo.</span></li>
+      </ol>
+      <figure class="map-box" style="margin:0">
+        <svg viewBox="0 0 340 230" role="img" aria-label="Contoh denah satu lantai: ruang awal di tengah, ruangan biasa di sekitarnya, treasure, shop, shrine, dan boss di ujung.">
+          <g stroke="#3a4252" stroke-width="3">
+            <line x1="170" y1="115" x2="100" y2="115"/>
+            <line x1="170" y1="115" x2="240" y2="115"/>
+            <line x1="170" y1="115" x2="170" y2="55"/>
+            <line x1="170" y1="115" x2="170" y2="175"/>
+            <line x1="100" y1="115" x2="30" y2="115"/>
+            <line x1="100" y1="115" x2="100" y2="55"/>
+            <line x1="240" y1="115" x2="240" y2="55"/>
+            <line x1="240" y1="55" x2="310" y2="55"/>
+            <line x1="240" y1="115" x2="240" y2="175"/>
+            <line x1="170" y1="175" x2="100" y2="175"/>
+          </g>
+          <g stroke="#0b0d12" stroke-width="2">
+            <rect x="145" y="97" width="50" height="36" rx="3" fill="#e7e1d4"/>
+            <rect x="75" y="97" width="50" height="36" rx="3" fill="#2a3140"/>
+            <rect x="215" y="97" width="50" height="36" rx="3" fill="#2a3140"/>
+            <rect x="145" y="37" width="50" height="36" rx="3" fill="#2a3140"/>
+            <rect x="145" y="157" width="50" height="36" rx="3" fill="#2a3140"/>
+            <rect x="5" y="97" width="50" height="36" rx="3" fill="#f2e36b"/>
+            <rect x="75" y="37" width="50" height="36" rx="3" fill="#2a3140"/>
+            <rect x="215" y="37" width="50" height="36" rx="3" fill="#2a3140"/>
+            <rect x="285" y="37" width="50" height="36" rx="3" fill="#e0474c"/>
+            <rect x="215" y="157" width="50" height="36" rx="3" fill="#86d6ff"/>
+            <rect x="75" y="157" width="50" height="36" rx="3" fill="#a77bd6"/>
+          </g>
+          <g font-family="JetBrains Mono, monospace" font-size="11" font-weight="600" text-anchor="middle">
+            <text x="170" y="119" fill="#0b0d12">AWAL</text>
+            <text x="30" y="119" fill="#0b0d12">RELIC</text>
+            <text x="310" y="59" fill="#0b0d12">BOSS</text>
+            <text x="240" y="179" fill="#0b0d12">SHOP</text>
+            <text x="100" y="179" fill="#0b0d12">SHRINE</text>
+          </g>
+        </svg>
+        <figcaption class="legend">
+          <span><i style="background:#e7e1d4"></i>Awal / tutorial</span>
+          <span><i style="background:#2a3140;outline:1px solid #3a4252"></i>Ruang musuh</span>
+          <span><i style="background:#f2e36b"></i>Treasure</span>
+          <span><i style="background:#86d6ff"></i>Shop</span>
+          <span><i style="background:#a77bd6"></i>Shrine</span>
+          <span><i style="background:#e0474c"></i>Boss</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section aria-labelledby="cls-h">
+    <h2 id="cls-h">Class dan elemen</h2>
+    <div class="classes">
+      <article class="cls" style="--c: var(--fire)">
+        <div class="orb"></div>
+        <span class="el">Api</span>
+        <h3>Pyromancer</h3>
+        <ul>
+          <li>Cahaya hangat, jangkauan kecil</li>
+          <li>Membakar musuh (damage over time)</li>
+          <li>Gaya main agresif, jarak dekat</li>
+        </ul>
+      </article>
+      <article class="cls" style="--c: var(--ice)">
+        <div class="orb"></div>
+        <span class="el">Es</span>
+        <h3>Frost Warden</h3>
+        <ul>
+          <li>Cahaya biru redup, tahan lama</li>
+          <li>Memperlambat dan membekukan</li>
+          <li>Gaya main bertahan dan kontrol</li>
+        </ul>
+      </article>
+      <article class="cls" style="--c: var(--bolt)">
+        <div class="orb"></div>
+        <span class="el">Petir</span>
+        <h3>Stormcaller</h3>
+        <ul>
+          <li>Kilatan menerangi seluruh ruangan sesaat</li>
+          <li>Serangan memantul antar musuh</li>
+          <li>Gaya main cepat, berisiko</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section aria-labelledby="re-h">
+    <h2 id="re-h">Reaksi elemen</h2>
+    <p class="muted">Musuh menyimpan status elemen pertama. Elemen kedua memicu reaksi. Relic bisa menambah elemen kedua ke seranganmu, dan di situ sinergi relic bertemu kombo elemen.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Campuran</th><th>Reaksi</th><th>Efek</th></tr></thead>
+        <tbody>
+          <tr><td class="mix"><span class="f">Api</span> + <span class="i">Es</span></td><td>Uap</td><td>Damage area, musuh di dalam uap tidak bisa melihatmu</td></tr>
+          <tr><td class="mix"><span class="i">Es</span> + <span class="b">Petir</span></td><td>Shatter</td><td>Damage besar ke musuh yang membeku</td></tr>
+          <tr><td class="mix"><span class="f">Api</span> + <span class="b">Petir</span></td><td>Ledakan cahaya</td><td>Ledakan yang menerangi seluruh ruangan selama beberapa detik</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="prog-h">
+    <h2 id="prog-h">Progres dalam satu run</h2>
+    <dl class="prog">
+      <div><dt>Relic</dt><dd>Mengubah cara menyerang: split, pierce, bounce, homing, ukuran proyektil. Warna dan trail proyektil ikut berubah. Sekitar 15 untuk MVP, 30 kalau sempat.</dd></div>
+      <div><dt>Level-up</dt><dd>XP dari musuh. Tiap naik level, pilih 1 dari 3 upgrade yang memperdalam elemenmu, misalnya reaksi lebih besar atau status lebih lama.</dd></div>
+      <div><dt>Shrine</dt><dd>Pilihan risiko: korbankan max HP untuk relic terkutuk yang kuat.</dd></div>
+    </dl>
+  </section>
+
+  <section aria-labelledby="atmo-h">
+    <h2 id="atmo-h">Gelap, tegang, tetap seru</h2>
+    <ul class="bullets muted">
+      <li><b>Ritme naik turun.</b> Ruangan sunyi, lalu sergapan, lalu lega di ruang treasure, lalu klimaks di boss.</li>
+      <li><b>Suara memegang separuh atmosfer.</b> Dengung ambient, bisikan, langkah dari arah gelap, detak jantung saat HP rendah. Booth expo pakai headphone.</li>
+      <li><b>Gelap tapi terbaca.</b> Ruang expo terang dan layar sering silau. Pemain dan musuh diberi rim light, mata musuh menyala, telegraph serangan berwarna terang. Kecerahan diuji di layar yang dipakai saat expo.</li>
+      <li><b>Game feel.</b> Hit-stop, screen shake, flash saat kena damage, damage number, dan glow pada relic langka.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="asset-h">
+    <h2 id="asset-h">Aset (semua gratis, CC0)</h2>
+    <p class="muted">Gaya tiap pack berbeda karena pembuatnya berbeda. Kecocokannya dicek lewat uji tampilan 1 ruangan sebelum dipakai penuh. Baca ulang halaman lisensi saat mengunduh.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Kebutuhan</th><th>Pack</th><th>Catatan</th></tr></thead>
+        <tbody>
+          <tr><td>Karakter pemain</td><td><a href="https://opengameart.org/content/lowpoly-rpg-characters">Quaternius Lowpoly RPG Characters</a></td><td>Wizard, warrior, rogue, monk, ranger. Proporsi netral.</td></tr>
+          <tr><td>Musuh undead</td><td><a href="https://downloadforfree.gumroad.com/l/free-character-pack-animated-skeletons-3d-model">Animated Skeletons (Gumroad)</a></td><td>4 skeleton, sudah beranimasi.</td></tr>
+          <tr><td>Musuh tambahan</td><td><a href="https://standout7.itch.io/horror-character-pack">Horror Character Pack (tier gratis)</a></td><td>Ghost, vampire, zombie. Sudah rigged, animasi lewat Mixamo.</td></tr>
+          <tr><td>Monster dan boss</td><td><a href="https://sketchfab.com/3d-models/ultimate-monsters-pack-fd72e114d119488da71fe3a16f216c4f">Quaternius Ultimate Monsters</a></td><td>50 monster. Pilih yang tidak terlalu imut.</td></tr>
+          <tr><td>Lingkungan dungeon</td><td><a href="https://kaylousberg.itch.io/kaykit-dungeon-remastered">KayKit Dungeon Remastered (tier gratis)</a></td><td>Sekitar 200 aset. Dibuat suram lewat lighting dan fog.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="scope-h">
+    <h2 id="scope-h">Scope</h2>
+    <div class="scope">
+      <div class="must">
+        <h3>Wajib (MVP)</h3>
+        <ul>
+          <li>1 class lengkap dengan cahaya elemennya</li>
+          <li>Generator ruangan dari prefab</li>
+          <li>4 jenis musuh</li>
+          <li>15 relic</li>
+          <li>2 reaksi elemen</li>
+          <li>1 boss 3 fase</li>
+          <li>HUD dan leaderboard lokal</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Kalau waktu cukup</h3>
+        <ul>
+          <li>3 class</li>
+          <li>30 relic dan reaksi ketiga</li>
+          <li>Shop dan Shrine</li>
+          <li>Co-op lokal 2 pemain</li>
+          <li>Lantai kedua</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="work-h">
+    <h2 id="work-h">Pembagian kerja</h2>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Bagian</th><th>Dikerjakan oleh</th></tr></thead>
+        <tbody>
+          <tr><td>Semua script C#: kontrol, combat, elemen dan reaksi, relic, level-up, AI musuh, boss, generator ruangan, HUD, leaderboard</td><td>Claude</td></tr>
+          <tr><td>Lighting, post-processing, efek partikel elemen, shader, game feel</td><td>Claude</td></tr>
+          <tr><td>Setup scene dan prefab lewat MCP Unity</td><td>Claude, dicek tim</td></tr>
+          <tr><td>Unduh dan impor aset, akun Mixamo</td><td>Tim</td></tr>
+          <tr><td>Penataan ruangan dan keputusan estetika akhir</td><td>Tim bersama Claude</td></tr>
+          <tr><td>Playtest dan penyetelan game feel</td><td>Tim</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="open-h">
+    <div class="open">
+      <h2 id="open-h">Belum diputuskan</h2>
+      <ul>
+        <li>Berapa minggu sampai expo dan berapa orang di tim. Ini menentukan MVP saja atau sampai 3 class.</li>
+        <li>Hasil uji tampilan 1 ruangan: apakah gabungan aset dan lighting gelap terasa cocok.</li>
+        <li>Prototipe 1 ruangan abu-abu dengan 2 elemen dan 1 reaksi: apakah intinya sudah seru.</li>
+        <li>Judul final.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <p>Struktur ruangan acak dan relic bertumpuk mengikuti genre roguelite berbasis ruangan, yang dipopulerkan The Binding of Isaac. Karakter, art, item, dan tema Runecrypt dibuat sendiri dan tidak meniru game tersebut.</p>
+    <p>Demo di atas hanya ilustrasi konsep cahaya, bukan tampilan game.</p>
+  </footer>
+</main>
+
+<script>
+(function () {
+  var canvas = document.getElementById('crypt');
+  var ctx = canvas.getContext('2d');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var W = 0, H = 0, T = 40;
+
+  var ELEMENTS = {
+    fire: { r: 0.22, glow: '255,138,61', dark: 0.97, desc: 'Api: cahaya hangat dan terang, jangkauannya kecil.' },
+    ice:  { r: 0.36, glow: '134,214,255', dark: 0.9, desc: 'Es: cahaya biru redup yang jangkauannya lebih luas.' },
+    bolt: { r: 0.15, glow: '242,227,107', dark: 0.98, desc: 'Petir: cahaya kecil, tapi kilatannya menerangi seluruh ruangan sesaat.' }
+  };
+  var el = 'fire', flash = 0;
+
+  // Fixed pseudo-random layout so every viewer sees the same room.
+  var seed = 7;
+  function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+  var tiles = [], bones = [], pillars = [[0.25, 0.3], [0.75, 0.3], [0.25, 0.72], [0.75, 0.72]];
+  for (var i = 0; i < 400; i++) tiles.push(rnd());
+  for (var j = 0; j < 14; j++) bones.push([rnd(), rnd(), rnd() * Math.PI]);
+  var foes = [[0.08, 0.15], [0.92, 0.2], [0.5, 0.08], [0.1, 0.85], [0.9, 0.86], [0.55, 0.92], [0.38, 0.5]].map(function (p) {
+    return { x: p[0], y: p[1], ox: p[0], oy: p[1], ph: rnd() * 6 };
+  });
+  var player = { x: 0.5, y: 0.55 }, target = { x: 0.5, y: 0.55 };
+
+  function resize() {
+    var rect = canvas.getBoundingClientRect();
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = rect.width; H = rect.height;
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    T = Math.max(26, W / 22);
+    draw(0);
+  }
+
+  function draw(t) {
+    var e = ELEMENTS[el];
+    var px = player.x * W, py = player.y * H, r = e.r * Math.max(W, H);
+
+    // Floor
+    var k = 0;
+    for (var y = 0; y < H; y += T) for (var x = 0; x < W; x += T) {
+      var v = 30 + Math.floor(tiles[k++ % tiles.length] * 14);
+      ctx.fillStyle = 'rgb(' + v + ',' + (v + 2) + ',' + (v + 8) + ')';
+      ctx.fillRect(x, y, T - 2, T - 2);
+    }
+    // Bones
+    ctx.strokeStyle = '#cfc7b4'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    bones.forEach(function (b) {
+      var bx = b[0] * W, by = b[1] * H, l = T * 0.35;
+      ctx.beginPath(); ctx.moveTo(bx - Math.cos(b[2]) * l, by - Math.sin(b[2]) * l);
+      ctx.lineTo(bx + Math.cos(b[2]) * l, by + Math.sin(b[2]) * l); ctx.stroke();
+    });
+    // Pillars
+    pillars.forEach(function (p) {
+      ctx.fillStyle = '#4a505c'; ctx.fillRect(p[0] * W - T * 0.6, p[1] * H - T * 0.6, T * 1.2, T * 1.2);
+      ctx.fillStyle = '#5d6470'; ctx.fillRect(p[0] * W - T * 0.6, p[1] * H - T * 0.6, T * 1.2, T * 0.25);
+    });
+    // Skeleton bodies (only seen when lit)
+    foes.forEach(function (f) {
+      var fx = f.x * W, fy = f.y * H;
+      ctx.fillStyle = '#d9d1bd';
+      ctx.beginPath(); ctx.arc(fx, fy - T * 0.28, T * 0.22, 0, 7); ctx.fill();
+      ctx.fillRect(fx - T * 0.18, fy - T * 0.06, T * 0.36, T * 0.42);
+    });
+    // Player
+    ctx.fillStyle = '#e7e1d4';
+    ctx.beginPath(); ctx.arc(px, py, T * 0.3, 0, 7); ctx.fill();
+    ctx.fillStyle = 'rgb(' + e.glow + ')';
+    ctx.beginPath(); ctx.arc(px + T * 0.32, py - T * 0.2, T * 0.12, 0, 7); ctx.fill();
+
+    // Darkness with a hole of light around the player
+    var dark = e.dark * (1 - flash);
+    var g = ctx.createRadialGradient(px, py, r * 0.1, px, py, r);
+    g.addColorStop(0, 'rgba(4,5,8,0)');
+    g.addColorStop(0.55, 'rgba(4,5,8,' + (dark * 0.45).toFixed(3) + ')');
+    g.addColorStop(1, 'rgba(4,5,8,' + dark.toFixed(3) + ')');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    // Coloured glow
+    var g2 = ctx.createRadialGradient(px, py, 0, px, py, r);
+    g2.addColorStop(0, 'rgba(' + e.glow + ',0.22)');
+    g2.addColorStop(1, 'rgba(' + e.glow + ',0)');
+    ctx.fillStyle = g2; ctx.fillRect(0, 0, W, H);
+    if (flash > 0) { ctx.fillStyle = 'rgba(242,227,107,' + (flash * 0.18).toFixed(3) + ')'; ctx.fillRect(0, 0, W, H); }
+
+    // Eyes always glow through the dark
+    foes.forEach(function (f) {
+      var fx = f.x * W, fy = f.y * H - T * 0.3;
+      var blink = reduce ? 1 : (Math.sin(t / 900 + f.ph) > -0.92 ? 1 : 0.1);
+      ctx.fillStyle = 'rgba(224,71,76,' + (0.9 * blink) + ')';
+      ctx.shadowColor = 'rgba(224,71,76,0.9)'; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(fx - T * 0.08, fy, T * 0.045, 0, 7); ctx.arc(fx + T * 0.08, fy, T * 0.045, 0, 7); ctx.fill();
+      ctx.shadowBlur = 0;
+    });
+  }
+
+  var last = 0;
+  function loop(t) {
+    var dt = Math.min(50, t - last); last = t;
+    player.x += (target.x - player.x) * Math.min(1, dt / 120);
+    player.y += (target.y - player.y) * Math.min(1, dt / 120);
+    if (!reduce) foes.forEach(function (f) {
+      // Foes creep toward the light, then drift back to their post.
+      var dx = player.x - f.x, dy = player.y - f.y, d = Math.hypot(dx, dy) || 1;
+      var pull = d < 0.45 ? 0.00004 * dt : 0;
+      f.x += dx / d * pull + (f.ox - f.x) * 0.0006 * dt;
+      f.y += dy / d * pull + (f.oy - f.y) * 0.0006 * dt;
+    });
+    flash = Math.max(0, flash - dt / (reduce ? 300 : 700));
+    draw(t);
+    requestAnimationFrame(loop);
+  }
+
+  function setTarget(ev) {
+    var rect = canvas.getBoundingClientRect();
+    target.x = Math.min(0.97, Math.max(0.03, (ev.clientX - rect.left) / rect.width));
+    target.y = Math.min(0.95, Math.max(0.05, (ev.clientY - rect.top) / rect.height));
+  }
+  canvas.addEventListener('pointermove', setTarget);
+  canvas.addEventListener('pointerdown', setTarget);
+
+  var desc = document.getElementById('el-desc');
+  document.querySelectorAll('.el-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      el = btn.dataset.el;
+      document.querySelectorAll('.el-btn').forEach(function (b) { b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'); });
+      desc.textContent = ELEMENTS[el].desc;
+      if (el === 'bolt') flash = 1;
+    });
+  });
+
+  window.addEventListener('resize', resize);
+  resize();
+  requestAnimationFrame(loop);
+})();
+</script>
