@@ -18,3 +18,4 @@ MemoryCaptures/
 *.tmp
 crashlytics-build.properties
 .vscode/
+Captures/
