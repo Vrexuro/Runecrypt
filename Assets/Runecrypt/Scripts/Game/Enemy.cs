@@ -73,7 +73,8 @@ namespace Runecrypt.Game
 
         void OnCollisionStay2D(Collision2D c)
         {
-            if (Time.time < nextContact) return;
+            // Musuh yang buta oleh Uap tidak menyerang (GDD §5.4).
+            if (Time.time < nextContact || Time.time < blindUntil) return;
             var player = c.collider.GetComponent<PlayerController>();
             if (player == null) return;
             player.TakeHit(new HitInfo(definition.contactDamage, definition.element, false, body.position));

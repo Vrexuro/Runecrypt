@@ -13,6 +13,7 @@ namespace Runecrypt.Game
 
         Rigidbody2D body;
         Vector2 origin;
+        bool spent; // Destroy baru berlaku di akhir frame; tanpa ini satu bola api bisa kena beberapa sasaran
 
         public void Launch(Vector2 direction)
         {
@@ -28,9 +29,11 @@ namespace Runecrypt.Game
 
         void OnTriggerEnter2D(Collider2D other)
         {
-            if (other.gameObject.layer == LayerMask.NameToLayer("Walls")) { Destroy(gameObject); return; }
+            if (spent) return;
+            if (other.gameObject.layer == LayerMask.NameToLayer("Walls")) { spent = true; Destroy(gameObject); return; }
             var target = other.GetComponentInParent<IDamageable>();
             if (target == null || target is PlayerController) return;
+            spent = true;
             // Cahaya bola api ini sendiri tidak ikut membuat sasarannya Tersingkap (GDD §5.5).
             foreach (var light in GetComponentsInChildren<LightSourceBehaviour>()) light.enabled = false;
             target.TakeHit(new HitInfo(damage, Element.Fire, true, body.position));
