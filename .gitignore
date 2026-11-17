@@ -19,3 +19,6 @@ MemoryCaptures/
 crashlytics-build.properties
 .vscode/
 Captures/
+
+# File CC0 mentah (32 MB); hasil potong ada di Assets/Runecrypt/Audio
+ArtSource/cc0_raw/
