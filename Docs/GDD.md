@@ -248,12 +248,14 @@ Semua musuh punya **mata merah yang selalu menyala** (sprite mata memakai materi
 
 ### 6.1 Musuh MVP
 
-| Nama | Wujud | Elemen | Perilaku | HP awal |
-|---|---|---|---|---|
-| **Pelita Sesat** | Roh api mati berwarna biru kehitaman, rongga mata kosong, jejak asap. Dibuat seram, bukan imut. | — | Melayang diam, lalu menukik cepat ke pemain dan mundur. Mengajarkan pemain untuk dash. | 6 |
-| **Tulang Penjaga** | Kerangka penjaga makam berperisai karatan | — | Berjalan lambat dan terus mengejar. Serangan jarak dekat. Sering muncul berkelompok. | 12 |
-| **Biarawan Beku** | Sosok berjubah biru pucat yang melayang | Es | Menjaga jarak dan menembakkan 3 serpih es. Saat mati meninggalkan Genangan Beku. Terkena api langsung memicu Uap. | 10 |
-| **Jubah Guntur** | Jubah kosong yang berkedip, diselimuti listrik | Petir | Berteleportasi pendek, lalu melepas kilatan garis lurus yang di-telegraph 0,6 detik. Terkena api memicu Ledakan Cahaya. | 16 |
+| Nama | Wujud | Elemen | Perilaku | HP awal | Gaya mati |
+|---|---|---|---|---|---|
+| **Pelita Sesat** | Roh api mati berwarna biru kehitaman, rongga mata kosong, jejak asap. Dibuat seram, bukan imut. | — | Melayang diam, lalu menukik cepat ke pemain dan mundur. Mengajarkan pemain untuk dash. | 6 | Nyala padam menjadi asap hitam, mata memudar paling akhir |
+| **Tulang Penjaga** | Kerangka penjaga makam berperisai karatan | — | Berjalan lambat dan terus mengejar. Serangan jarak dekat. Sering muncul berkelompok. | 12 | Abu dan serpihan tulang, tumpukan abu berpendar tertinggal (sudah dibuat di M1.5) |
+| **Biarawan Beku** | Sosok berjubah biru pucat yang melayang | Es | Menjaga jarak dan menembakkan 3 serpih es. Saat mati meninggalkan Genangan Beku. Terkena api langsung memicu Uap. | 10 | Pecah menjadi serpih es, meninggalkan Genangan Beku |
+| **Jubah Guntur** | Jubah kosong yang berkedip, diselimuti listrik | Petir | Berteleportasi pendek, lalu melepas kilatan garis lurus yang di-telegraph 0,6 detik. Terkena api memicu Ledakan Cahaya. | 16 | Jubah jatuh lemas sambil memercikkan listrik terakhir |
+
+Gaya mati ditentukan per jenis musuh (keputusan user, 17 Nov 2026): kerangka menjadi abu dan tulang, musuh berdaging berdarah. Keempat musuh MVP tidak berdaging; gaya berdarah cukup berupa prefab baru di `EnemyDefinition` (`deathEffect`, `remains`) tanpa mengubah kode.
 
 ### 6.2 Kemunculan
 Musuh muncul di titik spawn yang sudah ditandai di prefab ruangan, dengan efek asap gelap 0,5 detik supaya tidak muncul tiba-tiba di atas pemain. Jumlah dan jenisnya diatur oleh "budget" kesulitan ruangan yang naik seiring urutan ruangan dan kedalaman.
@@ -277,10 +279,16 @@ Total HP boss dan durasi tiap fase disetel saat playtest. Target pertarungan bos
 - **Pixel art 16x16**, boss 48x48. Semua dibuat lewat script Python + Pillow di `ArtSource/scripts/`. Hasil awal ada di `ArtSource/prototype/`.
 - **Palet:** ungu-hitam gelap untuk makam (`#1A1420`, `#342852`, `#544280`), jingga-kuning untuk api (`#FF8A3D`, `#FFCC66`, `#FFE296`), tulang (`#D9D1BD`), dan merah mata (`#E0474C`). Biru pucat untuk es dan putih-ungu untuk petir ditambahkan dengan gaya yang sama.
 - **Cahaya:** Light2D URP. Global light sangat redup. Point light dipasang pada pemain, proyektil, reaksi, Tiang Petir, dan musuh yang terbakar. ShadowCaster2D pada dinding dan pilar.
-- **Animasi:** 4 frame untuk diam, gerak, serang, dan mati. Juice di engine: flash putih, squash and stretch, dissolve, hit-stop 50 ms, screen shake ringan, dan angka damage.
+- **Animasi:** 4 frame untuk diam, gerak, serang, dan mati. Juice di engine (M1.5, angka lengkap di `Docs/specs/2026-11-17-juice-design.md` §5):
+  - Kena: kedipan putih 0,08 dtk (penuh saat Tersingkap, redup alpha 0,35 di gelap), hit-stop 0,03 dtk, knockback 4 tile/dtk, percikan bara.
+  - Angka damage dari sprite digit buatan sendiri, dibulatkan: kuning besar saat Tersingkap, abu-abu kecil di gelap, jingga untuk Terbakar, putih untuk Uap.
+  - Mati: hit-stop 0,06 dtk, guncangan ringan, efek mati dan sisa per jenis musuh (bagian 6.1).
+  - Pemain kena: kedipan merah, hit-stop 0,08 dtk, guncangan sedang, lalu berkedip selama kebal 0,8 dtk.
+  - Tembakan hanya menyentak kamera 1 piksel (tanpa guncangan) supaya tidak memicu mabuk gerak.
+  - Squash and stretch dan dissolve belum dibuat.
 
 ### 7.2 Audio
-SFX dan musik dibuat lewat script Python lebih dulu. Kalau hasilnya kurang, baru memakai SFX gratis berlisensi CC0, dan sumbernya dicatat di bagian kredit.
+SFX sintesis lewat script Python sudah dicoba dan dinilai kurang (17 Nov 2026), jadi **SFX memakai paket gratis berlisensi CC0**. Script `ArtSource/scripts/make_sfx_cc0.py` hanya memotong, mencampur, dan menormalkan file CC0 mentah. Sumber dan lisensinya dicatat di bagian kredit (§14). Musik belum ditentukan.
 - **SFX:** tembakan api, kena musuh, Kobaran, dash, Uap (desis), Ledakan Cahaya (dentum dan dengung), musuh mati, pintu jeruji turun/naik, pengambilan relic, level-up, detak jantung saat HP rendah, langkah dari arah gelap.
 - **Musik:** dengung ambient gelap berlapis untuk eksplorasi, lapisan perkusi saat pintu terkunci, tema boss yang intens, dan musik singkat di layar akhir.
 - Booth expo memakai headphone.
@@ -411,5 +419,13 @@ Pertanyaan tetap untuk penguji: Apa yang membingungkan di 30 detik pertama? Bagi
 | Versi | Tanggal | Perubahan |
 |---|---|---|
 | 0.1 | 17 Nov 2026 | Draf pertama GDD versi 2D (pindah dari konsep 3D) |
+| 0.2 | 17 Nov 2026 | M1.5 juice dan suara: angka feedback, gaya mati per musuh, SFX dari CC0, kredit aset |
 
-**Kredit aset:** semua sprite dan audio dibuat sendiri lewat script. Kalau nanti memakai SFX gratis, sumber dan lisensinya dicatat di sini.
+**Kredit aset:** semua sprite dibuat sendiri lewat script Python. SFX memakai paket berikut, semuanya berlisensi CC0 (domain publik), dipotong dan dicampur lewat `ArtSource/scripts/make_sfx_cc0.py`:
+
+| Paket | Pembuat | Lisensi | Dipakai untuk |
+|---|---|---|---|
+| [Fire Staff Collection](https://opengameart.org/content/fire-staff-sound-effects) | LEGIT Audio | CC0 | Tembakan bola api, ekor desis saat kena |
+| [Deep Bone Crack/Break SFX](https://opengameart.org/content/deep-bone-crackbreak-sfx) | Zane Little Music | CC0 | Kematian Tulang Penjaga |
+| [Bones Rattle](https://opengameart.org/content/bones-rattle) | congusbongus | CC0 | Klik tulang saat kena dan saat mati |
+| [Steam Release Sounds](https://opengameart.org/content/steam-release-sounds) | bart | CC0 (pembuat meminta atribusi) | Uap |
