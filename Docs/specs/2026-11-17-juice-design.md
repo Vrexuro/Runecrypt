@@ -88,7 +88,7 @@ Semua angka adalah *keputusan Claude* dan boleh disetel ulang setelah uji seru. 
 
 ### 5.1 Kematian Tulang Penjaga, gaya "abu dan tulang"
 
-1. Kedipan putih 0,06 dtk dan hit-stop 0,06 dtk.
+1. Kedipan putih 0,06 dtk dan hit-stop 0,06 dtk. Tubuh musuh bertahan 0,06 dtk (tanpa collider) supaya kedipan ini benar-benar terlihat *(revisi review akhir)*.
 2. Sprite tubuh hilang. Sebagai gantinya muncul:
    - 6–8 serpihan tulang (sprite 4x4 hasil script) yang meluncur menjauhi arah tembakan dengan kecepatan 2–4 tile/dtk sambil berputar. Gesekan menghentikannya dalam 0,3 dtk. Pantulan kecil disimulasikan dengan offset vertikal, karena kamera melihat dari atas. Setelah berhenti, serpihan diam 0,6 dtk lalu memudar;
    - kepulan abu (8 partikel abu-abu gelap).
@@ -124,9 +124,9 @@ Profil lainnya berada di data pemiliknya masing-masing:
 |---|---|---|
 | `FeedbackProfile` (ScriptableObject) | Game | Data satu kejadian: kekuatan dan durasi kedipan, hit-stop, trauma guncangan, prefab partikel, daftar klip SFX, volume, rentang pitch. |
 | `HitStopClock` | Core | Logika murni. Permintaan hit-stop yang tumpang tindih diambil yang **terpanjang** (tidak dijumlahkan). Menjawab "apakah sedang berhenti" berdasarkan waktu nyata. |
-| `ShakeTrauma` | Core | Logika murni. Trauma 0–1 ditambahkan per kejadian lalu turun linear 1,5/dtk. Offset = trauma² × maksimum 3 piksel, dibulatkan ke piksel. |
+| `ShakeTrauma` | Core | Logika murni. Trauma 0–1 ditambahkan per kejadian lalu turun linear 1,5/dtk. Offset = trauma × maksimum 4 piksel, dibulatkan ke piksel. *(Direvisi setelah review akhir: trauma² × 3 px membuat guncangan mati dan Uap dibulatkan ke 0 px.)* |
 | `DamageNumberFormat` | Core | Logika murni: pembulatan, warna, dan ukuran berdasarkan jenis kena (Tersingkap, gelap, Terbakar, Uap). |
-| `VoiceLimiter` | Core | Logika murni. Batas 12 suara bersamaan secara global dan 4 per klip. Kalau penuh, suara tertua diganti. |
+| `VoiceLimiter` | Core | Logika murni. Batas 12 suara bersamaan secara global dan 4 per klip. Kalau penuh, suara tertua diganti. Klip yang sama yang mulai lagi dalam 30 ms dilewati, dan semua SFX dinormalkan ke puncak −6 dBFS supaya bunyi serempak tidak clipping *(revisi review akhir)*. |
 | `FeedbackPlayer` | Game | Satu objek di scene. Memutar profil di sebuah posisi: memanggil HitStop, Shake, partikel (pool), dan SFX. |
 | `HitStop` | Game | Mengatur `Time.timeScale` memakai `HitStopClock`. Ada flag statis `GamePause.IsPaused` yang dipasang ArenaDirector saat layar Tumbang. Aturannya: hit-stop tidak dimulai kalau flag aktif, dan saat hit-stop selesai, timeScale hanya dikembalikan ke 1 kalau flag tidak aktif. Kasus "pemain mati di tengah hit-stop" dengan begitu tetap berhenti total. |
 | `CameraShake` | Game | Menggeser kamera per frame berdasarkan `ShakeTrauma`. Posisi dasar kamera disimpan terpisah supaya kamera tidak bergeser permanen. |
@@ -134,7 +134,7 @@ Profil lainnya berada di data pemiliknya masing-masing:
 | `DamageNumbers` | Game | Pool angka sprite. |
 | `RemainsRegistry` | Game | Mencatat tumpukan abu. Batasnya 30, dan yang tertua dihapus lebih dulu. |
 | `SfxPlayer` | Game | Pool AudioSource dan `VoiceLimiter`, dengan satu volume master statis. **Tanpa AudioMixer** di milestone ini, karena aset `.mixer` tidak bisa dibuat lewat script. Mixer dibuat manual di M5 bersama menu volume. |
-| `Knockback` | Game, di dalam `Enemy` | Kecepatan dorong ditambahkan ke kecepatan kejar, lalu diredam 12/dtk. Kekuatan 4 tile/dtk dari bola api. Musuh yang terdorong tetap dihitung oleh aturan cahaya seperti biasa. |
+| `Knockback` | Game, di dalam `Enemy` | Kecepatan dorong ditambahkan ke kecepatan kejar, lalu diredam 12/dtk. Kekuatan 4 tile/dtk dari bola api. Selama dorongan masih kuat, kecepatan kejar ditekan sebanding (`Knockback.Combine`), supaya musuh terlihat mundur, bukan sekadar tertahan *(revisi review akhir)*. Musuh yang terdorong tetap dihitung oleh aturan cahaya seperti biasa. |
 
 **Perubahan pada kode M1:**
 - `Enemy.TakeHit` memanggil profil kena yang sesuai (Tersingkap atau gelap) dan meminta angka damage. `Die` memunculkan `deathEffect` dan `remains`.

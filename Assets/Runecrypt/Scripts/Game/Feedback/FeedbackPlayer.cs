@@ -13,13 +13,21 @@ namespace Runecrypt.Game
         CameraShake shake;
         SfxPlayer sfx;
 
+        // Dicari saat dibutuhkan: Awake ini bisa jalan sebelum kamera terdaftar sebagai Camera.main.
+        CameraShake Shake
+        {
+            get
+            {
+                if (shake == null && Camera.main != null) shake = Camera.main.GetComponent<CameraShake>();
+                return shake;
+            }
+        }
+
         void Awake()
         {
             Instance = this;
             hitStop = GetComponent<HitStop>();
             sfx = GetComponent<SfxPlayer>();
-            var cam = Camera.main;
-            if (cam != null) shake = cam.GetComponent<CameraShake>();
         }
 
         void OnDestroy()
@@ -34,7 +42,7 @@ namespace Runecrypt.Game
             var fp = Instance;
             if (fp == null) return;
             if (p.hitStop > 0f && fp.hitStop != null) fp.hitStop.Request(p.hitStop);
-            if (p.shakeTrauma > 0f && fp.shake != null) fp.shake.Add(p.shakeTrauma);
+            if (p.shakeTrauma > 0f && fp.Shake != null) fp.Shake.Add(p.shakeTrauma);
             if (p.particlePrefab != null) Destroy(Instantiate(p.particlePrefab, pos, Quaternion.identity), 2f);
             if (fp.sfx != null) fp.sfx.Play(p.clips, p.volume, p.pitchJitter);
         }
@@ -42,7 +50,7 @@ namespace Runecrypt.Game
         public static void Kick(Vector2 dir, int pixels)
         {
             var fp = Instance;
-            if (fp != null && fp.shake != null) fp.shake.Kick(dir, pixels);
+            if (fp != null && fp.Shake != null) fp.Shake.Kick(dir, pixels);
         }
     }
 }

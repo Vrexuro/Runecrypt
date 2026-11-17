@@ -1,5 +1,6 @@
 """SFX M1.5 dari empat paket CC0: potong, campur, dan normalkan ke WAV 44,1 kHz mono 16-bit.
 
+Hasil: WAV dengan puncak -6 dBFS (headroom untuk bunyi serempak).
 Pemakaian: python make_sfx_cc0.py <folder_cc0_raw> <folder_output>
    misalnya: python ArtSource/scripts/make_sfx_cc0.py ArtSource/cc0_raw Assets/Runecrypt/Audio
 Butuh: numpy dan ffmpeg di PATH (alat ArtSource, bukan dependensi game).
@@ -54,7 +55,7 @@ def lowpass(x, fc):
     return y
 
 
-def norm(x, peak=0.89):
+def norm(x, peak=0.89):  # per lapisan; hasil akhir lihat HEADROOM
     m = np.max(np.abs(x))
     return x * (peak / m) if m > 0 else x
 
@@ -67,9 +68,13 @@ def mix(dst, src, at, gain=1.0):
     return dst
 
 
+# Puncak akhir -6 dBFS: kena dan mati sering berbunyi di frame yang sama, puncak awalnya berimpit (review M1.5).
+HEADROOM = 0.5
+
+
 def write(name, x):
-    x = norm(x)
-    assert np.all(np.isfinite(x)) and np.max(np.abs(x)) <= 0.9, name
+    x = norm(x, HEADROOM)
+    assert np.all(np.isfinite(x)) and np.max(np.abs(x)) <= HEADROOM + 1e-6, name
     with wave.open(str(OUT / f"{name}.wav"), "wb") as w:
         w.setnchannels(1)
         w.setsampwidth(2)

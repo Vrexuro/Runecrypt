@@ -15,8 +15,15 @@ namespace Runecrypt.Tests
         // --- Guncangan ---
         [Test] public void Trauma_ClampedToOne() { var t = new ShakeTrauma(); t.Add(0.45f); t.Add(0.45f); t.Add(0.45f); Assert.AreEqual(1f, t.Value, 1e-5); }
         [Test] public void Trauma_DecaysToZeroNotBelow() { var t = new ShakeTrauma(); t.Add(0.3f); t.Tick(0.1f); Assert.AreEqual(0.15f, t.Value, 1e-5); t.Tick(1f); Assert.AreEqual(0f, t.Value); }
-        [Test] public void Offset_ZeroAtZero_ThreeAtOne() { var t = new ShakeTrauma(); Assert.AreEqual(0f, t.OffsetPixels); t.Add(1f); Assert.AreEqual(3f, t.OffsetPixels, 1e-5); }
-        [Test] public void Offset_IsQuadratic() { var t = new ShakeTrauma(); t.Add(0.5f); Assert.AreEqual(0.75f, t.OffsetPixels, 1e-5); }
+        [Test] public void Offset_ZeroAtZero_FourAtOne() { var t = new ShakeTrauma(); Assert.AreEqual(0f, t.OffsetPixels); t.Add(1f); Assert.AreEqual(4f, t.OffsetPixels, 1e-5); }
+        [Test] public void Offset_IsLinear() { var t = new ShakeTrauma(); t.Add(0.5f); Assert.AreEqual(2f, t.OffsetPixels, 1e-5); }
+        // Review M1.5 Important #1: guncangan dibulatkan per piksel, jadi kejadian terkecil (mati, 0,25) harus ≥ 1 px.
+        [Test] public void Offset_SmallestEventIsVisible() { var t = new ShakeTrauma(); t.Add(0.25f); Assert.GreaterOrEqual(t.OffsetPixels, 1f); }
+
+        // --- Knockback (review Important #2): dorongan menekan kejaran, jadi musuh benar-benar mundur ---
+        [Test] public void Knock_Full_SuppressesChase() { var v = Knockback.Combine(new UnityEngine.Vector2(-2f, 0f), new UnityEngine.Vector2(4f, 0f), 4f); Assert.AreEqual(4f, v.x, 1e-5); }
+        [Test] public void Knock_Half_HalvesChase() { var v = Knockback.Combine(new UnityEngine.Vector2(-2f, 0f), new UnityEngine.Vector2(2f, 0f), 4f); Assert.AreEqual(1f, v.x, 1e-5); }
+        [Test] public void Knock_None_KeepsChase() { var v = Knockback.Combine(new UnityEngine.Vector2(-2f, 0f), UnityEngine.Vector2.zero, 4f); Assert.AreEqual(-2f, v.x, 1e-5); }
 
         // --- Angka damage ---
         [TestCase(3.75f, 4)] [TestCase(3f, 3)] [TestCase(1.25f, 1)] [TestCase(0.4f, 1)] [TestCase(2.5f, 3)]
@@ -27,6 +34,8 @@ namespace Runecrypt.Tests
         [Test] public void Voice_UsesFreeSlotsFirst() { var v = new VoiceLimiter(3, 4); Assert.AreEqual(0, v.Acquire(1, 0f, 1f)); Assert.AreEqual(1, v.Acquire(2, 0f, 1f)); Assert.AreEqual(2, v.Acquire(3, 0f, 1f)); }
         [Test] public void Voice_ReusesFinishedSlot() { var v = new VoiceLimiter(2, 4); v.Acquire(1, 0f, 0.1f); v.Acquire(2, 0f, 1f); Assert.AreEqual(0, v.Acquire(3, 0.2f, 1f)); }
         [Test] public void Voice_GlobalFull_StealsOldest() { var v = new VoiceLimiter(2, 4); v.Acquire(1, 0f, 5f); v.Acquire(2, 0.1f, 5f); Assert.AreEqual(0, v.Acquire(3, 0.2f, 5f)); }
+        // Review Important #4: klip yang sama dalam 30 ms menumpuk koheren (+12 dB untuk 4 salinan); lewati saja.
+        [Test] public void Voice_SameClipWithin30ms_IsSkipped() { var v = new VoiceLimiter(12, 4); v.Acquire(5, 1f, 1f); Assert.AreEqual(-1, v.Acquire(5, 1.02f, 1f)); Assert.AreNotEqual(-1, v.Acquire(5, 1.04f, 1f)); }
         [Test] public void Voice_PerClipCap_StealsOldestOfSameClip() { var v = new VoiceLimiter(12, 2); v.Acquire(9, 0f, 5f); v.Acquire(7, 0.05f, 5f); v.Acquire(9, 0.1f, 5f); Assert.AreEqual(0, v.Acquire(9, 0.2f, 5f)); }
     }
 }

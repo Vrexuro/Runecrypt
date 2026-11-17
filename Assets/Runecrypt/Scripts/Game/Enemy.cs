@@ -15,6 +15,8 @@ namespace Runecrypt.Game
         [SerializeField] float knockbackSpeed = 4f;
         [SerializeField] float knockbackDamping = 12f;
 
+        const float KillFlashTime = 0.06f;
+
         public static event Action<Enemy> AnyDied;
         public EnemyDefinition Definition => definition;
 
@@ -68,7 +70,8 @@ namespace Runecrypt.Game
                     ? ((Vector2)player.transform.position - body.position).normalized
                     : Vector2.zero;
             }
-            body.linearVelocity = dir * definition.moveSpeed * lightRules.SpeedMultiplier(IsLitNow) + knock;
+            Vector2 chase = dir * definition.moveSpeed * lightRules.SpeedMultiplier(IsLitNow);
+            body.linearVelocity = Knockback.Combine(chase, knock, knockbackSpeed);
             knock *= Mathf.Exp(-knockbackDamping * Time.fixedDeltaTime);
         }
 
@@ -85,7 +88,7 @@ namespace Runecrypt.Game
                 DamageNumbers.Show(applied, lit ? HitKind.Lit : HitKind.Dark, pos);
                 Vector2 impulse = (pos - hit.Point).normalized * knockbackSpeed;
                 knock += impulse;
-                body.linearVelocity += impulse; // langsung terasa di langkah fisika berikutnya
+                body.linearVelocity += impulse; // untuk langkah fisika sebelum FixedUpdate berikutnya (dan test Physics2D.Simulate)
             }
             else
             {
@@ -121,7 +124,15 @@ namespace Runecrypt.Game
             }
             if (definition.remains != null) RemainsRegistry.Add(Instantiate(definition.remains, pos, Quaternion.identity));
             AnyDied?.Invoke(this);
-            Destroy(gameObject);
+
+            // Tubuh bertahan sesaat supaya kedipan pukulan terakhir terlihat (spec §5.1 langkah 1), tapi sudah
+            // tidak bisa disentuh atau ditembak. Waktu berskala, jadi ikut tertahan selama hit-stop.
+            enabled = false;
+            body.simulated = false;
+            foreach (var c in GetComponentsInChildren<Collider2D>()) c.enabled = false;
+            float linger = KillFlashTime;
+            if (definition.deathProfile != null) linger = Mathf.Max(linger, definition.deathProfile.flashDuration);
+            Destroy(gameObject, linger);
         }
     }
 }

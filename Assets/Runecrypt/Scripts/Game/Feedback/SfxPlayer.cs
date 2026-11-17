@@ -31,6 +31,7 @@ namespace Runecrypt.Game
             if (clip == null) return;
             float pitch = 1f + Random.Range(-pitchJitter, pitchJitter);
             int slot = limiter.Acquire(clip.GetInstanceID(), Time.unscaledTime, clip.length / pitch);
+            if (slot < 0) return; // salinan serempak dari klip yang sama
             var src = sources[slot];
             src.Stop();
             src.clip = clip;
