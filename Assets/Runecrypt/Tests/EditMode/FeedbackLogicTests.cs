@@ -17,5 +17,16 @@ namespace Runecrypt.Tests
         [Test] public void Trauma_DecaysToZeroNotBelow() { var t = new ShakeTrauma(); t.Add(0.3f); t.Tick(0.1f); Assert.AreEqual(0.15f, t.Value, 1e-5); t.Tick(1f); Assert.AreEqual(0f, t.Value); }
         [Test] public void Offset_ZeroAtZero_ThreeAtOne() { var t = new ShakeTrauma(); Assert.AreEqual(0f, t.OffsetPixels); t.Add(1f); Assert.AreEqual(3f, t.OffsetPixels, 1e-5); }
         [Test] public void Offset_IsQuadratic() { var t = new ShakeTrauma(); t.Add(0.5f); Assert.AreEqual(0.75f, t.OffsetPixels, 1e-5); }
+
+        // --- Angka damage ---
+        [TestCase(3.75f, 4)] [TestCase(3f, 3)] [TestCase(1.25f, 1)] [TestCase(0.4f, 1)] [TestCase(2.5f, 3)]
+        public void Value_Rounds(float dmg, int expected) => Assert.AreEqual(expected, DamageNumberFormat.Value(dmg));
+        [Test] public void Lit_IsBiggerThanDark() => Assert.Greater(DamageNumberFormat.Style(HitKind.Lit).scale, DamageNumberFormat.Style(HitKind.Dark).scale);
+
+        // --- Batas suara ---
+        [Test] public void Voice_UsesFreeSlotsFirst() { var v = new VoiceLimiter(3, 4); Assert.AreEqual(0, v.Acquire(1, 0f, 1f)); Assert.AreEqual(1, v.Acquire(2, 0f, 1f)); Assert.AreEqual(2, v.Acquire(3, 0f, 1f)); }
+        [Test] public void Voice_ReusesFinishedSlot() { var v = new VoiceLimiter(2, 4); v.Acquire(1, 0f, 0.1f); v.Acquire(2, 0f, 1f); Assert.AreEqual(0, v.Acquire(3, 0.2f, 1f)); }
+        [Test] public void Voice_GlobalFull_StealsOldest() { var v = new VoiceLimiter(2, 4); v.Acquire(1, 0f, 5f); v.Acquire(2, 0.1f, 5f); Assert.AreEqual(0, v.Acquire(3, 0.2f, 5f)); }
+        [Test] public void Voice_PerClipCap_StealsOldestOfSameClip() { var v = new VoiceLimiter(12, 2); v.Acquire(9, 0f, 5f); v.Acquire(7, 0.05f, 5f); v.Acquire(9, 0.1f, 5f); Assert.AreEqual(0, v.Acquire(9, 0.2f, 5f)); }
     }
 }
