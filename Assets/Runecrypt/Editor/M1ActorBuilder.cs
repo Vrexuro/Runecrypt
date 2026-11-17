@@ -55,15 +55,14 @@ namespace Runecrypt.EditorTools
             EditorUtility.SetDirty(uap);
             var puddle = BuildPuddlePrefab(uap);
 
-            foreach (var name in new[] { "TestLight", "SkeletonDummy", "Player", "TulangPenjaga", "FrostPuddle" })
+            foreach (var name in new[] { "TestLight", "SkeletonDummy", "Player", "TulangPenjaga", "FrostPuddle", "ArenaDirector" })
                 foreach (var go in Object.FindObjectsByType<GameObject>(FindObjectsSortMode.None).Where(g => g != null && g.name == name && g.transform.parent == null).ToList())
                     Object.DestroyImmediate(go);
 
             Place(player, M1Builder.RoomCenter);
-            Place(enemy, new Vector3(6f, 2f, 0f));
-            Place(enemy, new Vector3(-7f, -3.5f, 0f));
             Place(puddle, new Vector3(-2.5f, -3.5f, 0f));
             Place(puddle, new Vector3(6.5f, -2.5f, 0f));
+            BuildArenaDirector(enemy);
 
             var scene = SceneManager.GetActiveScene();
             EditorSceneManager.MarkSceneDirty(scene);
@@ -139,6 +138,30 @@ namespace Runecrypt.EditorTools
             Set(enemy, "lightRules", rules);
             Set(enemy, "burnLight", burn.gameObject);
             return SavePrefab(go, "TulangPenjaga");
+        }
+
+        // Task 10: gelombang musuh dari 6 titik di sudut gelap ruangan.
+        static void BuildArenaDirector(GameObject enemyPrefab)
+        {
+            var go = new GameObject("ArenaDirector");
+            var director = go.AddComponent<ArenaDirector>();
+            Vector3[] points =
+            {
+                new Vector3(-8f, 3f), new Vector3(8f, 3f), new Vector3(-8f, -4.5f),
+                new Vector3(8f, -4.5f), new Vector3(-0.5f, 3.2f), new Vector3(-0.5f, -4.5f),
+            };
+            var so = new SerializedObject(director);
+            so.FindProperty("enemyPrefab").objectReferenceValue = enemyPrefab.GetComponent<Enemy>();
+            var arr = so.FindProperty("spawnPoints");
+            arr.arraySize = points.Length;
+            for (int i = 0; i < points.Length; i++)
+            {
+                var sp = new GameObject($"Spawn{i}").transform;
+                sp.SetParent(go.transform, false);
+                sp.position = points[i];
+                arr.GetArrayElementAtIndex(i).objectReferenceValue = sp;
+            }
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         static GameObject BuildSteamPrefab()

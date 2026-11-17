@@ -15,6 +15,7 @@ namespace Runecrypt.Game
         [SerializeField] float dashCooldown = 0.8f;
         [SerializeField] float dashDuration = 0.15f;
         [SerializeField] float dashInvulnerability = 0.2f;
+        [SerializeField] float hitInvulnerability = 0.8f;
         [SerializeField] float muzzleOffset = 0.5f;
         [SerializeField] Fireball fireballPrefab;
 
@@ -91,6 +92,8 @@ namespace Runecrypt.Game
         {
             if (Health.IsDead || Time.time < invulnerableUntil) return;
             Health.TakeDamage(hit.Damage);
+            // Kebal sesaat setelah kena, supaya dikerubungi tidak berarti mati dalam 2 detik.
+            invulnerableUntil = Time.time + hitInvulnerability;
         }
 
         void OnDied()
