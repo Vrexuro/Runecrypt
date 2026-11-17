@@ -1,0 +1,6 @@
+{
+    "name": "Runecrypt.Core",
+    "rootNamespace": "Runecrypt.Core",
+    "references": [],
+    "autoReferenced": true
+}
