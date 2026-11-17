@@ -38,8 +38,17 @@ namespace Runecrypt.EditorTools
                 d.maxHp = 12f; d.moveSpeed = 2f; d.contactDamage = 1f; d.contactInterval = 1f; d.element = Element.None;
             });
 
+            // M1.5: profil umpan balik dan prefab efek lebih dulu, karena prefab aktor menunjuknya.
+            var juice = M1JuiceBuilder.BuildAssets();
+            tulang.hitLit = juice.hitLit;
+            tulang.hitDark = juice.hitDark;
+            tulang.deathProfile = juice.deathTulang;
+            tulang.deathEffect = juice.deathTulangFx;
+            tulang.remains = juice.ashPile;
+            EditorUtility.SetDirty(tulang);
+
             var fireball = BuildFireballPrefab();
-            var player = BuildPlayerPrefab(fireball);
+            var player = BuildPlayerPrefab(fireball, juice);
             var enemy = BuildEnemyPrefab(tulang, rules);
 
             // Task 9: Uap + Genangan Beku.
@@ -52,10 +61,11 @@ namespace Runecrypt.EditorTools
                 d.radius = 2.5f; d.duration = 3f; d.damagePerTick = 2f; d.tickInterval = 0.5f; d.blindDuration = 0.6f;
             });
             uap.effectPrefab = steam;
+            uap.spawnProfile = juice.steam;
             EditorUtility.SetDirty(uap);
             var puddle = BuildPuddlePrefab(uap);
 
-            foreach (var name in new[] { "TestLight", "SkeletonDummy", "Player", "TulangPenjaga", "FrostPuddle", "ArenaDirector" })
+            foreach (var name in new[] { "TestLight", "SkeletonDummy", "Player", "TulangPenjaga", "FrostPuddle", "ArenaDirector", "Feedback" })
                 foreach (var go in Object.FindObjectsByType<GameObject>(FindObjectsSortMode.None).Where(g => g != null && g.name == name && g.transform.parent == null).ToList())
                     Object.DestroyImmediate(go);
 
@@ -63,6 +73,7 @@ namespace Runecrypt.EditorTools
             Place(puddle, new Vector3(-2.5f, -3.5f, 0f));
             Place(puddle, new Vector3(6.5f, -2.5f, 0f));
             BuildArenaDirector(enemy);
+            M1JuiceBuilder.BuildSceneServices();
 
             var scene = SceneManager.GetActiveScene();
             EditorSceneManager.MarkSceneDirty(scene);
@@ -99,7 +110,7 @@ namespace Runecrypt.EditorTools
             return SavePrefab(go, "Fireball").GetComponent<Fireball>();
         }
 
-        static GameObject BuildPlayerPrefab(Fireball fireball)
+        static GameObject BuildPlayerPrefab(Fireball fireball, M1JuiceBuilder.Assets juice)
         {
             var go = new GameObject("Player") { layer = Layer("Player") };
             var sr = go.AddComponent<SpriteRenderer>();
@@ -115,7 +126,12 @@ namespace Runecrypt.EditorTools
             go.AddComponent<CircleCollider2D>().radius = 0.35f;
             var pc = go.AddComponent<PlayerController>();
             Set(pc, "fireballPrefab", fireball);
-            M1Builder.MakePointLight("Light", go.transform, "#FF8A3D", 3f);
+            var light = M1Builder.MakePointLight("Light", go.transform, "#FF8A3D", 3f);
+            Set(pc, "shotProfile", juice.shot);
+            Set(pc, "hurtProfile", juice.playerHurt);
+            Set(pc, "hitFlash", M1JuiceBuilder.AddHitFlash(go));
+            Set(pc, "lightPulse", light.gameObject.AddComponent<LightPulse>());
+            Set(pc, "bodySprite", sr);
             return SavePrefab(go, "Player");
         }
 
@@ -137,6 +153,7 @@ namespace Runecrypt.EditorTools
             Set(enemy, "definition", def);
             Set(enemy, "lightRules", rules);
             Set(enemy, "burnLight", burn.gameObject);
+            Set(enemy, "hitFlash", M1JuiceBuilder.AddHitFlash(go));
             return SavePrefab(go, "TulangPenjaga");
         }
 
@@ -241,7 +258,7 @@ namespace Runecrypt.EditorTools
             go.transform.position = pos;
         }
 
-        static T LoadOrCreate<T>(string path, System.Action<T> init) where T : ScriptableObject
+        internal static T LoadOrCreate<T>(string path, System.Action<T> init) where T : ScriptableObject
         {
             var asset = AssetDatabase.LoadAssetAtPath<T>(path);
             if (asset != null) return asset;

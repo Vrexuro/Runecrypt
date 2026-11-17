@@ -66,6 +66,7 @@ namespace Runecrypt.EditorTools
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = new Color32(14, 10, 20, 255);
             go.AddComponent<UniversalAdditionalCameraData>();
+            go.AddComponent<AudioListener>(); // SFX M1.5 butuh pendengar di scene
             var ppc = go.AddComponent<PixelPerfectCamera>();
             ppc.assetsPPU = 16;
             ppc.refResolutionX = 320;

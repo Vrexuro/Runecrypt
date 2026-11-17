@@ -21,3 +21,4 @@ MonoBehaviour:
   tickInterval: 0.5
   blindDuration: 0.6
   effectPrefab: {fileID: 2000499808403196053, guid: e970294bb175628489ee48698955473b, type: 3}
+  spawnProfile: {fileID: 11400000, guid: 959cff270670e2343a4d338cbf3a55e5, type: 2}

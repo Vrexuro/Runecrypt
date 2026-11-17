@@ -18,3 +18,8 @@ MonoBehaviour:
   contactDamage: 1
   contactInterval: 1
   element: 0
+  hitLit: {fileID: 11400000, guid: f59e5c82c8053a6499c6630040857afe, type: 2}
+  hitDark: {fileID: 11400000, guid: c5d57477351240a4590a219051d37d18, type: 2}
+  deathProfile: {fileID: 11400000, guid: d2d921c4c8c97e647848974093d548ec, type: 2}
+  deathEffect: {fileID: 2025309643454532635, guid: ca03c4fccdbcb444b9f62d0e7bd73691, type: 3}
+  remains: {fileID: 4895201336083342530, guid: b820b8cc753ba6d4893f07e019d66f49, type: 3}
