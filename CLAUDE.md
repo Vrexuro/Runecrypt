@@ -43,7 +43,7 @@ Balas user dalam **Bahasa Indonesia**.
 ## Engine
 - Unity **6000.3.26f1** (6.3 LTS), template Universal 2D (URP 17.3, 2D Renderer). Paket terpasang antara lain Input System, Tilemap (+Extras), 2D Animation, Test Framework.
 - Cahaya memakai URP 2D: `Light2D` dan `ShadowCaster2D`.
-- Project ini **belum menjadi repo git**.
+- Repo git lokal, branch utama `main`. Fitur dikerjakan di branch `feature/<nama>` di checkout yang sama, karena Unity Editor dan MCP terbuka di folder ini (bukan worktree). Tanpa remote.
 
 ## Unity lewat MCP
 - MCP for Unity (CoplayDev) memakai transport HTTP Local di `http://127.0.0.1:8080/mcp`, dengan server `UnityMCP`.
