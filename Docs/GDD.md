@@ -238,6 +238,7 @@ Akibatnya terhadap desain:
 - **Ledakan Cahaya** dan kilatan Kobaran menerangi seluruh ruangan atau area di sekitar pemain sesaat, sehingga semua musuh di dalamnya Tersingkap. Momen itu adalah jendela untuk memberi damage besar.
 - Relic dan upgrade yang menambah radius cahaya, seperti Lentera Tulang, Sumbu Panjang, dan Cahaya Melebar, kini juga menambah daya serang. Karena itu relic terkutuk Lidah Kegelapan benar-benar menjadi pertukaran yang sulit.
 - Cahaya yang menyempit di lapisan lebih dalam dan di fase 2–3 boss membuat pertarungan lebih sulit, bukan hanya lebih gelap.
+- **Cahaya dari musuh yang Terbakar ikut membuatnya Tersingkap** (keputusan user, 17 Nov 2026). Jadi setelah kena bola api pertama, musuh itu Tersingkap selama Terbakar aktif. Tembakan berikutnya mendapat +25%, dan damage Terbakar sendiri menjadi 1,25/detik. Api memang dirancang "menandai" sasarannya. Kalau di uji seru (bagian 13) damage api terasa terlalu kuat, angka yang disetel adalah damage dasar atau bonus Tersingkap, bukan aturan ini.
 
 ---
 
