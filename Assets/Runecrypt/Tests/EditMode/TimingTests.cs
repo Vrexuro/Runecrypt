@@ -82,5 +82,21 @@ namespace Runecrypt.Tests
             Assert.AreEqual(0f, b.Tick(10.5f));
             Assert.AreEqual(1f, b.Tick(11f));
         }
+
+        [Test]
+        public void Burn_ApplyWithDuration_LastsLonger()
+        {
+            var b = new BurnStatus();
+            b.Apply(0f, 4f, 1f);
+            Assert.AreEqual(4f, b.Tick(4f));
+        }
+
+        [Test]
+        public void Burn_ApplyWithDamage_UsesNewDamage()
+        {
+            var b = new BurnStatus();
+            b.Apply(0f, 2f, 2f);
+            Assert.AreEqual(2f, b.Tick(1f));
+        }
     }
 }

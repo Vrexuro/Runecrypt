@@ -97,7 +97,7 @@ namespace Runecrypt.Game
                 DamageNumbers.Show(applied, HitKind.Steam, pos);
             }
             health.TakeDamage(applied);
-            if (hit.AppliesBurn && !health.IsDead) burn.Apply(Time.time);
+            if (hit.AppliesBurn && !health.IsDead) burn.Apply(Time.time, hit.BurnDuration, hit.BurnDamagePerTick);
         }
 
         public void Blind(float until) => blindUntil = Mathf.Max(blindUntil, until);

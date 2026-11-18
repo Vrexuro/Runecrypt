@@ -42,6 +42,33 @@ namespace Runecrypt.Tests
             h.TakeDamage(-2);
             Assert.AreEqual(6f, h.Current);
         }
+
+        [Test]
+        public void SetMax_Raise_KeepsCurrent()
+        {
+            var h = new Health(6);
+            h.SetMax(8);
+            Assert.AreEqual(6f, h.Current);
+            h.Heal(8);
+            Assert.AreEqual(8f, h.Current);
+        }
+
+        [Test]
+        public void SetMax_Lower_ClampsCurrent()
+        {
+            var h = new Health(6);
+            h.SetMax(4);
+            Assert.AreEqual(4f, h.Current);
+        }
+
+        [Test]
+        public void Heal_WhenDead_DoesNothing()
+        {
+            var h = new Health(6);
+            h.TakeDamage(6);
+            h.Heal(3);
+            Assert.AreEqual(0f, h.Current);
+        }
     }
 
     public class LightRulesTests

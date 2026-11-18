@@ -5,7 +5,8 @@ namespace Runecrypt.Core
     public class BurnStatus
     {
         const float Epsilon = 1e-4f;
-        readonly float damagePerTick, duration, tickInterval;
+        readonly float tickInterval;
+        float damagePerTick, duration;
         float end = float.NegativeInfinity;
         float nextTick;
 
@@ -18,8 +19,13 @@ namespace Runecrypt.Core
 
         public bool IsActive(float now) => now <= end + Epsilon;
 
-        public void Apply(float now)
+        public void Apply(float now) => Apply(now, duration, damagePerTick);
+
+        // Durasi dan damage mengikuti stat penyerang (Abu Pekat, Bara Tak Padam); apply terakhir yang berlaku.
+        public void Apply(float now, float duration, float damagePerTick)
         {
+            this.duration = duration;
+            this.damagePerTick = damagePerTick;
             if (!IsActive(now)) nextTick = now + tickInterval;
             end = now + duration;
         }
