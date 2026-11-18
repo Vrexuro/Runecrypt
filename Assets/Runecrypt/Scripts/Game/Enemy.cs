@@ -14,6 +14,8 @@ namespace Runecrypt.Game
         [SerializeField] GameObject burnLight;
         [SerializeField] HitFlash hitFlash;
         [SerializeField] GameObject homingMarker;
+        [SerializeField] GameObject blindIcon;
+        [SerializeField] GameObject stunIcon;
         [SerializeField] float knockbackSpeed = 4f;
         [SerializeField] float knockbackDamping = 12f;
 
@@ -29,7 +31,7 @@ namespace Runecrypt.Game
         Rigidbody2D body;
         Health health;
         readonly BurnStatus burn = new BurnStatus();
-        float blindUntil, nextWanderChange, nextContact, markedUntil;
+        float blindUntil, stunUntil, nextWanderChange, nextContact, markedUntil;
         Vector2 wanderDir, knock, lastHitPoint;
 
         bool IsLitNow => LightFieldHost.Field.IsLit(body.position);
@@ -51,7 +53,9 @@ namespace Runecrypt.Game
         void Update()
         {
             float now = Time.time;
-            if (homingMarker != null && homingMarker.activeSelf != now < markedUntil) homingMarker.SetActive(now < markedUntil);
+            SetShown(homingMarker, now < markedUntil);
+            SetShown(blindIcon, now < blindUntil);
+            SetShown(stunIcon, now < stunUntil);
             float burnDamage = burn.Tick(now);
             if (burnDamage > 0f)
             {
@@ -67,7 +71,8 @@ namespace Runecrypt.Game
         {
             float now = Time.time;
             Vector2 dir;
-            if (now < blindUntil)
+            if (now < stunUntil) dir = Vector2.zero;
+            else if (now < blindUntil)
             {
                 if (now >= nextWanderChange)
                 {
@@ -113,12 +118,19 @@ namespace Runecrypt.Game
             if (hit.AppliesBurn && !health.IsDead) burn.Apply(Time.time, hit.BurnDuration, hit.BurnDamagePerTick);
         }
 
+        static void SetShown(GameObject go, bool shown)
+        {
+            if (go != null && go.activeSelf != shown) go.SetActive(shown);
+        }
+
         public void Blind(float until) => blindUntil = Mathf.Max(blindUntil, until);
+        // Stun (GDD §5.4): diam sesaat dan tidak menyerang. Knockback tetap berlaku. Dipakai Ledakan Cahaya (M3).
+        public void Stun(float until) => stunUntil = Mathf.Max(stunUntil, until);
 
         void OnCollisionStay2D(Collision2D c)
         {
             // Musuh yang buta oleh Uap tidak menyerang (GDD §5.4).
-            if (Time.time < nextContact || Time.time < blindUntil) return;
+            if (Time.time < nextContact || Time.time < blindUntil || Time.time < stunUntil) return;
             var player = c.collider.GetComponent<PlayerController>();
             if (player == null) return;
             player.TakeHit(new HitInfo(definition.contactDamage, definition.element, false, body.position));

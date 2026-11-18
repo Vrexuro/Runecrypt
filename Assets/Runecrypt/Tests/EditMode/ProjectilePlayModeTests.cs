@@ -15,10 +15,10 @@ namespace Runecrypt.Tests
     {
         const float X = 100f;
 
-        internal static Enemy MakeEnemy(Vector2 pos, float hp)
+        internal static Enemy MakeEnemy(Vector2 pos, float hp, float speed = 0f, float contactInterval = 1f)
         {
             var d = ScriptableObject.CreateInstance<EnemyDefinition>();
-            d.maxHp = hp; d.moveSpeed = 0f;
+            d.maxHp = hp; d.moveSpeed = speed; d.contactInterval = contactInterval;
             var go = new GameObject("TestEnemy");
             go.SetActive(false);
             go.transform.position = pos;
@@ -171,11 +171,12 @@ namespace Runecrypt.Tests
         }
 
         // Pemain uji di x ≥ 100. Field serial diisi sebelum Awake.
-        internal static PlayerController MakePlayer(Fireball fireballPrefab = null, LightSourceBehaviour light = null)
+        internal static PlayerController MakePlayer(Fireball fireballPrefab = null, LightSourceBehaviour light = null,
+            float y = 10f)
         {
             var go = new GameObject("TestPlayer");
             go.SetActive(false);
-            go.transform.position = new Vector2(X, 10f);
+            go.transform.position = new Vector2(X, y);
             go.AddComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Kinematic;
             go.AddComponent<CircleCollider2D>().radius = 0.35f;
             var pc = go.AddComponent<PlayerController>();
@@ -275,6 +276,37 @@ namespace Runecrypt.Tests
             int clouds = Object.FindObjectsByType<SteamCloud>(FindObjectsSortMode.None).Length - before;
             yield return new ExitPlayMode();
             Assert.AreEqual(1, clouds, "Kobaran dihitung sebagai api, jadi memicu Uap tepat sekali");
+        }
+        // Stun (GDD §5.4, dipakai Ledakan Cahaya di M3): musuh diam sesaat.
+        [UnityTest]
+        public IEnumerator StunnedEnemy_DoesNotChase()
+        {
+            yield return new EnterPlayMode();
+            MakePlayer(y: 60f);
+            var e = MakeEnemy(new Vector2(X + 5f, 60f), 100f, speed: 2f);
+            e.Stun(Time.time + 5f);
+            Vector2 start = e.transform.position;
+            yield return Steps(20);
+            float drift = Vector2.Distance(start, e.transform.position);
+            yield return new ExitPlayMode();
+            Assert.Less(drift, 0.05f);
+        }
+
+        // Musuh yang sudah menempel pada pemain lalu terkena stun tidak boleh terus melukai.
+        [UnityTest]
+        public IEnumerator StunnedEnemy_DoesNotDamagePlayer()
+        {
+            yield return new EnterPlayMode();
+            var pc = MakePlayer(y: 70f);
+            var e = MakeEnemy(new Vector2(X + 1.2f, 70f), 100f, speed: 3f, contactInterval: 0.1f);
+            for (int i = 0; i < 50 && pc.Health.Current >= 6f; i++) yield return Steps(1);
+            float hpAtStun = pc.Health.Current;
+            e.Stun(Time.time + 5f);
+            yield return Steps(80);
+            float hpAfter = pc.Health.Current;
+            yield return new ExitPlayMode();
+            Assert.Less(hpAtStun, 6f, "prasyarat: musuh sempat menyentuh pemain sebelum stun");
+            Assert.AreEqual(hpAtStun, hpAfter, "musuh yang stun tidak menyerang");
         }
     }
 }
