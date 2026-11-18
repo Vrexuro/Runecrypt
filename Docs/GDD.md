@@ -455,6 +455,7 @@ Usulan desain dari sesi baseline (belum diputuskan, dibahas lewat brainstorming)
 | 0.1 | 17 Nov 2026 | Draf pertama GDD versi 2D (pindah dari konsep 3D) |
 | 0.2 | 17 Nov 2026 | M1.5 juice dan suara: angka feedback, gaya mati per musuh, SFX dari CC0, kredit aset |
 | 0.3 | 18 Nov 2026 | Dari usulan user setelah baseline M1: kenaikan kesulitan per ruangan dan per lantai, batas 8 musuh, 3 jenis pintu dan Gerbang Segel, peti boss (hadiah, Mimik, kutukan), cutscene peti, komik pembuka, cerita per lantai |
+| 0.4 | 18 Nov 2026 | M2 mesin konten: relic sebagai data (daftar modifier stat yang bertumpuk), relic 1–10 bisa dimainkan, Kobaran (klik kanan / RT / Shift kiri), status Stun, garis tepi jingga untuk musuh Tersingkap |
 
 **Kredit aset:** semua sprite dibuat sendiri lewat script Python. SFX memakai paket berikut, semuanya berlisensi CC0 (domain publik), dipotong dan dicampur lewat `ArtSource/scripts/make_sfx_cc0.py`:
 
