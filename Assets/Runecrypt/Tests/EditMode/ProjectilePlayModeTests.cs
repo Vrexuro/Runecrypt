@@ -328,5 +328,53 @@ namespace Runecrypt.Tests
             Assert.AreEqual(1, count);
             Assert.IsTrue(gone);
         }
+        // Review akhir M2 #1: cahaya bola api sendiri tidak boleh membuat sasaran pierce Tersingkap (GDD §5.5).
+        [UnityTest]
+        public IEnumerator Pierce_OwnLightDoesNotExposeTarget()
+        {
+            yield return new EnterPlayMode();
+            var a = MakeEnemy(new Vector2(X + 2f, 90f), 100f);
+            var b = MakeEnemy(new Vector2(X + 4f, 90f), 100f);
+            yield return Steps(2);
+            MakeFireball(new Vector2(X, 90f), withLight: true).Launch(Vector2.right, Shot(pierce: 1));
+            yield return Steps(40);
+            float lostA = 100f - a.CurrentHp, lostB = 100f - b.CurrentHp;
+            yield return new ExitPlayMode();
+            Assert.AreEqual(3f, lostA, 1e-4f, "sasaran yang ditembus tidak mendapat bonus dari cahaya bola api itu");
+            Assert.AreEqual(3f, lostB, 1e-4f);
+        }
+
+        // Review akhir M2 #2 (Review Focus 3): bola api yang menukik ke sudut cekung memantul dua kali dan
+        // kembali ke dalam ruangan, tidak tembus dan tidak berbalik arah secara keliru.
+        [UnityTest]
+        public IEnumerator Bounce_InCorner_ReturnsIntoRoom() => CornerBounce(new Vector2(1f, 0.8f), 100f);
+
+        // Dibidik tepat ke titik sudut (dikurangi jari-jari bola api): kedua dinding kena dalam satu langkah.
+        [UnityTest]
+        public IEnumerator Bounce_ExactlyIntoCorner_ReturnsIntoRoom() => CornerBounce(new Vector2(2.3f, 1.3f), 110f);
+
+        static IEnumerator CornerBounce(Vector2 dir, float Y)
+        {
+            yield return new EnterPlayMode();
+            var right = new GameObject("WallR") { layer = LayerMask.NameToLayer("Walls") };
+            right.transform.position = new Vector2(X + 3f, Y);
+            right.AddComponent<BoxCollider2D>().size = new Vector2(1f, 6f);
+            var top = new GameObject("WallT") { layer = LayerMask.NameToLayer("Walls") };
+            top.transform.position = new Vector2(X, Y + 2f);
+            top.AddComponent<BoxCollider2D>().size = new Vector2(7f, 1f);
+            var fb = MakeFireball(new Vector2(X, Y));
+            fb.Launch(dir, Shot(bounce: 2, range: 30f));
+            yield return Steps(30);
+            yield return null;
+            bool alive = fb != null;
+            Vector2 pos = alive ? (Vector2)fb.transform.position : Vector2.zero;
+            Vector2 v = alive ? fb.GetComponent<Rigidbody2D>().linearVelocity : Vector2.zero;
+            yield return new ExitPlayMode();
+            Assert.IsTrue(alive, "dua pantulan tersedia, bola api belum boleh hancur");
+            Assert.Less(pos.x, X + 2.5f, "tidak tembus dinding kanan");
+            Assert.Less(pos.y, Y + 1.5f, "tidak tembus dinding atas");
+            Assert.Less(v.x, 0f, "kembali ke dalam ruangan (ke kiri)");
+            Assert.Less(v.y, 0f, "kembali ke dalam ruangan (ke bawah)");
+        }
     }
 }

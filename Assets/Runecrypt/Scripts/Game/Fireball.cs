@@ -90,15 +90,14 @@ namespace Runecrypt.Game
             if (target == null || target is PlayerController) return;
             if (!hits.Add(target)) return; // pierce: sasaran yang sama hanya sekali
             bool last = pierceLeft <= 0;
-            if (last)
-            {
-                spent = true;
-                // Cahaya bola api ini sendiri tidak ikut membuat sasarannya Tersingkap (GDD §5.5).
-                foreach (var light in GetComponentsInChildren<LightSourceBehaviour>()) light.enabled = false;
-            }
+            if (last) spent = true;
+            // Cahaya bola api ini sendiri tidak ikut membuat sasarannya Tersingkap (GDD §5.5), juga saat menembus.
+            var lights = GetComponentsInChildren<LightSourceBehaviour>();
+            foreach (var light in lights) light.enabled = false;
             target.TakeHit(new HitInfo(shot.Damage, Element.Fire, true, body.position, shot.BurnDuration, shot.BurnDamagePerTick));
-            if (last) Destroy(gameObject);
-            else pierceLeft--;
+            if (last) { Destroy(gameObject); return; }
+            pierceLeft--;
+            foreach (var light in lights) light.enabled = true;
         }
     }
 }
