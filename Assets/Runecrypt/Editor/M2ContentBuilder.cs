@@ -8,13 +8,12 @@ using UnityEngine;
 namespace Runecrypt.EditorTools
 {
     // M2 (Docs/plans/2026-11-18-m2-mesin-konten.md Task 9): 10 relic data, prefab Kobaran dan pickup relic,
-    // material garis tepi, serta anak-anak musuh (garis tepi, ikon status, penanda homing).
+    // serta anak-anak musuh (ikon status, penanda homing).
     // Dipanggil dari M1ActorBuilder supaya "Runecrypt/M1/Build All" tetap mereproduksi scene.
     public static class M2ContentBuilder
     {
         const string RelicDir = "Assets/Runecrypt/Data/Relics/";
         const string PrefabDir = "Assets/Runecrypt/Prefabs/";
-        const string MaterialDir = "Assets/Runecrypt/Materials/";
         const string JuiceArt = "Assets/Runecrypt/Art/Juice/";
         const string UnlitMat = "Packages/com.unity.render-pipelines.universal/Runtime/Materials/Sprite-Unlit-Default.mat";
 
@@ -23,19 +22,16 @@ namespace Runecrypt.EditorTools
             public List<RelicDefinition> relics;
             public BlazeRing blaze;
             public RelicPickup pickup;
-            public Material outline;
         }
 
         public static Assets BuildAssets(FeedbackProfile pickupProfile)
         {
             Directory.CreateDirectory(RelicDir);
-            Directory.CreateDirectory(MaterialDir);
             var a = new Assets
             {
                 relics = BuildRelics(),
                 blaze = BuildBlaze(),
                 pickup = BuildPickup(pickupProfile),
-                outline = OutlineMaterial(),
             };
             AssetDatabase.SaveAssets();
             return a;
@@ -119,16 +115,8 @@ namespace Runecrypt.EditorTools
         }
 
         // Anak musuh M2. Dipanggil dari M1ActorBuilder.BuildEnemyPrefab sebelum prefab disimpan.
-        public static void AddEnemyParts(GameObject go, Enemy enemy, Material outlineMat)
+        public static void AddEnemyParts(GameObject go, Enemy enemy)
         {
-            var body = go.GetComponent<SpriteRenderer>();
-            var child = new GameObject("Outline");
-            child.transform.SetParent(go.transform, false);
-            var sr = child.AddComponent<SpriteRenderer>();
-            sr.sharedMaterial = outlineMat;
-            var outline = child.AddComponent<ExposedOutline>();
-            outline.SetSource(body);
-            Set(enemy, "outline", outline);
             Set(enemy, "blindIcon", Icon(go, "BlindIcon", "icon_blind", new Vector2(0f, 0.75f)));
             Set(enemy, "stunIcon", Icon(go, "StunIcon", "icon_stun", new Vector2(0f, 0.75f)));
             Set(enemy, "homingMarker", Icon(go, "HomingMarker", "homing_marker", new Vector2(0.45f, 0.45f)));
@@ -145,16 +133,6 @@ namespace Runecrypt.EditorTools
             sr.sortingOrder = 6;
             go.SetActive(false);
             return go;
-        }
-
-        static Material OutlineMaterial()
-        {
-            const string path = MaterialDir + "SpriteOutline.mat";
-            var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
-            if (mat != null) return mat;
-            mat = new Material(Shader.Find("Runecrypt/SpriteOutline"));
-            AssetDatabase.CreateAsset(mat, path);
-            return mat;
         }
 
         static void Set(Object target, string field, Object value)

@@ -5,8 +5,8 @@ namespace Runecrypt.EditorTools
     // Semua PNG di Assets/Runecrypt/Art otomatis jadi sprite pixel art 16 PPU (GDD §7.1).
     public class PixelArtImporter : AssetPostprocessor
     {
-        // Naikkan saat aturan impor berubah supaya Unity mengimpor ulang sprite lama (2: FullRect untuk SpriteOutline).
-        public override uint GetVersion() => 2;
+        // Naikkan saat aturan impor berubah supaya Unity mengimpor ulang sprite lama (3: kembali ke mesh Tight setelah garis tepi Tersingkap dihapus).
+        public override uint GetVersion() => 3;
 
         void OnPreprocessTexture()
         {
@@ -19,10 +19,9 @@ namespace Runecrypt.EditorTools
             ti.textureCompression = TextureImporterCompression.Uncompressed;
             ti.mipmapEnabled = false;
             ti.alphaIsTransparency = true;
-            // FullRect: garis tepi Tersingkap (SpriteOutline) menggambar di piksel kosong sekitar bentuk sprite.
             var settings = new TextureImporterSettings();
             ti.ReadTextureSettings(settings);
-            settings.spriteMeshType = UnityEngine.SpriteMeshType.FullRect;
+            settings.spriteMeshType = UnityEngine.SpriteMeshType.Tight;
             ti.SetTextureSettings(settings);
         }
     }

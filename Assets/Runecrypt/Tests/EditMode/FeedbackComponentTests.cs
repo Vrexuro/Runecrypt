@@ -22,30 +22,6 @@ namespace Runecrypt.Tests
             Object.DestroyImmediate(parent.gameObject); Object.DestroyImmediate(flash.gameObject);
         }
 
-        // M2 (GDD §5.5 aturan 1): garis tepi jingga mengikuti sprite musuh dan hanya tampil saat Tersingkap.
-        [Test]
-        public void ExposedOutline_CopiesSpriteAndHidesWhenNotVisible()
-        {
-            var tex = new Texture2D(4, 4);
-            var sprite = Sprite.Create(tex, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f), 16);
-            var parent = new GameObject("P").AddComponent<SpriteRenderer>();
-            parent.sprite = sprite; parent.flipX = true; parent.sortingOrder = 5;
-            var outline = new GameObject("O").AddComponent<SpriteRenderer>().gameObject.AddComponent<ExposedOutline>();
-            outline.SetSource(parent);
-            var sr = outline.GetComponent<SpriteRenderer>();
-
-            outline.SetVisible(true); outline.Apply();
-            Assert.AreSame(sprite, sr.sprite);
-            Assert.IsTrue(sr.flipX);
-            Assert.AreEqual(4, sr.sortingOrder, "di belakang tubuh musuh");
-            Assert.IsTrue(sr.enabled);
-
-            outline.SetVisible(false); outline.Apply();
-            Assert.IsFalse(sr.enabled, "musuh di gelap hanya terlihat matanya");
-            Object.DestroyImmediate(parent.gameObject); Object.DestroyImmediate(outline.gameObject);
-            Object.DestroyImmediate(sprite); Object.DestroyImmediate(tex);
-        }
-
         [Test]
         public void Registry_CapDropsOldest()
         {

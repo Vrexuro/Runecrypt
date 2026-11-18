@@ -159,7 +159,7 @@ namespace Runecrypt.EditorTools
             Set(enemy, "lightRules", rules);
             Set(enemy, "burnLight", burn.gameObject);
             Set(enemy, "hitFlash", M1JuiceBuilder.AddHitFlash(go));
-            M2ContentBuilder.AddEnemyParts(go, enemy, m2.outline);
+            M2ContentBuilder.AddEnemyParts(go, enemy);
             return SavePrefab(go, "TulangPenjaga");
         }
 
