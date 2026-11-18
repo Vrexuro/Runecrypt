@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Runecrypt.Core;
 using UnityEngine;
 
@@ -12,18 +13,23 @@ namespace Runecrypt.Game
         [SerializeField] LightRules lightRules;
         [SerializeField] GameObject burnLight;
         [SerializeField] HitFlash hitFlash;
+        [SerializeField] GameObject homingMarker;
         [SerializeField] float knockbackSpeed = 4f;
         [SerializeField] float knockbackDamping = 12f;
 
         const float KillFlashTime = 0.06f;
 
         public static event Action<Enemy> AnyDied;
+        static readonly List<Enemy> active = new List<Enemy>();
+        // Musuh hidup yang bisa dikejar homing. Musuh yang mati dinonaktifkan, jadi otomatis keluar.
+        public static IReadOnlyList<Enemy> Active => active;
         public EnemyDefinition Definition => definition;
+        public float CurrentHp => health.Current;
 
         Rigidbody2D body;
         Health health;
         readonly BurnStatus burn = new BurnStatus();
-        float blindUntil, nextWanderChange, nextContact;
+        float blindUntil, nextWanderChange, nextContact, markedUntil;
         Vector2 wanderDir, knock, lastHitPoint;
 
         bool IsLitNow => LightFieldHost.Field.IsLit(body.position);
@@ -36,9 +42,16 @@ namespace Runecrypt.Game
             if (burnLight != null) burnLight.SetActive(false);
         }
 
+        void OnEnable() => active.Add(this);
+        void OnDisable() => active.Remove(this);
+
+        // Penanda bara pada musuh yang sedang dikejar homing (GDD §5.5 aturan 2).
+        public void MarkTargeted(float now) => markedUntil = now + 0.1f;
+
         void Update()
         {
             float now = Time.time;
+            if (homingMarker != null && homingMarker.activeSelf != now < markedUntil) homingMarker.SetActive(now < markedUntil);
             float burnDamage = burn.Tick(now);
             if (burnDamage > 0f)
             {
