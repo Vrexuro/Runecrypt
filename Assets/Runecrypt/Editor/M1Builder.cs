@@ -96,6 +96,9 @@ namespace Runecrypt.EditorTools
                 else floor.SetTile(cell, floorTile);
                 if (pillar) obstacles.SetTile(cell, wallTile);
             }
+            // Tanpa ini collider dinding tetap kosong saat scene disimpan, dan pemain bisa menembus dinding.
+            walls.GetComponent<TilemapCollider2D>().ProcessTilemapChanges();
+            walls.GetComponent<CompositeCollider2D>().GenerateGeometry();
 
             // Satu objek per pilar: BoxCollider2D + ShadowCaster2D (di editor, caster memakai bentuk collider).
             foreach (var r in Pillars)
