@@ -27,11 +27,14 @@ namespace Runecrypt.Core
 
         public void Unregister(ILightSource s) => sources.Remove(s);
 
-        public bool IsLit(Vector2 point)
+        public bool IsLit(Vector2 point) => IsLit(point, null);
+
+        // ignore: cahaya milik bola api yang sedang mencari sasaran tidak ikut dihitung (GDD §5.5 aturan 2).
+        public bool IsLit(Vector2 point, ILightSource ignore)
         {
             foreach (var s in sources)
             {
-                if (!s.IsOn) continue;
+                if (!s.IsOn || s == ignore) continue;
                 if ((point - s.Position).sqrMagnitude > s.Radius * s.Radius) continue;
                 if (!isBlocked(s.Position, point)) return true;
             }
