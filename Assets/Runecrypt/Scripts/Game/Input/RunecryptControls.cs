@@ -155,6 +155,16 @@ namespace Runecrypt.Game
                     ""priority"": 0
                 },
                 {
+                    ""name"": ""Blaze"",
+                    ""type"": ""Button"",
+                    ""id"": ""ce4056f4-7be2-46a2-8bef-e8552f9246a6"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
+                },
+                {
                     ""name"": ""Restart"",
                     ""type"": ""Button"",
                     ""id"": ""394d4399-f0d1-4c0f-b521-bbfe6fb80148"",
@@ -363,6 +373,39 @@ namespace Runecrypt.Game
                     ""action"": ""Restart"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""346676fc-334d-4189-a271-edfca4be87c9"",
+                    ""path"": ""<Mouse>/rightButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""KeyboardMouse"",
+                    ""action"": ""Blaze"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""12e62e80-f5f2-440a-a7ca-c8948ec72f39"",
+                    ""path"": ""<Keyboard>/leftShift"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""KeyboardMouse"",
+                    ""action"": ""Blaze"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""7958e780-01d3-4c28-a505-0024df19e164"",
+                    ""path"": ""<Gamepad>/rightTrigger"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Gamepad"",
+                    ""action"": ""Blaze"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -405,6 +448,7 @@ namespace Runecrypt.Game
             m_Gameplay_AimKeys = m_Gameplay.FindAction("AimKeys", throwIfNotFound: true);
             m_Gameplay_Fire = m_Gameplay.FindAction("Fire", throwIfNotFound: true);
             m_Gameplay_Dash = m_Gameplay.FindAction("Dash", throwIfNotFound: true);
+            m_Gameplay_Blaze = m_Gameplay.FindAction("Blaze", throwIfNotFound: true);
             m_Gameplay_Restart = m_Gameplay.FindAction("Restart", throwIfNotFound: true);
         }
 
@@ -492,6 +536,7 @@ namespace Runecrypt.Game
         private readonly InputAction m_Gameplay_AimKeys;
         private readonly InputAction m_Gameplay_Fire;
         private readonly InputAction m_Gameplay_Dash;
+        private readonly InputAction m_Gameplay_Blaze;
         private readonly InputAction m_Gameplay_Restart;
         /// <summary>
         /// Provides access to input actions defined in input action map "Gameplay".
@@ -528,6 +573,10 @@ namespace Runecrypt.Game
             /// Provides access to the underlying input action "Gameplay/Dash".
             /// </summary>
             public InputAction @Dash => m_Wrapper.m_Gameplay_Dash;
+            /// <summary>
+            /// Provides access to the underlying input action "Gameplay/Blaze".
+            /// </summary>
+            public InputAction @Blaze => m_Wrapper.m_Gameplay_Blaze;
             /// <summary>
             /// Provides access to the underlying input action "Gameplay/Restart".
             /// </summary>
@@ -576,6 +625,9 @@ namespace Runecrypt.Game
                 @Dash.started += instance.OnDash;
                 @Dash.performed += instance.OnDash;
                 @Dash.canceled += instance.OnDash;
+                @Blaze.started += instance.OnBlaze;
+                @Blaze.performed += instance.OnBlaze;
+                @Blaze.canceled += instance.OnBlaze;
                 @Restart.started += instance.OnRestart;
                 @Restart.performed += instance.OnRestart;
                 @Restart.canceled += instance.OnRestart;
@@ -608,6 +660,9 @@ namespace Runecrypt.Game
                 @Dash.started -= instance.OnDash;
                 @Dash.performed -= instance.OnDash;
                 @Dash.canceled -= instance.OnDash;
+                @Blaze.started -= instance.OnBlaze;
+                @Blaze.performed -= instance.OnBlaze;
+                @Blaze.canceled -= instance.OnBlaze;
                 @Restart.started -= instance.OnRestart;
                 @Restart.performed -= instance.OnRestart;
                 @Restart.canceled -= instance.OnRestart;
@@ -719,6 +774,13 @@ namespace Runecrypt.Game
             /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
             /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
             void OnDash(InputAction.CallbackContext context);
+            /// <summary>
+            /// Method invoked when associated input action "Blaze" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+            /// </summary>
+            /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+            /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+            /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+            void OnBlaze(InputAction.CallbackContext context);
             /// <summary>
             /// Method invoked when associated input action "Restart" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
             /// </summary>

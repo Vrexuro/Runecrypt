@@ -230,5 +230,51 @@ namespace Runecrypt.Tests
             yield return new ExitPlayMode();
             Assert.AreEqual(3.75f, r, 1e-4f, "Lentera Tulang: radius cahaya +25%");
         }
+        static BlazeRing MakeBlaze(Vector2 pos)
+        {
+            var go = new GameObject("Blaze");
+            go.SetActive(false);
+            go.transform.position = pos;
+            var light = new GameObject("Light");
+            light.transform.SetParent(go.transform, false);
+            light.SetActive(false);
+            var src = light.AddComponent<LightSourceBehaviour>();
+            var ring = go.AddComponent<BlazeRing>();
+            var so = new SerializedObject(ring);
+            so.FindProperty("lightSource").objectReferenceValue = src;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            go.SetActive(true);
+            return ring;
+        }
+
+        // Kobaran (GDD §4.1): radius 2,5 tile, damage 6. Cahayanya menyala sebelum damage, jadi musuh di dalam
+        // ring Tersingkap: 6 × 1,25 = 7,5.
+        [UnityTest]
+        public IEnumerator Blaze_DamagesEnemiesInRadius_WithLitBonus()
+        {
+            yield return new EnterPlayMode();
+            var near = MakeEnemy(new Vector2(X + 2f, 30f), 100f);
+            var far = MakeEnemy(new Vector2(X + 3f, 30f), 100f);
+            yield return Steps(2);
+            MakeBlaze(new Vector2(X, 30f)).Init(6f, 2.5f, 2f, 1f);
+            float lostNear = 100f - near.CurrentHp, lostFar = 100f - far.CurrentHp;
+            yield return new ExitPlayMode();
+            Assert.AreEqual(7.5f, lostNear, 1e-4f);
+            Assert.AreEqual(0f, lostFar);
+        }
+
+        [UnityTest]
+        public IEnumerator Blaze_TriggersFrostPuddle()
+        {
+            yield return new EnterPlayMode();
+            var puddle = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Runecrypt/Prefabs/FrostPuddle.prefab");
+            Object.Instantiate(puddle, new Vector3(X + 1f, 40f, 0f), Quaternion.identity);
+            yield return Steps(2);
+            int before = Object.FindObjectsByType<SteamCloud>(FindObjectsSortMode.None).Length;
+            MakeBlaze(new Vector2(X, 40f)).Init(6f, 2.5f, 2f, 1f);
+            int clouds = Object.FindObjectsByType<SteamCloud>(FindObjectsSortMode.None).Length - before;
+            yield return new ExitPlayMode();
+            Assert.AreEqual(1, clouds, "Kobaran dihitung sebagai api, jadi memicu Uap tepat sekali");
+        }
     }
 }

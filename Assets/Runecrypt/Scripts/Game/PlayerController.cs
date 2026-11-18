@@ -22,6 +22,12 @@ namespace Runecrypt.Game
         [SerializeField] LightSourceBehaviour lightSource;
         [SerializeField] float baseLightRadius = 3f;
 
+        [Header("Kobaran (GDD §4.1)")]
+        [SerializeField] BlazeRing blazePrefab;
+        [SerializeField] float blazeCooldown = 6f;
+        [SerializeField] float blazeRadius = 2.5f;
+        [SerializeField] float blazeDamage = 6f;
+
         [Header("Umpan balik (M1.5)")]
         [SerializeField] FeedbackProfile shotProfile;
         [SerializeField] FeedbackProfile hurtProfile;
@@ -43,7 +49,7 @@ namespace Runecrypt.Game
         RunecryptControls controls;
         Rigidbody2D body;
         Camera cam;
-        Cooldown fire, dash;
+        Cooldown fire, dash, blaze;
         Vector2 aim = Vector2.right;
         Vector2 dashVelocity;
         float dashUntil, invulnerableUntil, blinkUntil;
@@ -56,6 +62,7 @@ namespace Runecrypt.Game
             controls = new RunecryptControls();
             fire = new Cooldown(1f / shotsPerSecond);
             dash = new Cooldown(dashCooldown);
+            blaze = new Cooldown(blazeCooldown);
             Health = new Health(maxHp);
             Health.Died += OnDied;
             Recalculate();
@@ -76,6 +83,7 @@ namespace Runecrypt.Game
         {
             fire.Seconds = 1f / Mathf.Max(0.5f, Stats.Get(Stat.FireRate, shotsPerSecond));
             dash.Seconds = Stats.Get(Stat.DashCooldown, dashCooldown);
+            blaze.Seconds = Stats.Get(Stat.BlazeCooldown, blazeCooldown);
             speed = Stats.Get(Stat.MoveSpeed, moveSpeed);
             Health.SetMax(Stats.Get(Stat.MaxHp, maxHp));
             if (lightSource != null) lightSource.Radius = Stats.Get(Stat.LightRadius, baseLightRadius);
@@ -111,6 +119,14 @@ namespace Runecrypt.Game
             {
                 bool dim = now < blinkUntil && (int)((blinkUntil - now) / BlinkInterval) % 2 == 0;
                 SetBodyAlpha(dim ? BlinkAlpha : 1f);
+            }
+
+            if (g.Blaze.WasPressedThisFrame() && blaze.IsReady(now) && blazePrefab != null)
+            {
+                blaze.Start(now);
+                var shot = Stats.Shot(fireballPrefab.Defaults);
+                Instantiate(blazePrefab, body.position, Quaternion.identity)
+                    .Init(Stats.Get(Stat.BlazeDamage, blazeDamage), blazeRadius, shot.BurnDuration, shot.BurnDamagePerTick);
             }
 
             if (g.Dash.WasPressedThisFrame() && dash.IsReady(now))
