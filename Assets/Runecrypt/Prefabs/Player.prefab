@@ -305,6 +305,12 @@ MonoBehaviour:
   hitInvulnerability: 0.8
   muzzleOffset: 0.5
   fireballPrefab: {fileID: 2316188306512192739, guid: fd5fdf6224eed7d448d5e9506ed1faab, type: 3}
+  lightSource: {fileID: 7370025515934970010}
+  baseLightRadius: 3
+  blazePrefab: {fileID: 6078801833246174535, guid: 2eec6989be3529f499108fd34b70ab5d, type: 3}
+  blazeCooldown: 6
+  blazeRadius: 2.5
+  blazeDamage: 6
   shotProfile: {fileID: 11400000, guid: f5646d1d25ab1f74c9d95cff42c01ffd, type: 2}
   hurtProfile: {fileID: 11400000, guid: c26da699135d9314c89b5e74a9935925, type: 2}
   hitFlash: {fileID: 5265014972649927636}

@@ -17,6 +17,15 @@ namespace Runecrypt.Game
         [SerializeField] float spawnFade = 0.5f;
         [SerializeField] int maxPerWave = 6;
 
+        // shortcut: pickup relic setiap gelombang hanya untuk mencoba relic di M2, diganti ruang harta di M4.
+        [Header("Relic (M2)")]
+        [SerializeField] List<RelicDefinition> relicPool = new List<RelicDefinition>();
+        [SerializeField] RelicPickup relicPickupPrefab;
+        [SerializeField] Vector2 pickupPoint;
+
+        readonly System.Random rng = new System.Random();
+        RelicPickup currentPickup;
+
         RunecryptControls controls;
         PlayerController player;
         int wave, alive;
@@ -99,7 +108,20 @@ namespace Runecrypt.Game
         void OnEnemyDied(Enemy e)
         {
             alive = Mathf.Max(0, alive - 1);
-            if (alive == 0) nextWaveAt = Time.time + waveDelay;
+            if (alive == 0)
+            {
+                nextWaveAt = Time.time + waveDelay;
+                SpawnRelicPickup();
+            }
+        }
+
+        void SpawnRelicPickup()
+        {
+            if (relicPickupPrefab == null || player == null || currentPickup != null) return;
+            var relic = RelicPicker.PickUnowned(relicPool, player.Relics, rng);
+            if (relic == null) return; // semua relic sudah dimiliki
+            currentPickup = Instantiate(relicPickupPrefab, pickupPoint, Quaternion.identity);
+            currentPickup.Init(relic);
         }
 
         void OnPlayerDied()
@@ -123,7 +145,10 @@ namespace Runecrypt.Game
             var style = new GUIStyle(GUI.skin.label) { fontSize = 22 };
             style.normal.textColor = Color.white;
             float hp = player != null ? player.Health.Current : 0f;
-            GUI.Label(new Rect(16, 12, 600, 30), $"HP {hp:0.#}/6   Gelombang {wave}   FPS {fps:0}", style);
+            float maxHp = player != null ? player.Health.Max : 6f;
+            GUI.Label(new Rect(16, 12, 600, 30), $"HP {hp:0.#}/{maxHp:0.#}   Gelombang {wave}   FPS {fps:0}", style);
+            if (player != null && player.Relics.Count > 0)
+                GUI.Label(new Rect(16, 40, 1200, 30), "Relic: " + string.Join(", ", player.Relics.Select(r => r.displayName)), style);
 
             if (!playerDead) return;
             var big = new GUIStyle(style) { fontSize = 40, alignment = TextAnchor.MiddleCenter };

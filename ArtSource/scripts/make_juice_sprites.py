@@ -1,4 +1,5 @@
-"""Sprite juice M1.5: digit angka damage, serpihan tulang, tumpukan abu, bara, cincin uap, kepulan abu.
+"""Sprite juice M1.5 dan M2: digit angka damage, serpihan tulang, tumpukan abu, bara, cincin uap, kepulan abu,
+lalu (M2) orb relic, cincin Kobaran, ikon Buta/Stun, dan penanda homing.
 Pemakaian: python make_juice_sprites.py <folder_output>   (misalnya Assets/Runecrypt/Art/Juice)"""
 import math
 import os
@@ -99,8 +100,58 @@ for y in range(6):
             puff.putpixel((x, y), ASH + (int(230 * (1 - d) ** 0.7),))
 made.append(save(puff, "ash_puff"))
 
+# --- M2 ---
+TOMB_DARK, TOMB_MID = (26, 20, 32), (84, 66, 128)   # palet makam GDD §7.1
+GREY, GREY_LIGHT = (120, 116, 130), (170, 166, 178)
+STUN_YELLOW = (255, 226, 150)
+
+# Orb relic 16x16: bola rune gelap bertepi ungu dengan inti bara, supaya terbaca sebagai "benda berharga".
+orb = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+for y in range(16):
+    for x in range(16):
+        d = math.hypot(x - 7.5, y - 7.5)
+        if d < 6.0:
+            c = TOMB_MID if d > 4.8 else TOMB_DARK
+            if d < 2.2:
+                c = EMBER_HOT if d < 1.2 else EMBER
+            orb.putpixel((x, y), c + (255,))
+for (x, y) in [(7, 3), (8, 3), (3, 7), (12, 8), (7, 12)]:   # empat titik rune di cangkang
+    orb.putpixel((x, y), EMBER + (255,))
+made.append(save(orb, "relic_orb"))
+
+# Cincin Kobaran 48x48 (3 unit) setebal 2 piksel: luar jingga, dalam kuning.
+blaze = Image.new("RGBA", (48, 48), (0, 0, 0, 0))
+for y in range(48):
+    for x in range(48):
+        r = math.hypot(x - 23.5, y - 23.5)
+        if 21.5 <= r < 22.5:
+            blaze.putpixel((x, y), EMBER_HOT + (255,))
+        elif 22.5 <= r < 23.5:
+            blaze.putpixel((x, y), EMBER + (230,))
+made.append(save(blaze, "blaze_ring"))
+
+# Ikon status 5x5 di atas kepala musuh. Buta: pusaran abu-abu. Stun: bintik kuning.
+ICONS = {
+    "icon_blind": ([".###.", "#...#", "#.#.#", "#..#.", ".##.."], GREY, GREY_LIGHT),
+    "icon_stun": (["#...#", ".#.#.", "..#..", ".#.#.", "#...#"], STUN_YELLOW, EMBER_HOT),
+}
+for name, (rows, c1, c2) in ICONS.items():
+    im = Image.new("RGBA", (5, 5), (0, 0, 0, 0))
+    for y, row in enumerate(rows):
+        for x, ch in enumerate(row):
+            if ch == "#":
+                im.putpixel((x, y), (c2 if (x + y) % 2 == 0 else c1) + (255,))
+    made.append(save(im, name))
+
+# Penanda homing 3x3: bara kecil berbentuk plus (GDD §5.5 aturan 2).
+marker = Image.new("RGBA", (3, 3), (0, 0, 0, 0))
+for (x, y), c in [((1, 0), EMBER), ((0, 1), EMBER), ((1, 1), EMBER_HOT), ((2, 1), EMBER), ((1, 2), EMBER)]:
+    marker.putpixel((x, y), c + (255,))
+made.append(save(marker, "homing_marker"))
+
 # Self-check: jumlah dan ukuran setiap file.
-SIZES = {"digit": (3, 5), "bone": (4, 4), "ash_pile": (16, 16), "ash_embers": (16, 16), "steam_ring": (32, 32), "ash_puff": (6, 6)}
+SIZES = {"digit": (3, 5), "bone": (4, 4), "ash_pile": (16, 16), "ash_embers": (16, 16), "steam_ring": (32, 32), "ash_puff": (6, 6),
+         "relic_orb": (16, 16), "blaze_ring": (48, 48), "icon_": (5, 5), "homing_marker": (3, 3)}
 assert sum(n.startswith("digit_") for n in made) == 10
 for n in made:
     key = next(k for k in SIZES if n.startswith(k))

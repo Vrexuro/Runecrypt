@@ -47,9 +47,12 @@ namespace Runecrypt.EditorTools
             tulang.remains = juice.ashPile;
             EditorUtility.SetDirty(tulang);
 
+            // M2: relic, Kobaran, pickup, dan material garis tepi.
+            var m2 = M2ContentBuilder.BuildAssets(juice.shot);
+
             var fireball = BuildFireballPrefab();
-            var player = BuildPlayerPrefab(fireball, juice);
-            var enemy = BuildEnemyPrefab(tulang, rules);
+            var player = BuildPlayerPrefab(fireball, juice, m2);
+            var enemy = BuildEnemyPrefab(tulang, rules, m2);
 
             // Task 9: Uap + Genangan Beku.
             Directory.CreateDirectory(DataDir + "Reactions");
@@ -72,7 +75,7 @@ namespace Runecrypt.EditorTools
             Place(player, M1Builder.RoomCenter);
             Place(puddle, new Vector3(-2.5f, -3.5f, 0f));
             Place(puddle, new Vector3(6.5f, -2.5f, 0f));
-            BuildArenaDirector(enemy);
+            BuildArenaDirector(enemy, m2);
             M1JuiceBuilder.BuildSceneServices();
 
             var scene = SceneManager.GetActiveScene();
@@ -110,7 +113,7 @@ namespace Runecrypt.EditorTools
             return SavePrefab(go, "Fireball").GetComponent<Fireball>();
         }
 
-        static GameObject BuildPlayerPrefab(Fireball fireball, M1JuiceBuilder.Assets juice)
+        static GameObject BuildPlayerPrefab(Fireball fireball, M1JuiceBuilder.Assets juice, M2ContentBuilder.Assets m2)
         {
             var go = new GameObject("Player") { layer = Layer("Player") };
             var sr = go.AddComponent<SpriteRenderer>();
@@ -132,10 +135,12 @@ namespace Runecrypt.EditorTools
             Set(pc, "hitFlash", M1JuiceBuilder.AddHitFlash(go));
             Set(pc, "lightPulse", light.gameObject.AddComponent<LightPulse>());
             Set(pc, "bodySprite", sr);
+            Set(pc, "lightSource", light.GetComponent<LightSourceBehaviour>());
+            Set(pc, "blazePrefab", m2.blaze);
             return SavePrefab(go, "Player");
         }
 
-        static GameObject BuildEnemyPrefab(EnemyDefinition def, LightRules rules)
+        static GameObject BuildEnemyPrefab(EnemyDefinition def, LightRules rules, M2ContentBuilder.Assets m2)
         {
             var go = new GameObject("TulangPenjaga") { layer = Layer("Enemies") };
             var sr = go.AddComponent<SpriteRenderer>();
@@ -154,11 +159,12 @@ namespace Runecrypt.EditorTools
             Set(enemy, "lightRules", rules);
             Set(enemy, "burnLight", burn.gameObject);
             Set(enemy, "hitFlash", M1JuiceBuilder.AddHitFlash(go));
+            M2ContentBuilder.AddEnemyParts(go, enemy, m2.outline);
             return SavePrefab(go, "TulangPenjaga");
         }
 
         // Task 10: gelombang musuh dari 6 titik di sudut gelap ruangan.
-        static void BuildArenaDirector(GameObject enemyPrefab)
+        static void BuildArenaDirector(GameObject enemyPrefab, M2ContentBuilder.Assets m2)
         {
             var go = new GameObject("ArenaDirector");
             var director = go.AddComponent<ArenaDirector>();
@@ -178,6 +184,11 @@ namespace Runecrypt.EditorTools
                 sp.position = points[i];
                 arr.GetArrayElementAtIndex(i).objectReferenceValue = sp;
             }
+            var pool = so.FindProperty("relicPool");
+            pool.arraySize = m2.relics.Count;
+            for (int i = 0; i < m2.relics.Count; i++) pool.GetArrayElementAtIndex(i).objectReferenceValue = m2.relics[i];
+            so.FindProperty("relicPickupPrefab").objectReferenceValue = m2.pickup;
+            so.FindProperty("pickupPoint").vector2Value = M1Builder.RoomCenter;
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 

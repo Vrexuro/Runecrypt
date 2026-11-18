@@ -308,5 +308,25 @@ namespace Runecrypt.Tests
             Assert.Less(hpAtStun, 6f, "prasyarat: musuh sempat menyentuh pemain sebelum stun");
             Assert.AreEqual(hpAtStun, hpAfter, "musuh yang stun tidak menyerang");
         }
+        // Pickup relic di arena M2 (pengganti ruang harta sampai M4): disentuh sekali, relic masuk, pickup hilang.
+        [UnityTest]
+        public IEnumerator RelicPickup_GivesRelicOnce()
+        {
+            yield return new EnterPlayMode();
+            var pc = MakePlayer(y: 80f);
+            pc.GetComponent<Rigidbody2D>().useFullKinematicContacts = true; // pemain uji kinematic, pickup statis
+            var go = new GameObject("Pickup");
+            go.transform.position = pc.transform.position;
+            go.AddComponent<CircleCollider2D>().isTrigger = true;
+            var pickup = go.AddComponent<RelicPickup>();
+            pickup.Init(Relic(Stat.FireRate, StatOp.Percent, 0.2f));
+            yield return Steps(3);
+            yield return null;
+            int count = pc.Relics.Count;
+            bool gone = pickup == null;
+            yield return new ExitPlayMode();
+            Assert.AreEqual(1, count);
+            Assert.IsTrue(gone);
+        }
     }
 }
