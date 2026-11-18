@@ -34,7 +34,9 @@ namespace Runecrypt.Tests
             yield return null;
             bool stillThere = go != null;
             bool colliderOff = stillThere && !col.enabled;
-            yield return new WaitForSeconds(0.3f);
+            // Tunggu sampai objek hilang (maks 1 detik), bukan jeda tetap: saat editor tidak fokus satu frame bisa
+            // melompati 0,3 detik sekaligus, sehingga coroutine bangun sebelum Destroy tertunda diproses.
+            for (float t = 0f; t < 1f && go != null; t += Time.deltaTime) yield return null;
             bool goneLater = go == null;
             yield return new ExitPlayMode();
 
