@@ -14,6 +14,7 @@ namespace Runecrypt.Game
         [SerializeField] GameObject burnLight;
         [SerializeField] HitFlash hitFlash;
         [SerializeField] GameObject homingMarker;
+        [SerializeField] ExposedOutline outline;
         [SerializeField] GameObject blindIcon;
         [SerializeField] GameObject stunIcon;
         [SerializeField] float knockbackSpeed = 4f;
@@ -54,6 +55,7 @@ namespace Runecrypt.Game
         {
             float now = Time.time;
             SetShown(homingMarker, now < markedUntil);
+            if (outline != null) outline.SetVisible(!health.IsDead && IsLitNow);
             SetShown(blindIcon, now < blindUntil);
             SetShown(stunIcon, now < stunUntil);
             float burnDamage = burn.Tick(now);
