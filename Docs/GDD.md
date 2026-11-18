@@ -106,7 +106,7 @@ flowchart TD
     B --> C[3. Ruang Tutorial]
     C --> D{4. Ruangan berikutnya}
     D -->|Ruang musuh| E[5. Pertarungan: pintu terkunci]
-    E -->|Semua musuh mati| F[Hadiah: orb XP / relic]
+    E -->|Semua musuh mati| F[Hadiah: orb XP / hati]
     F -->|XP penuh| U[Pilih 1 dari 3 upgrade]
     U --> D
     F --> D
@@ -164,7 +164,7 @@ flowchart TD
 ### 4.3 Player Rewards (power-ups dan pick-ups)
 - **Orb XP:** dijatuhkan musuh dan bergerak sendiri ke pemain.
 - **Hati:** kadang jatuh dari musuh, memulihkan 2 HP.
-- **Relic:** didapat di ruang harta (pilih 1 dari 2) dan peluang kecil dari ruang musuh. Daftarnya di bagian 5.2.
+- **Relic:** sebelum boss hanya didapat di ruang harta (pilih 1 dari 2). Setiap lantai pasti punya 1 ruang harta, dan ruang harta kedua hanya muncul dengan peluang 10% (keputusan user 18 Nov 2026; angka 10% usulan Claude, disetel saat playtest). Jadi dapat 2 relic sebelum boss itu jarang, tapi bisa. Ruang musuh tidak menjatuhkan relic. Daftarnya di bagian 5.2.
 - **Upgrade level-up:** pilih 1 dari 3. Daftarnya di bagian 5.3.
 - **Peti boss:** muncul setelah boss kalah. Isinya diundi: hadiah relic (70%), Mimik (15%), atau kutukan kecil (15%). Detail di bagian 6.4.
 
@@ -238,7 +238,7 @@ Cahaya tidak hanya menentukan apa yang terlihat, tapi juga mengubah aturan perta
 
 | Aturan | Efek | Feedback |
 |---|---|---|
-| **1. Tersingkap** | Musuh di area terang menerima damage +25%. Berlaku juga untuk boss. | Tubuh musuh tampil utuh dengan garis tepi jingga, dan angka damage berwarna kuning terang. Musuh di gelap hanya terlihat dari matanya. |
+| **1. Tersingkap** | Musuh di area terang menerima damage +25%. Berlaku juga untuk boss. | Tubuh musuh tampil utuh, dan angka damage berwarna kuning terang. Tanpa garis tepi (dihapus 18 Nov 2026, keputusan user: tubuh yang terang sudah cukup membedakan). Musuh di gelap hanya terlihat dari matanya. |
 | **2. Bidikan butuh cahaya** | Efek yang mencari sasaran sendiri hanya bisa memilih musuh yang terang. Ini berlaku untuk homing (bola api yang otomatis berbelok mengejar musuh, dari relic Mata Ngengat) dan untuk tularan Rantai Nyala. | Musuh yang sedang dikejar homing diberi penanda kecil berbentuk bara. |
 | **3. Gelap menguatkan musuh** | Musuh di area gelap bergerak 20% lebih cepat. | Jejak asap tipis keluar di belakang musuh yang sedang berada di gelap. |
 
@@ -355,7 +355,7 @@ Uji tata letak terburuk: pemain yang hanya memakai keyboard laptop tanpa mouse t
 
 ### 9.1 Generator Lantai
 - Lantai disusun di grid. Random walk dari ruang awal menghasilkan **8–12 ruangan**.
-- **Ruang boss** ditempatkan di ujung buntu terjauh dari ruang awal. **Ruang harta** ditempatkan di 1 ujung buntu lain (2 kalau lantainya besar).
+- **Ruang boss** ditempatkan di ujung buntu terjauh dari ruang awal. **Ruang harta** pasti ada 1 di ujung buntu lain. Ruang harta kedua muncul dengan peluang 10%, kalau masih ada ujung buntu tersisa (bagian 4.3).
 - Setiap ruangan adalah **prefab Tilemap buatan tangan** berukuran satu layar. Prefab menandai titik pintu (atas, bawah, kiri, kanan), titik spawn musuh, dan posisi benda reaksi. Pintu yang tidak terhubung ditutup tembok.
 - Target MVP: **10 prefab ruang musuh**, 1 ruang awal/tutorial, 2 ruang harta, dan 1 arena boss.
 
@@ -456,6 +456,7 @@ Usulan desain dari sesi baseline (belum diputuskan, dibahas lewat brainstorming)
 | 0.2 | 17 Nov 2026 | M1.5 juice dan suara: angka feedback, gaya mati per musuh, SFX dari CC0, kredit aset |
 | 0.3 | 18 Nov 2026 | Dari usulan user setelah baseline M1: kenaikan kesulitan per ruangan dan per lantai, batas 8 musuh, 3 jenis pintu dan Gerbang Segel, peti boss (hadiah, Mimik, kutukan), cutscene peti, komik pembuka, cerita per lantai |
 | 0.4 | 18 Nov 2026 | M2 mesin konten: relic sebagai data (daftar modifier stat yang bertumpuk), relic 1–10 bisa dimainkan, Kobaran (klik kanan / RT / Shift kiri), status Stun, garis tepi jingga untuk musuh Tersingkap |
+| 0.5 | 18 Nov 2026 | Dari uji user M2: relic sebelum boss hanya dari ruang harta (1 pasti, ruang kedua 10%), ruang musuh tidak menjatuhkan relic, garis tepi Tersingkap dihapus |
 
 **Kredit aset:** semua sprite dibuat sendiri lewat script Python. SFX memakai paket berikut, semuanya berlisensi CC0 (domain publik), dipotong dan dicampur lewat `ArtSource/scripts/make_sfx_cc0.py`:
 
