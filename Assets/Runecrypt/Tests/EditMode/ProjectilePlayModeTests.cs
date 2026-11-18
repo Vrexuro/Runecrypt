@@ -162,5 +162,73 @@ namespace Runecrypt.Tests
             Assert.Greater(lostA, 0f, "homing berbelok ke musuh terang");
             Assert.AreEqual(0f, lostB, "musuh gelap tidak dikejar walau diterangi bola api itu sendiri");
         }
+        static RelicDefinition Relic(Stat stat, StatOp op, float value, bool healFull = false)
+        {
+            var r = ScriptableObject.CreateInstance<RelicDefinition>();
+            r.mods = new[] { new StatMod { stat = stat, op = op, value = value } };
+            r.healFull = healFull;
+            return r;
+        }
+
+        // Pemain uji di x ≥ 100. Field serial diisi sebelum Awake.
+        internal static PlayerController MakePlayer(Fireball fireballPrefab = null, LightSourceBehaviour light = null)
+        {
+            var go = new GameObject("TestPlayer");
+            go.SetActive(false);
+            go.transform.position = new Vector2(X, 10f);
+            go.AddComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Kinematic;
+            go.AddComponent<CircleCollider2D>().radius = 0.35f;
+            var pc = go.AddComponent<PlayerController>();
+            var so = new SerializedObject(pc);
+            if (fireballPrefab != null) so.FindProperty("fireballPrefab").objectReferenceValue = fireballPrefab;
+            if (light != null)
+            {
+                light.transform.SetParent(go.transform, false);
+                so.FindProperty("lightSource").objectReferenceValue = light;
+            }
+            so.ApplyModifiedPropertiesWithoutUndo();
+            go.SetActive(true);
+            return pc;
+        }
+
+        [UnityTest]
+        public IEnumerator SplitRelic_SpawnsTwoFireballs()
+        {
+            yield return new EnterPlayMode();
+            var template = MakeFireball(new Vector2(X, 20f));
+            template.gameObject.SetActive(false);
+            var pc = MakePlayer(template);
+            int before = Object.FindObjectsByType<Fireball>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length;
+            pc.AddRelic(Relic(Stat.ProjectileCount, StatOp.Add, 1f));
+            pc.Shoot(Vector2.right);
+            int spawned = Object.FindObjectsByType<Fireball>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length - before;
+            yield return new ExitPlayMode();
+            Assert.AreEqual(2, spawned, "Bara Kembar: satu tembakan mengeluarkan 2 bola api");
+        }
+
+        [UnityTest]
+        public IEnumerator HeartRelic_RaisesMaxAndHeals()
+        {
+            yield return new EnterPlayMode();
+            var pc = MakePlayer();
+            pc.TakeHit(new HitInfo(2f, Element.None, false, Vector2.zero));
+            pc.AddRelic(Relic(Stat.MaxHp, StatOp.Add, 2f, healFull: true));
+            float max = pc.Health.Max, cur = pc.Health.Current;
+            yield return new ExitPlayMode();
+            Assert.AreEqual(8f, max);
+            Assert.AreEqual(8f, cur);
+        }
+
+        [UnityTest]
+        public IEnumerator LanternRelic_GrowsPlayerLight()
+        {
+            yield return new EnterPlayMode();
+            var light = new GameObject("PlayerLight").AddComponent<LightSourceBehaviour>();
+            var pc = MakePlayer(light: light);
+            pc.AddRelic(Relic(Stat.LightRadius, StatOp.Percent, 0.25f));
+            float r = light.Radius;
+            yield return new ExitPlayMode();
+            Assert.AreEqual(3.75f, r, 1e-4f, "Lentera Tulang: radius cahaya +25%");
+        }
     }
 }

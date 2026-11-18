@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Runecrypt.Core;
 using UnityEngine;
 
@@ -18,6 +19,8 @@ namespace Runecrypt.Game
         [SerializeField] float hitInvulnerability = 0.8f;
         [SerializeField] float muzzleOffset = 0.5f;
         [SerializeField] Fireball fireballPrefab;
+        [SerializeField] LightSourceBehaviour lightSource;
+        [SerializeField] float baseLightRadius = 3f;
 
         [Header("Umpan balik (M1.5)")]
         [SerializeField] FeedbackProfile shotProfile;
@@ -26,11 +29,16 @@ namespace Runecrypt.Game
         [SerializeField] LightPulse lightPulse;
         [SerializeField] SpriteRenderer bodySprite;
 
-        const float ShotPulse = 1.3f, ShotPulseTime = 0.05f, BlinkInterval = 0.08f, BlinkAlpha = 0.4f;
+        const float SpreadDegrees = 10f, ShotPulse = 1.3f, ShotPulseTime = 0.05f, BlinkInterval = 0.08f, BlinkAlpha = 0.4f;
 
         public static PlayerController Instance { get; private set; }
         public Health Health { get; private set; }
         public event Action Died;
+        public PlayerStats Stats { get; } = new PlayerStats();
+        public IReadOnlyList<RelicDefinition> Relics => relics;
+
+        readonly List<RelicDefinition> relics = new List<RelicDefinition>();
+        float speed;
 
         RunecryptControls controls;
         Rigidbody2D body;
@@ -50,6 +58,27 @@ namespace Runecrypt.Game
             dash = new Cooldown(dashCooldown);
             Health = new Health(maxHp);
             Health.Died += OnDied;
+            Recalculate();
+        }
+
+        // Relic bertumpuk lewat stat (GDD §5.2). Kode pemain tidak berubah untuk relic baru.
+        public void AddRelic(RelicDefinition r)
+        {
+            if (r == null || Health.IsDead) return;
+            relics.Add(r);
+            Stats.Add(r.mods);
+            Recalculate();
+            if (r.healFull) Health.Heal(Health.Max);
+            else if (r.heal > 0f) Health.Heal(r.heal);
+        }
+
+        void Recalculate()
+        {
+            fire.Seconds = 1f / Mathf.Max(0.5f, Stats.Get(Stat.FireRate, shotsPerSecond));
+            dash.Seconds = Stats.Get(Stat.DashCooldown, dashCooldown);
+            speed = Stats.Get(Stat.MoveSpeed, moveSpeed);
+            Health.SetMax(Stats.Get(Stat.MaxHp, maxHp));
+            if (lightSource != null) lightSource.Radius = Stats.Get(Stat.LightRadius, baseLightRadius);
         }
 
         void OnEnable() => controls.Enable();
@@ -75,12 +104,7 @@ namespace Runecrypt.Game
             if (wantFire && fire.IsReady(now))
             {
                 fire.Start(now);
-                Vector2 muzzle = body.position + aim * muzzleOffset;
-                var fb = Instantiate(fireballPrefab, muzzle, Quaternion.identity);
-                fb.Launch(aim);
-                FeedbackPlayer.Play(shotProfile, muzzle);
-                if (lightPulse != null) lightPulse.Pulse(ShotPulse, ShotPulseTime);
-                FeedbackPlayer.Kick(-aim, 1); // sentakan 1 piksel, bukan guncangan (anti-tujuan spec §2)
+                Shoot(aim);
             }
 
             if (bodySprite != null)
@@ -100,11 +124,23 @@ namespace Runecrypt.Game
             }
         }
 
+        // Satu tembakan: Bara Kembar menambah bola api yang menyebar 10° (GDD §5.2).
+        internal void Shoot(Vector2 direction)
+        {
+            var shot = Stats.Shot(fireballPrefab.Defaults);
+            Vector2 muzzle = body.position + direction * muzzleOffset;
+            foreach (var dir in SpreadPattern.Directions(direction, shot.Count, SpreadDegrees))
+                Instantiate(fireballPrefab, muzzle, Quaternion.identity).Launch(dir, shot);
+            FeedbackPlayer.Play(shotProfile, muzzle);
+            if (lightPulse != null) lightPulse.Pulse(ShotPulse, ShotPulseTime);
+            FeedbackPlayer.Kick(-direction, 1); // sentakan 1 piksel, bukan guncangan (anti-tujuan spec §2)
+        }
+
         void FixedUpdate()
         {
             body.linearVelocity = Time.time < dashUntil
                 ? dashVelocity
-                : Vector2.ClampMagnitude(controls.Gameplay.Move.ReadValue<Vector2>(), 1f) * moveSpeed;
+                : Vector2.ClampMagnitude(controls.Gameplay.Move.ReadValue<Vector2>(), 1f) * speed;
         }
 
         public void TakeHit(HitInfo hit)
