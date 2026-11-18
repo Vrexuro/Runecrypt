@@ -57,7 +57,14 @@ Setelah 8 sampai 12 ruangan, pemain sampai di depan **Sang Pemadam**: makhluk be
 | **Why is all this fun?** | (1) Cahaya adalah senjata. Setiap tembakan juga mengungkap musuh dan membuatnya lebih rentan, jadi menyerang dan melihat menyatu. (2) Reaksi elemen memberi momen "wah" yang bisa dipicu pemain secara sengaja dari benda di ruangan. (3) Relic bertumpuk membuat setiap run terasa berbeda. (4) Run pendek dengan leaderboard memancing pengunjung untuk mencoba lagi. |
 
 ### 2.2 Story Synopsis
-Dahulu kala, Runecrypt adalah makam tempat para penjaga api disemayamkan. Sesuatu terbangun di dasarnya, yaitu **Sang Pemadam**, makhluk yang memakan setiap cahaya yang mendekat. Obor padam satu per satu, dan para penjaga bangkit sebagai pelayan kegelapan. Pyromancer terakhir turun ke makam membawa bara terakhir di tangannya. Cerita disampaikan lewat satu layar pembuka dan tulisan di dinding, tanpa cutscene panjang, supaya pengunjung expo bisa langsung bermain.
+Dahulu kala, Runecrypt adalah makam tempat para penjaga api disemayamkan. Sesuatu terbangun di dasarnya, yaitu **Sang Pemadam**, makhluk yang memakan setiap cahaya yang mendekat. Obor padam satu per satu, dan para penjaga bangkit sebagai pelayan kegelapan. Pyromancer terakhir turun ke makam membawa bara terakhir di tangannya. Cerita disampaikan lewat **komik pembuka 5 panel (±20 detik, bisa dilewati dengan satu tombol)** dan tulisan di dinding. Pyromancer adalah murid penjaga api terakhir. Gurunya turun ke makam dan tidak kembali. Yang tersisa hanya lenteranya, berisi bara kecil yang condong ke arah makam.
+
+**Cerita per lantai.**
+- **Lantai 1:** musuh Tulang adalah para penjaga yang jatuh. Pemain mengalahkan wujud pertama Sang Pemadam. Tungku makam lalu menyala lagi, dan Sang Pemadam mundur ke bawah lewat Gerbang Segel.
+- **Lantai berikutnya:** Sang Pemadam makin kuat karena menelan lebih banyak cahaya. Tulisan di dinding memberi petunjuk tentang nasib sang guru.
+- **Lantai 3** *(jika waktu cukup)*: sang guru muncul sebagai boss tengkorak.
+
+Naskah lengkap ada di `Docs/specs/2026-11-18-peti-pintu-cerita-design.md` §8–9.
 
 ### 2.3 Key Features
 - **Cahaya adalah senjata.** Ruangan gelap gulita. Tubuh pemain dan setiap bola api adalah sumber cahaya. Musuh di gelap hanya terlihat dari mata merahnya dan bergerak lebih cepat, sedangkan musuh yang tersingkap cahaya menerima damage lebih besar (bagian 5.5).
@@ -92,7 +99,7 @@ Dahulu kala, Runecrypt adalah makam tempat para penjaga api disemayamkan. Sesuat
 
 ```mermaid
 flowchart TD
-    A[1. Layar Judul] -->|Mulai| B[2. Layar Cerita singkat]
+    A[1. Layar Judul] -->|Mulai| B[2. Komik pembuka, bisa dilewati]
     A -->|Leaderboard| L[8. Leaderboard]
     A -->|Pengaturan| S[Pengaturan]
     A -->|60 detik diam| L
@@ -105,7 +112,7 @@ flowchart TD
     F --> D
     D -->|Ruang harta| T[Pilih relic] --> D
     D -->|Ruang boss| G[6. Sang Pemadam, 3 fase]
-    G -->|Boss kalah| H{7. Turun lebih dalam?}
+    G -->|Boss kalah| P[Peti boss: hadiah / Mimik / kutukan] --> H{7. Gerbang Segel: turun lebih dalam?}
     H -->|Ya, kedalaman +1| D
     H -->|Keluar makam| I[Layar Akhir]
     E -->|HP habis| I
@@ -159,6 +166,7 @@ flowchart TD
 - **Hati:** kadang jatuh dari musuh, memulihkan 2 HP.
 - **Relic:** didapat di ruang harta (pilih 1 dari 2) dan peluang kecil dari ruang musuh. Daftarnya di bagian 5.2.
 - **Upgrade level-up:** pilih 1 dari 3. Daftarnya di bagian 5.3.
+- **Peti boss:** muncul setelah boss kalah. Isinya diundi: hadiah relic (70%), Mimik (15%), atau kutukan kecil (15%). Detail di bagian 6.4.
 
 ---
 
@@ -254,11 +262,12 @@ Semua musuh punya **mata merah yang selalu menyala** (sprite mata memakai materi
 | **Tulang Penjaga** | Kerangka penjaga makam berperisai karatan | — | Berjalan lambat dan terus mengejar. Serangan jarak dekat. Sering muncul berkelompok. | 12 | Abu dan serpihan tulang, tumpukan abu berpendar tertinggal (sudah dibuat di M1.5) |
 | **Biarawan Beku** | Sosok berjubah biru pucat yang melayang | Es | Menjaga jarak dan menembakkan 3 serpih es. Saat mati meninggalkan Genangan Beku. Terkena api langsung memicu Uap. | 10 | Pecah menjadi serpih es, meninggalkan Genangan Beku |
 | **Jubah Guntur** | Jubah kosong yang berkedip, diselimuti listrik | Petir | Berteleportasi pendek, lalu melepas kilatan garis lurus yang di-telegraph 0,6 detik. Terkena api memicu Ledakan Cahaya. | 16 | Jubah jatuh lemas sambil memercikkan listrik terakhir |
+| **Mimik** | Peti kayu makam dengan gigi, lidah, dan mata merah. Sebelum dibuka, sesekali "bernapas" atau berkilat merah di celah tutupnya. | — | Hanya muncul dari peti boss. Melompat ke arah pemain 3 kali, lalu diam 1,2 detik. Saat mati menjatuhkan hadiah peti. | ±36 (disetel saat playtest) | Berdarah |
 
-Gaya mati ditentukan per jenis musuh (keputusan user, 17 Nov 2026): kerangka menjadi abu dan tulang, musuh berdaging berdarah. Keempat musuh MVP tidak berdaging; gaya berdarah cukup berupa prefab baru di `EnemyDefinition` (`deathEffect`, `remains`) tanpa mengubah kode.
+Gaya mati ditentukan per jenis musuh (keputusan user, 17 Nov 2026): kerangka menjadi abu dan tulang, musuh berdaging berdarah. Mimik adalah satu-satunya musuh MVP yang berdaging, jadi gaya berdarah tampil lewat Mimik. Gaya ini cukup berupa prefab baru di `EnemyDefinition` (`deathEffect`, `remains`) tanpa mengubah kode.
 
 ### 6.2 Kemunculan
-Musuh muncul di titik spawn yang sudah ditandai di prefab ruangan, dengan efek asap gelap 0,5 detik supaya tidak muncul tiba-tiba di atas pemain. Jumlah dan jenisnya diatur oleh "budget" kesulitan ruangan yang naik seiring urutan ruangan dan kedalaman.
+Musuh muncul di titik spawn yang sudah ditandai di prefab ruangan, dengan efek asap gelap 0,5 detik supaya tidak muncul tiba-tiba di atas pemain. Jumlah dan jenisnya diatur oleh "budget" kesulitan ruangan yang naik seiring urutan ruangan dan kedalaman. Di dalam satu lantai, ruangan berikutnya hanya menambah **jumlah** musuh, tidak menaikkan HP dan damage (keputusan user, 18 Nov 2026). **Paling banyak 8 musuh per ruangan**, supaya layar tetap terbaca di gelap.
 
 ### 6.3 Boss: Sang Pemadam
 Makhluk berjubah raksasa berukuran 48x48 piksel. Wajahnya hanya lubang gelap dengan mata merah, dan "tangan"-nya berupa asap. Semua serangannya didahului **telegraph terang** di lantai.
@@ -270,6 +279,28 @@ Makhluk berjubah raksasa berukuran 48x48 piksel. Wajahnya hanya lubang gelap den
 | **3. Kelaparan** (33–0%) | Kegelapan menutup dari tepi layar. Serangan makin cepat dan AoE beruntun. Damage yang diterimanya −50%, kecuali saat stun. Terkena Ledakan Cahaya membuatnya stun 1,5 detik dan damage yang diterimanya ×1,5 selama stun. Tiang Petir dari fase 2 tetap ada. Boss tetap bisa dikalahkan tanpa reaksi, hanya jauh lebih lama. *(keputusan Claude)* |
 
 Total HP boss dan durasi tiap fase disetel saat playtest. Target pertarungan boss sekitar 90–120 detik.
+
+
+### 6.4 Pintu dan Peti Boss
+Keputusan user, 18 Nov 2026. Detail lengkap ada di `Docs/specs/2026-11-18-peti-pintu-cerita-design.md`.
+
+| Pintu | Tampilan | Fungsi |
+|---|---|---|
+| **Pintu ruangan** | Kayu dan besi gelap, tanpa cahaya | Terkunci sampai musuh habis |
+| **Pintu ruang harta** (opsional) | Bingkai bersisik emas | Sama dengan pintu ruangan |
+| **Pintu boss** | Mengikuti boss di dalamnya, sebagai petunjuk. Untuk Sang Pemadam: tirai jubah gelap, asap hitam merembes, dan dua mata merah. Obor di sampingnya padam saat pemain mendekat. | Disimpan di data boss, jadi boss baru membawa pintunya sendiri |
+| **Gerbang Segel** | Batu besar dengan rune api yang menyala terang | Muncul setelah boss kalah. Pemain memilih **Turun lebih dalam** atau **Keluar makam**. |
+
+**Peti boss** muncul bersama Gerbang Segel. Pemain boleh mengabaikannya. Isinya diundi saat peti muncul:
+- **Hadiah (bobot 70):** 1 relic yang belum dimiliki pemain, dengan bobot Biasa : Langka = 3 : 1. Kalau semua relic sudah dimiliki, diganti pemulihan HP penuh.
+- **Mimik (bobot 15):** peti hidup menyerang. Kalau dikalahkan, Mimik menjatuhkan hadiahnya.
+- **Kutukan (bobot 15):** di MVP hanya *Kutukan Redup*, yaitu radius cahaya −20% sampai lantai berikutnya selesai. Dihitung setelah batas minimal 60%.
+- **Pengaman:** peti boss pertama dalam satu run selalu berisi Hadiah, dan zonk tidak pernah muncul dua kali berturut-turut.
+
+**Cutscene peti** (Unity Timeline, total paling lama 2,5 detik, bisa dilewati):
+- Pembukanya sama untuk semua hasil: peti bergetar dan cahaya merembes dari celah tutupnya.
+- Akhirnya berbeda untuk Hadiah, Mimik, dan Kutukan.
+- Selama cutscene, pemain kebal.
 
 ---
 
@@ -332,7 +363,7 @@ Uji tata letak terburuk: pemain yang hanya memakai keyboard laptop tanpa mouse t
 Kontrol terukir di lantai, dengan ikon yang menyesuaikan perangkat input yang terakhir dipakai. Isinya: 2 Pelita Sesat, 1 Genangan Beku, dan 1 Tiang Petir, supaya pemain langsung memicu kedua reaksi.
 
 ### 9.3 Lapisan Lebih Dalam
-Setiap kedalaman +1: radius cahaya pemain −10% (minimal 60%), budget musuh +25%, HP musuh +15%, dan boss muncul lagi dengan HP lebih tinggi. Prefab yang dipakai tetap sama.
+Setiap kedalaman +1: radius cahaya pemain −10% (minimal 60%), budget musuh +25%, HP musuh +15%, dan boss muncul lagi dengan HP lebih tinggi. Damage pukulan musuh naik setengah hati (1 HP) setiap 2 lantai: 1 HP di lantai 1–2, 2 HP di lantai 3–4, dan 3 HP di lantai 5–6. Damage boss naik dengan cara yang sama (2 → 3 → 4 HP). Prefab yang dipakai tetap sama.
 
 ### 9.4 Target Durasi
 Ruang musuh 20–35 detik, ruang harta 10 detik, boss 90–120 detik. Total sampai boss pertama kalah sekitar 6–8 menit.
@@ -360,9 +391,9 @@ Ruang musuh 20–35 detik, ruang harta 10 detik, boss 90–120 detik. Total samp
 
 ## 11. Scope dan Pembagian Kerja
 
-**MVP (wajib):** 1 class (Pyromancer), generator lantai, 4 musuh, 15 relic, 2 reaksi (Uap, Ledakan Cahaya), 1 boss 3 fase, HUD, leaderboard lokal, SFX dan musik dasar, lapisan lebih dalam (dibuat dengan prefab yang sama).
+**MVP (wajib):** 1 class (Pyromancer), generator lantai, 5 musuh (termasuk Mimik), 15 relic, peti boss dengan Mimik dan kutukan, 3 jenis pintu dan Gerbang Segel, komik pembuka, cutscene peti, 2 reaksi (Uap, Ledakan Cahaya), 1 boss 3 fase, HUD, leaderboard lokal, SFX dan musik dasar, lapisan lebih dalam (dibuat dengan prefab yang sama).
 
-**Urutan pemotongan kalau jadwal tertinggal** *(keputusan Claude)*: attract mode → minimap → gamepad (keyboard+mouse tetap) → prefab ruang musuh dari 10 menjadi 6 → relic dari 15 menjadi 10 → lapisan lebih dalam. Yang **tidak pernah dipotong**: loop ruangan, cahaya, 2 reaksi, 4 musuh, boss, leaderboard, dan suara.
+**Urutan pemotongan kalau jadwal tertinggal** *(keputusan Claude)*: attract mode → pintu ruang harta → komik 5 panel menjadi 3 → tulisan dinding → minimap → gamepad (keyboard+mouse tetap) → prefab ruang musuh dari 10 menjadi 6 → relic dari 15 menjadi 10 → lapisan lebih dalam. Yang **tidak pernah dipotong**: loop ruangan, cahaya, 2 reaksi, 5 musuh, boss, peti boss dengan ketiga hasilnya, Gerbang Segel, leaderboard, dan suara.
 
 **Jika waktu cukup (berurutan):** Shrine dan relic terkutuk → class kedua (Frost Warden) dan reaksi Shatter → Shop → 30 relic → Stormcaller → co-op lokal 2 pemain → lantai kedua dengan tema baru.
 
@@ -423,6 +454,7 @@ Usulan desain dari sesi baseline (belum diputuskan, dibahas lewat brainstorming)
 |---|---|---|
 | 0.1 | 17 Nov 2026 | Draf pertama GDD versi 2D (pindah dari konsep 3D) |
 | 0.2 | 17 Nov 2026 | M1.5 juice dan suara: angka feedback, gaya mati per musuh, SFX dari CC0, kredit aset |
+| 0.3 | 18 Nov 2026 | Dari usulan user setelah baseline M1: kenaikan kesulitan per ruangan dan per lantai, batas 8 musuh, 3 jenis pintu dan Gerbang Segel, peti boss (hadiah, Mimik, kutukan), cutscene peti, komik pembuka, cerita per lantai |
 
 **Kredit aset:** semua sprite dibuat sendiri lewat script Python. SFX memakai paket berikut, semuanya berlisensi CC0 (domain publik), dipotong dan dicampur lewat `ArtSource/scripts/make_sfx_cc0.py`:
 

@@ -1,6 +1,6 @@
 # Desain: Peti Boss, Pintu, Kenaikan Kesulitan, dan Cerita
 
-> Status: menunggu persetujuan user. Hasil brainstorming 17–18 Nov 2026, berangkat dari usulan user di sesi baseline M1 (GDD §13).
+> Status: **disetujui user 18 Nov 2026**. Hasil brainstorming 17–18 Nov 2026, berangkat dari usulan user di sesi baseline M1 (GDD §13).
 > Setelah disetujui: GDD, roadmap, dan daftar MVP di CLAUDE.md diperbarui. Rencana kerja ditulis per milestone (M3, M4, M5) tepat sebelum milestone itu dimulai, sesuai aturan roadmap.
 
 ## 1. Maksud
