@@ -96,11 +96,12 @@ def prism(name, pts_xz, y0, y1, m, bevel=0.0):
     return o
 
 
-def tube(name, pts, r, m):
+def tube(name, pts, r, m, res=1):
     cu = bpy.data.curves.new(name, 'CURVE')
     cu.dimensions = '3D'
     cu.bevel_depth = r
-    cu.bevel_resolution = 1
+    cu.bevel_resolution = res
+    cu.use_fill_caps = True
     sp = cu.splines.new('POLY')
     sp.points.add(len(pts) - 1)
     for p, (x, y, z) in zip(sp.points, pts): p.co = (x, y, z, 1)
@@ -125,33 +126,58 @@ def boolean(target, cutter, op='DIFFERENCE'):
     cutter.hide_viewport = True
 
 
-# ---------- tengkorak ----------
-cranium = sphere('Cranium', (0, 0.0, 0.80), (0.205, 0.19, 0.175), M_BONE, seg=12, rings=8)
-# pelat wajah: profil depan diekstrusi ke belakang, jadi wajah datar dengan tulang pipi
-face = prism('Face', [(-0.19, 0.775), (-0.04, 0.745), (0, 0.75), (0.04, 0.745), (0.19, 0.775), (0.185, 0.705),
-                      (0.15, 0.655), (0.11, 0.618), (-0.11, 0.618), (-0.15, 0.655), (-0.185, 0.705)],
-             -0.175, -0.06, M_BONE, bevel=0.008)  # tidak menembus ke belakang tempurung
+# ---------- tengkorak: satu mesh yang dibentuk ulang, bukan bola + balok ----------
+def smooth(o):
+    for p in o.data.polygons: p.use_smooth = True
+    return o
+
+
+def skull_mesh():
+    """Tempurung bola halus + blok wajah membulat (subdivision) + tulang pipi, dilebur jadi satu permukaan."""
+    cran = smooth(sphere('Skull', (0, 0.01, 0.80), (0.2, 0.195, 0.18), M_BONE, seg=24, rings=16))
+    parts = []
+    bpy.ops.mesh.primitive_cube_add(location=(0, -0.09, 0.68))
+    face = bpy.context.active_object
+    face.scale = (0.155, 0.1, 0.085)
+    link(face, M_BONE, 'FaceBlock')
+    sub = face.modifiers.new('sub', 'SUBSURF'); sub.levels = sub.render_levels = 2
+    parts.append(face)
+    for sx in (1, -1):
+        parts.append(smooth(sphere(f'CheekBone_{sx}', (sx * 0.14, -0.11, 0.672), (0.03, 0.045, 0.02), M_BONE, seg=12, rings=8)))
+    parts.append(smooth(sphere('Occiput', (0, 0.06, 0.69), (0.15, 0.12, 0.085), M_BONE, seg=16, rings=10)))  # tutup celah belakang
+    for prt in parts: boolean(cran, prt, 'UNION')
+    return cran
+
+
+skull = skull_mesh()
 for s in (1, -1):
-    # rongga mata miring: kotak pemotong diputar supaya alis turun ke tengah (kesan marah)
-    cut = box(f'SocketCut_{s}', (s * 0.095, -0.17, 0.722), (0.068, 0.07, 0.045), M_INK, rot=(0, s * math.radians(-12), 0))
-    boolean(face, cut)
-    sphere(f'SocketDark_{s}', (s * 0.095, -0.125, 0.72), (0.06, 0.03, 0.045), M_INK)
+    # rongga mata bulat telur, miring supaya alis turun ke tengah (kesan marah)
+    cut = sphere(f'SocketCut_{s}', (s * 0.095, -0.175, 0.722), (0.062, 0.07, 0.046), M_INK, seg=12, rings=8)
+    cut.rotation_euler = (0, s * math.radians(-14), 0)
+    boolean(skull, cut)
+    sphere(f'SocketDark_{s}', (s * 0.095, -0.12, 0.72), (0.06, 0.035, 0.045), M_INK)
     sphere(f'Eye_{s}', (s * 0.095, -0.15, 0.715), (0.026, 0.014, 0.026), M_EYE, seg=8, rings=6)
-    sphere(f'Cheek_{s}', (s * 0.165, -0.11, 0.67), (0.035, 0.05, 0.022), M_BONE, seg=8, rings=5)
-    sphere(f'EarHole_{s}', (s * 0.2, 0.0, 0.70), (0.006, 0.02, 0.022), M_INK, seg=8, rings=5)
-nose = prism('NoseCut', [(0, 0.684), (-0.03, 0.636), (0, 0.646), (0.03, 0.636)], -0.2, -0.12, M_INK)
-boolean(face, nose)
-prism('NoseDark', [(0, 0.68), (-0.026, 0.638), (0, 0.646), (0.026, 0.638)], -0.14, -0.12, M_INK)
-sphere('SkullBase', (0, 0.03, 0.655), (0.15, 0.14, 0.06), M_BONE)  # menutup celah bawah tempurung dari belakang
-# gigi atas, mulut, rahang bawah, gigi bawah
+    sphere(f'EarHole_{s}', (s * 0.17, 0.005, 0.715), (0.008, 0.02, 0.022), M_INK, seg=8, rings=5)
+def nose_cone(name, r, depth, y, m):
+    # kerucut 3 sisi sepanjang sumbu y, puncak segitiga menghadap ke atas (lubang hidung tengkorak)
+    bpy.ops.mesh.primitive_cone_add(vertices=3, radius1=r, radius2=r, depth=depth, location=(0, y, 0.655),
+                                    rotation=(math.pi / 2, 0, 0))
+    return link(bpy.context.active_object, m, name)
+boolean(skull, nose_cone('NoseCut', 0.032, 0.12, -0.18, M_INK))
+nose_cone('NoseDark', 0.03, 0.02, -0.135, M_INK)
+box('Mouth', (0, -0.15, 0.59), (0.085, 0.012, 0.01), M_INK)
+# gigi mengikuti lengkung rahang
 for i, x in enumerate((-0.083, -0.05, -0.017, 0.017, 0.05, 0.083)):
-    box(f'ToothUp_{i}', (x, -0.165, 0.612), (0.014, 0.012, 0.014), M_BONE)
-    if 0 < i < 5: box(f'ToothLow_{i}', (x, -0.155, 0.576), (0.013, 0.011, 0.011), M_BONE)
-box('Mouth', (0, -0.14, 0.592), (0.095, 0.025, 0.006), M_INK)
-prism('Jaw', [(-0.115, 0.588), (0.115, 0.588), (0.108, 0.545), (0.062, 0.512), (-0.062, 0.512), (-0.108, 0.545)],
-      -0.16, 0.02, M_BONE, bevel=0.006)
-for s in (1, -1):  # ramus rahang naik ke arah telinga
-    box(f'JawRamus_{s}', (s * 0.11, 0.0, 0.6), (0.012, 0.035, 0.05), M_BONE)
+    box(f'ToothUp_{i}', (x, -0.158 + 1.6 * x * x, 0.612), (0.0135, 0.012, 0.015), M_BONE)
+    if 0 < i < 5: box(f'ToothLow_{i}', (x, -0.148 + 1.6 * x * x, 0.568), (0.0125, 0.011, 0.011), M_BONE)
+# rahang bawah: satu lengkung U halus dari ramus kanan, dagu, ke ramus kiri
+jaw = tube('Jaw', [(-0.12, -0.03, 0.552), (-0.085, -0.115, 0.538), (0, -0.142, 0.534),
+                   (0.085, -0.115, 0.538), (0.12, -0.03, 0.552)], 0.024, M_BONE, res=3)
+for s in (1, -1):  # ramus pipih naik dari sudut rahang ke dalam tengkorak
+    ramus = sphere(f'JawRamus_{s}', (s * 0.118, -0.02, 0.59), (0.014, 0.034, 0.052), M_BONE, seg=10, rings=6)
+    ramus.rotation_euler = (math.radians(-15), 0, 0)
+    smooth(ramus)
+smooth(sphere('Chin', (0, -0.125, 0.548), (0.09, 0.035, 0.026), M_BONE, seg=14, rings=8))
 
 # ---------- badan ----------
 for i in range(2): cyl(f'Neck_{i}', (0, 0.02, 0.505 + i * 0.03 - 0.012), (0, 0.02, 0.505 + i * 0.03 + 0.012), 0.024, M_BONE_D)
