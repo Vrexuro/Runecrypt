@@ -16,6 +16,17 @@ BG, GRID = (40, 40, 46), (56, 56, 64)
 S, W, H = 380, 420, 470
 
 
+def chaikin(ps, n=4):
+    """Haluskan poligon tertutup dengan memotong setiap sudut (algoritma Chaikin)."""
+    for _ in range(n):
+        out = []
+        for i in range(len(ps)):
+            (x0, z0), (x1, z1) = ps[i], ps[(i + 1) % len(ps)]
+            out += [(0.75 * x0 + 0.25 * x1, 0.75 * z0 + 0.25 * z1), (0.25 * x0 + 0.75 * x1, 0.25 * z0 + 0.75 * z1)]
+        ps = out
+    return ps
+
+
 class Panel:
     def __init__(self, title, top=False):
         self.img = Image.new('RGB', (W, H), BG)
@@ -29,7 +40,9 @@ class Panel:
         self.d.text((12, 8), title, fill=(235, 230, 220))
 
     def p(self, x, z): return (self.cx + x * S, self.base - z * S)
-    def poly(self, ps, fill, outline=INK, w=2): self.d.polygon([self.p(*q) for q in ps], fill=fill, outline=outline, width=w)
+    def poly(self, ps, fill, outline=INK, w=2, soft=True):
+        if soft and len(ps) > 3: ps = chaikin(ps)
+        self.d.polygon([self.p(*q) for q in ps], fill=fill, outline=outline, width=w)
     def ell(self, c, rx, rz, fill, outline=INK, w=2):
         x, y = self.p(*c)
         self.d.ellipse([x - rx * S, y - rz * S, x + rx * S, y + rz * S], fill=fill, outline=outline, width=w)
@@ -47,14 +60,15 @@ class Panel:
 
 
 def robe_front(P, back=False):
-    P.poly([(-0.13, 0.56), (0.13, 0.56), (0.21, 0.25), (0.27, 0.03), (0.2, 0.0), (0.0, 0.02), (-0.2, 0.0), (-0.27, 0.03), (-0.21, 0.25)], ROBE)
+    P.poly([(-0.13, 0.57), (0.0, 0.58), (0.13, 0.57), (0.17, 0.45), (0.2, 0.3), (0.25, 0.12), (0.28, 0.03), (0.2, -0.005),
+            (0.0, 0.01), (-0.2, -0.005), (-0.28, 0.03), (-0.25, 0.12), (-0.2, 0.3), (-0.17, 0.45)], ROBE)
     for x in (-0.13, 0.13): P.line([(x * 0.6, 0.5), (x * 1.5, 0.04)], ROBE_D, 3)     # lipatan kain
-    P.poly([(-0.27, 0.03), (0.27, 0.03), (0.26, 0.06), (-0.26, 0.06)], TRIM, outline=INK, w=1)  # pinggiran rune
+    P.poly([(-0.27, 0.03), (0.27, 0.03), (0.26, 0.06), (-0.26, 0.06)], TRIM, outline=INK, w=1, soft=False)  # pinggiran rune
     if not back:
-        P.poly([(-0.03, 0.42), (0.03, 0.42), (0.06, 0.03), (-0.06, 0.03)], ROBE_D)        # belahan depan
-    P.poly([(-0.16, 0.44), (0.16, 0.44), (0.17, 0.4), (-0.17, 0.4)], SASH)              # selempang
+        P.poly([(-0.03, 0.42), (0.03, 0.42), (0.045, 0.2), (0.06, 0.03), (-0.06, 0.03), (-0.045, 0.2)], ROBE_D, soft=False)  # belahan depan
+    P.poly([(-0.16, 0.44), (0.16, 0.44), (0.17, 0.4), (-0.17, 0.4)], SASH, soft=False)              # selempang
     tail_x = -0.09 if not back else 0.09
-    P.poly([(tail_x, 0.41), (tail_x + 0.04, 0.41), (tail_x + 0.05, 0.27), (tail_x + 0.01, 0.29)], SASH)
+    P.poly([(tail_x, 0.41), (tail_x + 0.04, 0.41), (tail_x + 0.05, 0.27), (tail_x + 0.01, 0.29)], SASH, soft=False)
 
 
 def sleeves_front(P, ember_x, back=False):
@@ -65,14 +79,14 @@ def sleeves_front(P, ember_x, back=False):
 
 
 def hood_front(P, back=False):
-    P.poly([(-0.2, 0.58), (-0.21, 0.72), (-0.16, 0.86), (-0.06, 0.94), (0.0, 0.97), (0.06, 0.94),
-            (0.16, 0.86), (0.21, 0.72), (0.2, 0.58), (0.12, 0.54), (-0.12, 0.54)], ROBE)
+    P.poly([(-0.2, 0.56), (-0.23, 0.68), (-0.22, 0.8), (-0.16, 0.9), (-0.07, 0.96), (0.0, 0.985), (0.07, 0.96),
+            (0.16, 0.9), (0.22, 0.8), (0.23, 0.68), (0.2, 0.56), (0.12, 0.52), (0.0, 0.51), (-0.12, 0.52)], ROBE)
     if back:
         P.line([(0, 0.95), (0, 0.6)], ROBE_D, 3)                                         # jahitan belakang
         return
-    P.ell((0, 0.71), 0.125, 0.11, FACE)                                                  # wajah gelap
+    P.ell((0, 0.705), 0.13, 0.115, FACE)                                                  # wajah gelap
     for s in (1, -1): P.glow((s * 0.045, 0.72), 0.018, EYE, (255, 245, 210))
-    P.line([(-0.17, 0.62), (-0.13, 0.82), (-0.05, 0.875)], ROBE_L, 3)                    # tepi kerudung terang
+    P.line([(-0.18, 0.63), (-0.17, 0.74), (-0.13, 0.83), (-0.05, 0.88)], ROBE_L, 3)                    # tepi kerudung terang
 
 
 def view_front():
@@ -90,12 +104,13 @@ def view_back():
 
 def view_side():
     P = Panel('SAMPING KANAN (menghadap kanan)')
-    P.poly([(-0.08, 0.56), (0.08, 0.56), (0.17, 0.2), (0.22, 0.03), (0.18, 0.0), (-0.2, 0.0), (-0.24, 0.04), (-0.16, 0.22)], ROBE)
-    P.poly([(-0.24, 0.04), (0.22, 0.04), (0.21, 0.07), (-0.23, 0.07)], TRIM, outline=INK, w=1)
-    P.poly([(-0.09, 0.44), (0.09, 0.44), (0.1, 0.4), (-0.1, 0.4)], SASH)
+    P.poly([(-0.08, 0.57), (0.08, 0.57), (0.12, 0.42), (0.17, 0.22), (0.23, 0.04), (0.17, -0.005), (-0.19, -0.005),
+            (-0.25, 0.04), (-0.18, 0.22), (-0.12, 0.42)], ROBE)
+    P.poly([(-0.24, 0.04), (0.22, 0.04), (0.21, 0.07), (-0.23, 0.07)], TRIM, outline=INK, w=1, soft=False)
+    P.poly([(-0.09, 0.44), (0.09, 0.44), (0.1, 0.4), (-0.1, 0.4)], SASH, soft=False)
     # kerudung dari samping: ujung tertarik ke belakang, wajah gelap di depan
-    P.poly([(0.14, 0.58), (0.16, 0.74), (0.11, 0.86), (0.02, 0.93), (-0.12, 0.97), (-0.2, 0.9),
-            (-0.18, 0.75), (-0.14, 0.6), (-0.04, 0.54)], ROBE)
+    P.poly([(0.13, 0.57), (0.17, 0.66), (0.17, 0.76), (0.13, 0.86), (0.04, 0.94), (-0.08, 0.975), (-0.17, 0.95),
+            (-0.21, 0.86), (-0.2, 0.74), (-0.16, 0.62), (-0.06, 0.53), (0.05, 0.53)], ROBE)
     P.poly([(0.16, 0.74), (0.11, 0.84), (0.07, 0.78), (0.08, 0.64), (0.14, 0.6)], FACE)
     P.glow((0.12, 0.72), 0.016, EYE, (255, 245, 210))
     # lengan kanan (dekat) ke depan, bara di ujung
