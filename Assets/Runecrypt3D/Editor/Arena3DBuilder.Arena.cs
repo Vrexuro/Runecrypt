@@ -106,8 +106,10 @@ namespace Runecrypt.EditorTools3D
             foreach (var r in Model(PyroModel, visual).GetComponentsInChildren<Renderer>()) r.shadowCastingMode = ShadowCastingMode.Off;
             // cahaya pemain GDD §4.2: radius 3 tile, jingga hangat, dengan bayangan supaya pilar memotong cahaya
             var light = PointLight(go.transform, "PlayerLight", 3f, 7f, true);
-            light.transform.localPosition = new Vector3(0f, 0.9f, -0.45f);   // sedikit di depan: wajah dan badan ikut terang
-            var src = light.gameObject.AddComponent<LightSource3D>();
+            // lampu sedikit di depan tapi tetap di dalam kapsul (|z| <= 0,25), supaya tidak masuk ke pilar saat menempel
+            light.transform.localPosition = new Vector3(0f, 0.95f, -0.22f);
+            // titik aturan cahaya di pusat pemain (root), bukan di posisi lampu
+            var src = go.AddComponent<LightSource3D>();
             SetRef(src, "visual", light);
             SetFloat(src, "radius", 3f);
             var p = go.AddComponent<Player3D>();
@@ -180,6 +182,7 @@ namespace Runecrypt.EditorTools3D
             cam.nearClipPlane = 0.1f; cam.farClipPlane = 60f;
             var data = cam.GetUniversalAdditionalCameraData();
             data.renderPostProcessing = true;
+            data.SetRenderer(Renderer3DIndex());   // default URP tetap Renderer2D untuk scene 2D
             var follow = cam.gameObject.AddComponent<CameraFollow3D>();
             SetRef(follow, "target", player);
         }
@@ -257,7 +260,7 @@ namespace Runecrypt.EditorTools3D
         {
             var scenes = EditorBuildSettings.scenes.ToList();
             if (scenes.Any(s => s.path == path)) return;
-            scenes.Insert(0, new EditorBuildSettingsScene(path, true));
+            scenes.Add(new EditorBuildSettingsScene(path, true));   // di akhir: scene 2D tetap index 0
             EditorBuildSettings.scenes = scenes.ToArray();
         }
 

@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 4743205111184208694}
   - component: {fileID: 9218360778599089753}
   - component: {fileID: 6610894666198806510}
+  - component: {fileID: 7195912149891166690}
   - component: {fileID: 5530386893634670164}
   m_Layer: 10
   m_Name: Player3D
@@ -86,6 +87,21 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &7195912149891166690
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2979790338346074974}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6140e52ffe91d0141b18a98ee7e8854b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Runecrypt.Game3D::Runecrypt.Game3D.LightSource3D
+  radius: 3
+  visual: {fileID: 5106919445065195416}
+  rangePerRadius: 1.4
 --- !u!114 &5530386893634670164
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -148,7 +164,6 @@ GameObject:
   m_Component:
   - component: {fileID: 787449422842328214}
   - component: {fileID: 5106919445065195416}
-  - component: {fileID: 2127415302598451472}
   m_Layer: 0
   m_Name: PlayerLight
   m_TagString: Untagged
@@ -165,7 +180,7 @@ Transform:
   m_GameObject: {fileID: 4386966365783981186}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.9, z: -0.45}
+  m_LocalPosition: {x: 0, y: 0.95, z: -0.22}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -236,21 +251,6 @@ Light:
   m_LightUnit: 1
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
---- !u!114 &2127415302598451472
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4386966365783981186}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6140e52ffe91d0141b18a98ee7e8854b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Runecrypt.Game3D::Runecrypt.Game3D.LightSource3D
-  radius: 3
-  visual: {fileID: 5106919445065195416}
-  rangePerRadius: 1.4
 --- !u!1001 &333226903111932558
 PrefabInstance:
   m_ObjectHideFlags: 0

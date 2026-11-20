@@ -5,6 +5,7 @@
         "Runecrypt.Core",
         "Runecrypt.Game",
         "Runecrypt.Game3D",
+        "Unity.RenderPipelines.Universal.Runtime",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

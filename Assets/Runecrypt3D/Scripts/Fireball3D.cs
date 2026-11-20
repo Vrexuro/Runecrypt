@@ -18,7 +18,7 @@ namespace Runecrypt.Game3D
         Vector3 dir;
         float traveled;
         int mask, wallLayer;
-        bool spent;
+        bool spent, checkedStart;
 
         public void Launch(Vector2 direction)
         {
@@ -30,21 +30,33 @@ namespace Runecrypt.Game3D
         void FixedUpdate()
         {
             if (spent || dir == Vector3.zero) return;
+            // SphereCast tidak melihat collider tempat ia mulai; tembakan jarak dekat bisa muncul di dalam musuh atau pilar.
+            if (!checkedStart)
+            {
+                checkedStart = true;
+                var overlap = Physics.OverlapSphere(transform.position, radius, mask, QueryTriggerInteraction.Ignore);
+                if (overlap.Length > 0) { Hit(overlap[0], transform.position); return; }
+            }
             float step = speed * Time.fixedDeltaTime;
             if (Physics.SphereCast(transform.position, radius, dir, out var hit, step, mask, QueryTriggerInteraction.Ignore))
             {
-                if (hit.collider.gameObject.layer != wallLayer)
-                {
-                    var target = hit.collider.GetComponentInParent<IDamageable>();
-                    if (target != null && !(target is Player3D))
-                        target.TakeHit(new HitInfo(damage, Element.Fire, true, Plane3D.ToPlane(hit.point)));
-                }
-                Expire();
+                Hit(hit.collider, hit.point);
                 return;
             }
             transform.position += dir * step;
             traveled += step;
             if (traveled >= range) Expire();
+        }
+
+        void Hit(Collider c, Vector3 point)
+        {
+            if (c.gameObject.layer != wallLayer)
+            {
+                var target = c.GetComponentInParent<IDamageable>();
+                if (target != null && !(target is Player3D))
+                    target.TakeHit(new HitInfo(damage, Element.Fire, true, Plane3D.ToPlane(point)));
+            }
+            Expire();
         }
 
         void Expire()

@@ -23,6 +23,8 @@ namespace Runecrypt.Game3D
         public Health Health { get; private set; }
         public event Action Died;
         public Vector2 Aim => aim;
+        // bola api terbang setinggi moncong; bidik di lantai membuat tembakan ke samping lewat di belakang musuh
+        internal float AimPlaneHeight => transform.position.y + muzzleHeight;
 
         RunecryptControls controls;
         Rigidbody body;
@@ -62,7 +64,7 @@ namespace Runecrypt.Game3D
             Vector2 pos = Plane3D.ToPlane(transform.position);
             // Review Focus 1: kursor yang tidak mengenai lantai memakai arah bidik terakhir.
             Vector2 mouse = pos + aim;
-            if (cam != null && Plane3D.RayToFloor(cam.ScreenPointToRay(g.AimPoint.ReadValue<Vector2>()), 0f, out var p)) mouse = p;
+            if (cam != null && Plane3D.RayToFloor(cam.ScreenPointToRay(g.AimPoint.ReadValue<Vector2>()), AimPlaneHeight, out var p)) mouse = p;
             var result = AimSelector.Select(g.AimStick.ReadValue<Vector2>(), g.AimKeys.ReadValue<Vector2>(), mouse, pos, aim);
             aim = result.Direction;
             if (visual != null) visual.rotation = Quaternion.LookRotation(Plane3D.ToWorld(aim), Vector3.up);
