@@ -7,7 +7,7 @@ import math
 import os
 import bpy
 
-OUT = r'D:\Claude\PGIM\Runecrypt\ArtSource\spike3d'
+OUT = globals().get('RENDER_OUT', r'D:\Claude\PGIM\Runecrypt\ArtSource\spike3d')  # set RENDER_OUT sebelum exec untuk model lain
 scene = bpy.context.scene
 
 old = bpy.data.collections.get('SpikeStage')
