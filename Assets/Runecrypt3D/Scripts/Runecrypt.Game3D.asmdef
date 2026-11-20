@@ -1,0 +1,12 @@
+{
+    "name": "Runecrypt.Game3D",
+    "rootNamespace": "Runecrypt.Game3D",
+    "references": [
+        "Runecrypt.Core",
+        "Runecrypt.Game",
+        "Unity.InputSystem",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.RenderPipelines.Core.Runtime"
+    ],
+    "autoReferenced": true
+}
