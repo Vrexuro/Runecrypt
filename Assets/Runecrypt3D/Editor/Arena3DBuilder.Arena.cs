@@ -181,6 +181,10 @@ namespace Runecrypt.EditorTools3D
             var clips = AssetDatabase.LoadAllAssetsAtPath(modelPath).OfType<AnimationClip>().Where(c => !c.name.StartsWith("__preview")).ToDictionary(c => c.name);
             tree.AddChild(clips["Idle"], 0f);
             tree.AddChild(clips["Move"], minMul * v0);
+            // Idle hanya berbobot saat SpeedMul tertahan di minMul; timeScale membatalkannya agar Idle di laju aslinya
+            var children = tree.children;
+            children[0].timeScale = 1f / minMul;
+            tree.children = children;
             state.speedParameterActive = true;
             state.speedParameter = "SpeedMul";
             EditorUtility.SetDirty(ctrl);

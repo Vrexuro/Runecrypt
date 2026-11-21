@@ -37,6 +37,8 @@ namespace Runecrypt.Tests3D
             Assert.AreEqual(new[] { "Idle", "Move" }, tree.children.Select(c => c.motion.name).ToArray());
             Assert.AreEqual(0f, tree.children[0].threshold, 1e-4f);
             Assert.AreEqual(min * v0, tree.children[1].threshold, 1e-4f);
+            // Idle hanya berbobot saat SpeedMul = min, jadi timeScale 1/min memutarnya pada laju aslinya
+            Assert.AreEqual(1f / min, tree.children[0].timeScale, 1e-4f, "Idle melambat karena SpeedMul");
             Assert.IsTrue(state.speedParameterActive);
             Assert.AreEqual("SpeedMul", state.speedParameter);
 
@@ -109,11 +111,12 @@ namespace Runecrypt.Tests3D
             var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
             wall.layer = LayerMask.NameToLayer("Walls");
             wall.transform.position = new Vector3(120.8f, 0.5f, 0f);
-            var (drive, anim) = MakeTulang(new Vector3(120f, 0f, 0f));
-            Assert.IsNotNull(anim.runtimeAnimatorController, "prasyarat: Animator punya controller");
+            var (drive, anim) = MakeTulang(new Vector3(119f, 0f, 0f));   // 0,5 tile dari dinding: sempat berlari dulu
             drive.velocity = new Vector3(2f, 0f, 0f);
-            yield return Steps(40);
-            Assert.Less(anim.GetFloat("Speed"), 1.0f, "berlari di tempat saat terhalang dinding");
+            yield return Steps(12);
+            Assert.Greater(anim.GetFloat("Speed"), 1.0f, "prasyarat: sempat berlari");
+            yield return Steps(50);
+            Assert.Less(anim.GetFloat("Speed"), 0.1f, "berlari di tempat saat terhalang dinding");
             Object.Destroy(drive.gameObject); Object.Destroy(wall);
             yield return new ExitPlayMode();
         }
