@@ -22,3 +22,6 @@ Captures/
 
 # File CC0 mentah (32 MB); hasil potong ada di Assets/Runecrypt/Audio
 ArtSource/cc0_raw/
+
+# Instruksi asisten AI lokal, tidak ikut repo
+CLAUDE.md
