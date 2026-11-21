@@ -19,3 +19,6 @@ MemoryCaptures/
 crashlytics-build.properties
 .vscode/
 Captures/
+
+# Instruksi asisten AI lokal, tidak ikut repo
+CLAUDE.md
