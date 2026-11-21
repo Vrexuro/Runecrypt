@@ -6,16 +6,15 @@ using UnityEngine;
 namespace Runecrypt.Game3D
 {
     // Musuh 3D berbasis EnemyDefinition yang sama dengan versi 2D. Aturan cahaya GDD §5.5 dari Core:
-    // terang = damage +25%, gelap = kecepatan +20%. Kedipan putih saat kena, goyang sebagai pengganti animasi jalan.
+    // terang = damage +25%, gelap = kecepatan +20%. Kedipan putih saat kena; animasi jalan dari Locomotion3D.
     [RequireComponent(typeof(Rigidbody))]
     public class Enemy3D : MonoBehaviour, IDamageable
     {
         [SerializeField] EnemyDefinition definition;
         [SerializeField] LightRules lightRules;
-        [SerializeField] Transform visual;
         [SerializeField] Renderer[] flashRenderers;
 
-        const float FlashTime = 0.08f, BobHeight = 0.03f, BobRate = 12f;
+        const float FlashTime = 0.08f;
         static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
 
         public static event Action<Enemy3D> AnyDied;
@@ -64,8 +63,6 @@ namespace Runecrypt.Game3D
 
         void Update()
         {
-            if (visual != null)
-                visual.localPosition = new Vector3(0f, Mathf.Abs(Mathf.Sin(Time.time * BobRate)) * BobHeight, 0f);
             if (flashing && Time.time >= flashUntil) SetFlash(false);
         }
 

@@ -133,7 +133,6 @@ namespace Runecrypt.EditorTools3D
             var e = go.AddComponent<Enemy3D>();
             SetRef(e, "definition", AssetDatabase.LoadAssetAtPath<EnemyDefinition>("Assets/Runecrypt/Data/Enemies/TulangPenjaga.asset"));
             SetRef(e, "lightRules", AssetDatabase.LoadAssetAtPath<LightRules>("Assets/Runecrypt/Data/LightRules.asset"));
-            SetRef(e, "visual", visual);
             var so = new SerializedObject(e);
             var arr = so.FindProperty("flashRenderers");
             var rs = model.GetComponentsInChildren<Renderer>();
