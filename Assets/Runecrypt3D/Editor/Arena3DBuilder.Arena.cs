@@ -28,6 +28,7 @@ namespace Runecrypt.EditorTools3D
             EnableAdditionalLightShadows();
             foreach (var d in new[] { "Scenes", "Prefabs", "Materials" }) Directory.CreateDirectory(Root + d);
             ConfigureRig(TulangModel);
+            ConfigureRig(PyroModel);
             RemapPyromancerMaterials();
             FixTulangEye();
 

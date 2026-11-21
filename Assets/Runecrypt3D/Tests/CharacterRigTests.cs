@@ -9,6 +9,7 @@ namespace Runecrypt.Tests3D
     public class CharacterRigTests
     {
         [TestCase("Assets/Spike3D/Models/TulangPenjaga3D.fbx", 16 / 60f, "thigh.L")]
+        [TestCase("Assets/Runecrypt3D/Models/Pyromancer3D.fbx", 32 / 60f, "robe_front.L_2")]
         public void Model_HasGenericLoopingClips(string path, float moveSeconds, string bone)
         {
             var imp = (ModelImporter)AssetImporter.GetAtPath(path);
