@@ -43,6 +43,7 @@ GameObject:
   - component: {fileID: 6390683706219980298}
   - component: {fileID: 1407841102667112892}
   - component: {fileID: 4821087825477759413}
+  - component: {fileID: 5361336845877720276}
   - component: {fileID: 6492133178280512836}
   m_Layer: 9
   m_Name: Tulang3D
@@ -117,6 +118,24 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &5361336845877720276
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8717800401098056616}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21949c36d46f87a40b38e73e69edf029, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Runecrypt.Game3D::Runecrypt.Game3D.Locomotion3D
+  animator: {fileID: 5707307144940739111}
+  designSpeed: 2
+  minMul: 0.5
+  maxMul: 1.3
+  reverseWhenBackward: 0
+  facing: {fileID: 0}
 --- !u!114 &6492133178280512836
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -131,7 +150,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Runecrypt.Game3D::Runecrypt.Game3D.Enemy3D
   definition: {fileID: 11400000, guid: 1513f6678c5d7ee42a8bc3936aa5ca70, type: 2}
   lightRules: {fileID: 11400000, guid: 78f5b19299ebb554ba36837f4785062c, type: 2}
-  visual: {fileID: 873582052636635349}
   flashRenderers:
   - {fileID: 3454511061760438798}
 --- !u!1001 &2188459379458402230
@@ -186,6 +204,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: TulangPenjaga3D
       objectReference: {fileID: 0}
+    - target: {fileID: 5866666021909216657, guid: 0bc4838d7e57e7d44a2c2a8ec29143ef, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: 60b13db77db58614a8f303af92cdd60c, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -199,5 +221,10 @@ Transform:
 --- !u!137 &3454511061760438798 stripped
 SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: 3579829230510151096, guid: 0bc4838d7e57e7d44a2c2a8ec29143ef, type: 3}
+  m_PrefabInstance: {fileID: 2188459379458402230}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &5707307144940739111 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 0bc4838d7e57e7d44a2c2a8ec29143ef, type: 3}
   m_PrefabInstance: {fileID: 2188459379458402230}
   m_PrefabAsset: {fileID: 0}

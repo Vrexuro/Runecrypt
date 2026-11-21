@@ -4,6 +4,7 @@ using System.Linq;
 using Runecrypt.Core;
 using Runecrypt.Game3D;
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -105,8 +106,11 @@ namespace Runecrypt.EditorTools3D
             go.AddComponent<Rigidbody>();
             var visual = new GameObject("Visual").transform;
             visual.SetParent(go.transform, false);
+            var model = Model(PyroModel, visual);
             // lampu pemain ada di dekat tubuhnya sendiri; tanpa ini tubuh pemain melempar bayangan raksasa ke depan
-            foreach (var r in Model(PyroModel, visual).GetComponentsInChildren<Renderer>()) r.shadowCastingMode = ShadowCastingMode.Off;
+            foreach (var r in model.GetComponentsInChildren<Renderer>()) r.shadowCastingMode = ShadowCastingMode.Off;
+            // bidik dan gerak terpisah: mundur sambil membidik memutar klip Move terbalik
+            AddLocomotion(go, model, "Pyromancer3D", PyroModel, 5f, 0.6f, 1.2f, true, visual);
             // cahaya pemain GDD §4.2: radius 3 tile, jingga hangat, dengan bayangan supaya pilar memotong cahaya
             var light = PointLight(go.transform, "PlayerLight", 3f, 7f, true);
             // lampu sedikit di depan tapi tetap di dalam kapsul (|z| <= 0,25), supaya tidak masuk ke pilar saat menempel
@@ -130,6 +134,7 @@ namespace Runecrypt.EditorTools3D
             var visual = new GameObject("Visual").transform;
             visual.SetParent(go.transform, false);
             var model = Model(TulangModel, visual);
+            AddLocomotion(go, model, "Tulang3D", TulangModel, 2f, 0.5f, 1.3f, false, null);
             var e = go.AddComponent<Enemy3D>();
             SetRef(e, "definition", AssetDatabase.LoadAssetAtPath<EnemyDefinition>("Assets/Runecrypt/Data/Enemies/TulangPenjaga.asset"));
             SetRef(e, "lightRules", AssetDatabase.LoadAssetAtPath<LightRules>("Assets/Runecrypt/Data/LightRules.asset"));
@@ -140,6 +145,46 @@ namespace Runecrypt.EditorTools3D
             for (int i = 0; i < rs.Length; i++) arr.GetArrayElementAtIndex(i).objectReferenceValue = rs[i];
             so.ApplyModifiedPropertiesWithoutUndo();
             return Save(go, "Tulang3D").GetComponent<Enemy3D>();
+        }
+
+        // Animator Idle <-> Move. v0 sama dengan konstanta V0 di script rig Blender (m3d_*_rig.py).
+        static void AddLocomotion(GameObject go, GameObject model, string name, string modelPath, float v0, float minMul, float maxMul,
+                                  bool reverse, Transform facing)
+        {
+            var anim = model.GetComponent<Animator>();
+            anim.runtimeAnimatorController = BuildController(name, modelPath, v0, minMul);
+            anim.applyRootMotion = false;
+            var loco = go.AddComponent<Locomotion3D>();
+            var so = new SerializedObject(loco);
+            so.FindProperty("animator").objectReferenceValue = anim;
+            so.FindProperty("designSpeed").floatValue = v0;
+            so.FindProperty("minMul").floatValue = minMul;
+            so.FindProperty("maxMul").floatValue = maxMul;
+            so.FindProperty("reverseWhenBackward").boolValue = reverse;
+            so.FindProperty("facing").objectReferenceValue = facing;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        // Blend tree 1D pada Speed (Idle di 0, Move di minMul·v0, threshold manual karena klip in-place),
+        // laju state dari SpeedMul. Dibuat ulang setiap build supaya bisa direproduksi.
+        static AnimatorController BuildController(string name, string modelPath, float v0, float minMul)
+        {
+            Directory.CreateDirectory(Root + "Animation");
+            string path = Root + "Animation/" + name + ".controller";
+            AssetDatabase.DeleteAsset(path);
+            var ctrl = AnimatorController.CreateAnimatorControllerAtPath(path);
+            ctrl.AddParameter("Speed", AnimatorControllerParameterType.Float);
+            ctrl.AddParameter(new AnimatorControllerParameter { name = "SpeedMul", type = AnimatorControllerParameterType.Float, defaultFloat = 1f });
+            var state = ctrl.CreateBlendTreeInController("Locomotion", out var tree);
+            tree.blendParameter = "Speed";
+            tree.useAutomaticThresholds = false;
+            var clips = AssetDatabase.LoadAllAssetsAtPath(modelPath).OfType<AnimationClip>().Where(c => !c.name.StartsWith("__preview")).ToDictionary(c => c.name);
+            tree.AddChild(clips["Idle"], 0f);
+            tree.AddChild(clips["Move"], minMul * v0);
+            state.speedParameterActive = true;
+            state.speedParameter = "SpeedMul";
+            EditorUtility.SetDirty(ctrl);
+            return ctrl;
         }
 
         static void Capsule(GameObject go)

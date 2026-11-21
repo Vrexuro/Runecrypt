@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 4743205111184208694}
   - component: {fileID: 9218360778599089753}
   - component: {fileID: 6610894666198806510}
+  - component: {fileID: 4410599015734900316}
   - component: {fileID: 7195912149891166690}
   - component: {fileID: 5530386893634670164}
   m_Layer: 10
@@ -87,6 +88,24 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &4410599015734900316
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2979790338346074974}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21949c36d46f87a40b38e73e69edf029, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Runecrypt.Game3D::Runecrypt.Game3D.Locomotion3D
+  animator: {fileID: 6193937898590938911}
+  designSpeed: 5
+  minMul: 0.6
+  maxMul: 1.2
+  reverseWhenBackward: 1
+  facing: {fileID: 2914384421141918404}
 --- !u!114 &7195912149891166690
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -307,6 +326,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Pyromancer3D
       objectReference: {fileID: 0}
+    - target: {fileID: 5866666021909216657, guid: 53c8afb947427944a98ff54a7b600146, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: b6be345a3bbb5f44f86c97b291ba2d32, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -315,5 +338,10 @@ PrefabInstance:
 --- !u!4 &222195250404949349 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 53c8afb947427944a98ff54a7b600146, type: 3}
+  m_PrefabInstance: {fileID: 333226903111932558}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &6193937898590938911 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 53c8afb947427944a98ff54a7b600146, type: 3}
   m_PrefabInstance: {fileID: 333226903111932558}
   m_PrefabAsset: {fileID: 0}
