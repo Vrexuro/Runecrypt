@@ -13,9 +13,11 @@ namespace Runecrypt.Tests3D
         static Vector3 EyeCenter(GameObject go, string eyeMaterial)
         {
             Vector3 sum = Vector3.zero; int n = 0;
-            foreach (var r in go.GetComponentsInChildren<MeshRenderer>())
+            foreach (var r in go.GetComponentsInChildren<Renderer>())
             {
-                var mesh = r.GetComponent<MeshFilter>().sharedMesh;
+                // model ber-rig: posisi bind SkinnedMeshRenderer cukup untuk arah hadap
+                var mesh = r is SkinnedMeshRenderer smr ? smr.sharedMesh : r.TryGetComponent<MeshFilter>(out var f) ? f.sharedMesh : null;
+                if (mesh == null) continue;
                 var mats = r.sharedMaterials;
                 var verts = mesh.vertices;
                 for (int s = 0; s < mesh.subMeshCount && s < mats.Length; s++)

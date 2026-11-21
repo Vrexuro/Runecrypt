@@ -136,6 +136,22 @@ def key_clip(arm, name, frames, pose_fn):
     return act
 
 
+class solo_track:
+    """with solo_track(arm, 'Move'): hanya track itu yang dievaluasi (untuk self-check per frame)."""
+
+    def __init__(self, arm, name):
+        self.tracks = arm.animation_data.nla_tracks
+        self.name = name
+
+    def __enter__(self):
+        for t in self.tracks:
+            t.mute = t.name != self.name
+
+    def __exit__(self, *exc):
+        for t in self.tracks:
+            t.mute = False
+
+
 def two_bone_ik(hip, target, l1, l2):
     """IK analitis di bidang y-z. hip, target: (y, z). Hasil: (sudut paha absolut, tekuk lutut) dalam radian.
 
@@ -167,6 +183,7 @@ def export_fbx(arm, mesh, path):
         bake_anim=True, bake_anim_use_nla_strips=True, bake_anim_use_all_actions=False,
         bake_anim_force_startend_keying=True, bake_anim_simplify_factor=0.0, bake_anim_use_all_bones=True,
         # ekspor uji 2026-11-21: forward 'Z' + bakeAxisConversion Unity mati -> depan (-Y Blender) jadi +Z, skala 1
+        use_triangles=True,   # n-gon cekung (panggul, bilah pedang) dibuang Unity sebagai self-intersecting
         use_mesh_modifiers=True, apply_scale_options='FBX_SCALE_ALL', axis_forward='Z', axis_up='Y')
 
 

@@ -133,7 +133,7 @@ MonoBehaviour:
   lightRules: {fileID: 11400000, guid: 78f5b19299ebb554ba36837f4785062c, type: 2}
   visual: {fileID: 873582052636635349}
   flashRenderers:
-  - {fileID: 693393351124187954}
+  - {fileID: 3454511061760438798}
 --- !u!1001 &2188459379458402230
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -144,7 +144,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 0bc4838d7e57e7d44a2c2a8ec29143ef, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0bc4838d7e57e7d44a2c2a8ec29143ef, type: 3}
       propertyPath: m_LocalPosition.y
@@ -164,11 +164,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0bc4838d7e57e7d44a2c2a8ec29143ef, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0bc4838d7e57e7d44a2c2a8ec29143ef, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0bc4838d7e57e7d44a2c2a8ec29143ef, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -191,13 +191,13 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0bc4838d7e57e7d44a2c2a8ec29143ef, type: 3}
---- !u!23 &693393351124187954 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: 0bc4838d7e57e7d44a2c2a8ec29143ef, type: 3}
-  m_PrefabInstance: {fileID: 2188459379458402230}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1861184325974753373 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 0bc4838d7e57e7d44a2c2a8ec29143ef, type: 3}
+  m_PrefabInstance: {fileID: 2188459379458402230}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &3454511061760438798 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 3579829230510151096, guid: 0bc4838d7e57e7d44a2c2a8ec29143ef, type: 3}
   m_PrefabInstance: {fileID: 2188459379458402230}
   m_PrefabAsset: {fileID: 0}

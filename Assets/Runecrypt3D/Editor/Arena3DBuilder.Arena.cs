@@ -27,6 +27,7 @@ namespace Runecrypt.EditorTools3D
             ConfigureProject();
             EnableAdditionalLightShadows();
             foreach (var d in new[] { "Scenes", "Prefabs", "Materials" }) Directory.CreateDirectory(Root + d);
+            ConfigureRig(TulangModel);
             RemapPyromancerMaterials();
             FixTulangEye();
 
@@ -230,6 +231,24 @@ namespace Runecrypt.EditorTools3D
         }
 
         // ---------- utilitas ----------
+        // Rig dari script Blender (m3d_*_rig.py): Generic, klip Idle/Move berulang, tanpa kompresi (rig kecil mudah bergetar).
+        static void ConfigureRig(string modelPath)
+        {
+            var imp = (ModelImporter)AssetImporter.GetAtPath(modelPath);
+            imp.animationType = ModelImporterAnimationType.Generic;
+            imp.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+            imp.animationCompression = ModelImporterAnimationCompression.Off;
+            imp.SaveAndReimport();   // take baru terbaca sebagai defaultClipAnimations setelah tipe Generic
+            var clips = imp.defaultClipAnimations;
+            foreach (var c in clips)
+            {
+                c.name = c.name.Substring(c.name.LastIndexOf('|') + 1);   // "Rig|Move" -> "Move"
+                c.loopTime = true;
+            }
+            imp.clipAnimations = clips;
+            imp.SaveAndReimport();
+        }
+
         static void RemapPyromancerMaterials()
         {
             var mats = new Dictionary<string, Material>
