@@ -130,7 +130,7 @@ namespace Runecrypt.Spike3D
             {
                 mat.EnableKeyword("_EMISSION");
                 mat.SetColor("_EmissionColor", emission.Value);
-                mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
+                mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;   // None membuat URP 17 mematikan _EMISSION
             }
             EditorUtility.SetDirty(mat);
             return mat;

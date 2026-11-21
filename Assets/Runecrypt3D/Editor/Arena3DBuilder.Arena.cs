@@ -28,6 +28,7 @@ namespace Runecrypt.EditorTools3D
             EnableAdditionalLightShadows();
             foreach (var d in new[] { "Scenes", "Prefabs", "Materials" }) Directory.CreateDirectory(Root + d);
             RemapPyromancerMaterials();
+            FixTulangEye();
 
             BuildPlayer(BuildFireball());
             BuildTulang();
@@ -150,7 +151,7 @@ namespace Runecrypt.EditorTools3D
         {
             var m = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(path));
             m.transform.SetParent(parent, false);
-            m.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);   // ekspor FBX dari Blender membalik arah depan
+            // depan model FBX sudah +Z; putaran 180° di Spike3DSetup hanya untuk memamerkan wajah ke kamera
             foreach (var r in m.GetComponentsInChildren<Renderer>()) r.shadowCastingMode = ShadowCastingMode.On;
             return m;
         }
@@ -281,10 +282,20 @@ namespace Runecrypt.EditorTools3D
             {
                 mat.EnableKeyword("_EMISSION");
                 mat.SetColor("_EmissionColor", emission.Value);
-                mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
+                // URP 17 mematikan _EMISSION saat validasi material kalau flag GI tidak emissive
+                mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
             }
             EditorUtility.SetDirty(mat);
             return mat;
+        }
+
+        // Material mata Tulang dibuat Spike3DSetup; perbaiki flag GI-nya di sini supaya Build Arena saja cukup.
+        static void FixTulangEye()
+        {
+            var eye = AssetDatabase.LoadAssetAtPath<Material>("Assets/Spike3D/Materials/Tulang_Eye.mat");
+            eye.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+            eye.EnableKeyword("_EMISSION");
+            EditorUtility.SetDirty(eye);
         }
 
         static void SetRef(Object target, string field, Object value)
