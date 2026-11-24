@@ -94,6 +94,28 @@ namespace Runecrypt.EditorTools
             Physics2D.IgnoreLayerCollision(react, enemies, true);
             Physics2D.IgnoreLayerCollision(react, walls, true);
             Physics2D.IgnoreLayerCollision(react, react, true);
+
+            // M2.5: Anglo dan Guci padat bagi pemain, musuh, dan tembakan; uap dan dinding tidak menyentuhnya.
+            int props = EnsureLayer("Props");
+            Physics2D.IgnoreLayerCollision(props, react, true);
+            Physics2D.IgnoreLayerCollision(props, walls, true);
+        }
+
+        // Menambah layer di slot user pertama yang kosong (8–31) kalau belum ada.
+        static int EnsureLayer(string name)
+        {
+            int existing = Layer(name);
+            if (existing >= 0) return existing;
+            var tags = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
+            var layers = tags.FindProperty("layers");
+            for (int i = 8; i < layers.arraySize; i++)
+            {
+                if (!string.IsNullOrEmpty(layers.GetArrayElementAtIndex(i).stringValue)) continue;
+                layers.GetArrayElementAtIndex(i).stringValue = name;
+                tags.ApplyModifiedPropertiesWithoutUndo();
+                return i;
+            }
+            throw new System.InvalidOperationException("Tidak ada slot layer kosong untuk " + name);
         }
 
         static Fireball BuildFireballPrefab()
