@@ -247,6 +247,7 @@ Akibatnya terhadap desain:
 - Relic dan upgrade yang menambah radius cahaya, seperti Lentera Tulang, Sumbu Panjang, dan Cahaya Melebar, kini juga menambah daya serang. Karena itu relic terkutuk Lidah Kegelapan benar-benar menjadi pertukaran yang sulit.
 - Cahaya yang menyempit di lapisan lebih dalam dan di fase 2–3 boss membuat pertarungan lebih sulit, bukan hanya lebih gelap.
 - **Cahaya dari musuh yang Terbakar ikut membuatnya Tersingkap** (keputusan user, 17 Nov 2026). Jadi setelah kena bola api pertama, musuh itu Tersingkap selama Terbakar aktif. Tembakan berikutnya mendapat +25%, dan damage Terbakar sendiri menjadi 1,25/detik. Api memang dirancang "menandai" sasarannya. Kalau di uji seru (bagian 13) damage api terasa terlalu kuat, angka yang disetel adalah damage dasar atau bonus Tersingkap, bukan aturan ini.
+- **Anglo** (M2.5, spec `Docs/specs/2026-11-24-isi-makam-design.md`) adalah sumber cahaya lingkungan. Anglo menyala kalau terkena Bola Api atau Kobaran, lalu menerangi radius 2,5 tile sampai ruangan dimulai ulang. Musuh di dekatnya jadi Tersingkap dan kehilangan bonus kecepatan gelap. Reaksi tidak menyalakan Anglo. Nisan, pilar, dan sarkofagus memotong cahaya seperti dinding.
 
 ---
 
@@ -317,6 +318,8 @@ Keputusan user, 18 Nov 2026. Detail lengkap ada di `Docs/specs/2026-11-18-peti-p
   - Pemain kena: kedipan merah, hit-stop 0,08 dtk, guncangan sedang, lalu berkedip selama kebal 0,8 dtk.
   - Tembakan hanya menyentak kamera 1 piksel (tanpa guncangan) supaya tidak memicu mabuk gerak.
   - Squash and stretch dan dissolve belum dibuat.
+- **Kit makam (M2.5):** variasi lantai (biasa ±70%, retak, berlumut, ada tulang, rune pudar), overlay dinding atas (relung berisi tengkorak, obor padam, bata retak), dekorasi lepas (sarang laba-laba, rantai, tulang, panji, lilin padam), debu yang hanya tampak di area terang, dan suara ambien makam. Benda yang bisa dipakai: Anglo, Guci Abu (pecah, peluang 15% menjatuhkan Bara Pemulih +1 HP), serta nisan, sarkofagus, dan pilar sebagai tempat berlindung.
+- **Keterbacaan:** benda yang bisa dipakai punya garis terang 1 piksel di sisi atas dan bentuk lebih gemuk; dekorasi lebih gelap dan rata tanpa garis terang. Tidak ada merah terang selain mata musuh.
 
 ### 7.2 Audio
 SFX sintesis lewat script Python sudah dicoba dan dinilai kurang (17 Nov 2026), jadi **SFX memakai paket gratis berlisensi CC0**. Script `ArtSource/scripts/make_sfx_cc0.py` hanya memotong, mencampur, dan menormalkan file CC0 mentah. Sumber dan lisensinya dicatat di bagian kredit (§14). Musik belum ditentukan.
@@ -358,6 +361,7 @@ Uji tata letak terburuk: pemain yang hanya memakai keyboard laptop tanpa mouse t
 - **Ruang boss** ditempatkan di ujung buntu terjauh dari ruang awal. **Ruang harta** pasti ada 1 di ujung buntu lain. Ruang harta kedua muncul dengan peluang 10%, kalau masih ada ujung buntu tersisa (bagian 4.3).
 - Setiap ruangan adalah **prefab Tilemap buatan tangan** berukuran satu layar. Prefab menandai titik pintu (atas, bawah, kiri, kanan), titik spawn musuh, dan posisi benda reaksi. Pintu yang tidak terhubung ditutup tembok.
 - Target MVP: **10 prefab ruang musuh**, 1 ruang awal/tutorial, 2 ruang harta, dan 1 arena boss.
+- Prefab ruangan memakai kit makam M2.5 (prefab Anglo, Guci Abu, nisan, sarkofagus, dan sprite dekorasi). Benda yang menahan gerak ditaruh di pinggir dan sudut, menjauhi titik spawn dan pintu. Saat pemain masuk ruangan, sinyal `RoomEvents.Started` mengembalikan Anglo dan guci ke keadaan awal.
 
 ### 9.2 Ruang Tutorial
 Kontrol terukir di lantai, dengan ikon yang menyesuaikan perangkat input yang terakhir dipakai. Isinya: 2 Pelita Sesat, 1 Genangan Beku, dan 1 Tiang Petir, supaya pemain langsung memicu kedua reaksi.
@@ -441,6 +445,7 @@ Playtest dilakukan minimal sekali seminggu setelah prototipe jalan, terutama di 
 |---|---|---|---|---|---|
 | 17 Nov 2026 | User (anggota tim, belum penguji luar) | M1-baseline (`feature/m1-prototipe`, tanpa juice dan SFX), ±5 menit, charger tercolok | (1) 30 detik pertama tidak membingungkan. (2) Tidak ada bagian yang terlalu gelap, tetapi tembok kiri dan kanan sulit dibedakan dari latar, sehingga pemain kadang tersangkut. (3) Mulai bosan karena hanya satu arena, tanpa ruangan berikutnya dan tanpa SFX. (4) Perbedaan musuh terang dan gelap terasa. Pertanyaan "ingin mencoba lagi?" dan "sengaja menembak genangan es?" belum terjawab jelas. | SFX dan efek pukulan: M1.5. Ruangan berikutnya: M2 (generator). Kontras tembok: kandidat perbaikan, misalnya rim light atau tepi terang pada tile tembok. | Dibandingkan pada uji M1.5 (Task 9) |
 | 18 Nov 2026 | User (anggota tim) | M2 (`feature/m2-mesin-konten`, relic 1–10, Kobaran, garis tepi Tersingkap) | (1) Garis tepi jingga pada musuh terang dirasa tidak perlu. (2) Relic dari setiap gelombang terasa salah; relic seharusnya langka. (3) Dinding ruangan bisa ditembus di keempat sisi. | (1) Garis tepi dihapus (899604f). (2) Relic sebelum boss hanya dari ruang harta, 1 pasti dan ruang kedua 10% (§4.3, dikerjakan di M4; pickup tiap gelombang tetap dipakai sementara untuk mencoba relic). (3) Bug sejak M1: collider dinding tidak pernah dibangun builder, diperbaiki dengan test regresi (7de92dd). | Belum diuji ulang |
+| *(menunggu)* | User | M2.5 Isi Makam (`feature/m2-5-isi-makam`) | Pertanyaan: (1) apakah ruangan masih terasa sepi; (2) apakah pemain sengaja menyalakan Anglo; (3) apakah mata merah musuh tetap mudah terlihat; (4) apakah benda yang bisa dipakai bisa dibedakan dari dekorasi | | |
 | | | | | | |
 
 Pertanyaan tetap untuk penguji: Apa yang membingungkan di 30 detik pertama? Bagian mana yang terlalu gelap? Kapan terasa bosan? Apakah ingin mencoba lagi? Khusus prototipe M1: apakah genangan es sengaja ditembak, dan apakah terasa beda musuh di terang dan di gelap?
@@ -458,6 +463,7 @@ Usulan desain dari sesi baseline (belum diputuskan, dibahas lewat brainstorming)
 | 0.3 | 18 Nov 2026 | Dari usulan user setelah baseline M1: kenaikan kesulitan per ruangan dan per lantai, batas 8 musuh, 3 jenis pintu dan Gerbang Segel, peti boss (hadiah, Mimik, kutukan), cutscene peti, komik pembuka, cerita per lantai |
 | 0.4 | 18 Nov 2026 | M2 mesin konten: relic sebagai data (daftar modifier stat yang bertumpuk), relic 1–10 bisa dimainkan, Kobaran (klik kanan / RT / Shift kiri), status Stun, garis tepi jingga untuk musuh Tersingkap |
 | 0.5 | 18 Nov 2026 | Dari uji user M2: relic sebelum boss hanya dari ruang harta (1 pasti, ruang kedua 10%), ruang musuh tidak menjatuhkan relic, garis tepi Tersingkap dihapus |
+| 0.6 | 24 Nov 2026 | M2.5 Isi Makam: kit makam (variasi lantai dan dinding, dekorasi, debu, ambien), Anglo sebagai sumber cahaya lingkungan, Guci Abu dan Bara Pemulih, nisan dan sarkofagus sebagai tempat berlindung; versi expo tetap 2D |
 
 **Kredit aset:** semua sprite dibuat sendiri lewat script Python. SFX memakai paket berikut, semuanya berlisensi CC0 (domain publik), dipotong dan dicampur lewat `ArtSource/scripts/make_sfx_cc0.py`:
 
