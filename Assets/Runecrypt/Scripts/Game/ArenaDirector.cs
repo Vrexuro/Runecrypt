@@ -77,6 +77,7 @@ namespace Runecrypt.Game
 
         void SpawnWave()
         {
+            RoomEvents.RaiseStarted(); // satu gelombang = satu ruangan (spec Isi Makam §6)
             wave++;
             int count = Mathf.Min(2 + wave, maxPerWave);
             Vector2 p = player.transform.position;
