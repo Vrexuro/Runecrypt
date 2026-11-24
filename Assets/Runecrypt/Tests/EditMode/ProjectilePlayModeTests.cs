@@ -39,7 +39,7 @@ namespace Runecrypt.Tests
             Count = 1, Pierce = pierce, Bounce = bounce, HomingTurn = homing,
         };
 
-        static Fireball MakeFireball(Vector2 pos, bool withLight = false)
+        internal static Fireball MakeFireball(Vector2 pos, bool withLight = false)
         {
             var go = new GameObject("Fireball");
             go.SetActive(false);
@@ -69,7 +69,7 @@ namespace Runecrypt.Tests
 
         // Menunggu n langkah fisika. WaitForFixedUpdate sendiri lanjut sekali per frame walau frame itu tanpa
         // langkah fisika, jadi yang dihitung adalah Time.fixedTime. Bisa lebih beberapa langkah saat frame melompat.
-        static IEnumerator Steps(int n)
+        internal static IEnumerator Steps(int n)
         {
             float target = Time.fixedTime + n * Time.fixedDeltaTime - 1e-4f;
             while (Time.fixedTime < target) yield return new WaitForFixedUpdate();

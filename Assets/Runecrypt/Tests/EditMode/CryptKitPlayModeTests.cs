@@ -68,5 +68,67 @@ namespace Runecrypt.Tests
             finally { RoomEvents.ClearForTests(); }
             yield return new ExitPlayMode();
         }
+
+        // ---------- Task 4: Anglo ----------
+        const string Prefabs = "Assets/Runecrypt/Prefabs/";
+
+        static T Spawn<T>(string prefab, Vector2 pos) where T : Component =>
+            Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(Prefabs + prefab + ".prefab"), pos, Quaternion.identity)
+                .GetComponent<T>();
+
+        static HitInfo Hit(Element e, Vector2 at, float damage = 3f) => new HitInfo(damage, e, e == Element.Fire, at);
+
+        [UnityTest]
+        public IEnumerator Fireball_LightsBrazier()
+        {
+            yield return new EnterPlayMode();
+            var brazier = Spawn<Brazier>("Brazier", new Vector2(X + 3f, 0f));
+            yield return ProjectilePlayModeTests.Steps(2);
+            ProjectilePlayModeTests.MakeFireball(new Vector2(X, 0f)).Launch(Vector2.right);
+            yield return ProjectilePlayModeTests.Steps(30);
+            bool lit = brazier.IsLit;
+            yield return new ExitPlayMode();
+            Assert.IsTrue(lit);
+        }
+
+        // Anglo yang menyala adalah sumber cahaya aturan dengan radius 2,5 (spec §5.2).
+        [UnityTest]
+        public IEnumerator LitBrazier_RevealsNearbyEnemy()
+        {
+            yield return new EnterPlayMode();
+            var brazier = Spawn<Brazier>("Brazier", new Vector2(X, 0f));
+            Vector2 near = new Vector2(X + 2f, 0f), far = new Vector2(X + 3f, 0f);
+            bool before = LightFieldHost.Field.IsLit(near);
+            brazier.TakeHit(Hit(Element.Fire, brazier.transform.position));
+            bool nearAfter = LightFieldHost.Field.IsLit(near), farAfter = LightFieldHost.Field.IsLit(far);
+            yield return new ExitPlayMode();
+            Assert.IsFalse(before, "padam: tidak menerangi");
+            Assert.IsTrue(nearAfter, "2 tile: terang");
+            Assert.IsFalse(farAfter, "3 tile: di luar radius 2,5");
+        }
+
+        [UnityTest]
+        public IEnumerator IceHit_DoesNotLightBrazier()
+        {
+            yield return new EnterPlayMode();
+            var brazier = Spawn<Brazier>("Brazier", new Vector2(X, 0f));
+            brazier.TakeHit(Hit(Element.Ice, brazier.transform.position));
+            bool lit = brazier.IsLit;
+            yield return new ExitPlayMode();
+            Assert.IsFalse(lit);
+        }
+
+        [UnityTest]
+        public IEnumerator RoomStarted_ExtinguishesBrazier()
+        {
+            yield return new EnterPlayMode();
+            var brazier = Spawn<Brazier>("Brazier", new Vector2(X, 0f));
+            brazier.TakeHit(Hit(Element.Fire, brazier.transform.position));
+            RoomEvents.RaiseStarted();
+            bool lit = brazier.IsLit, lightOn = LightFieldHost.Field.IsLit(new Vector2(X + 1f, 0f));
+            yield return new ExitPlayMode();
+            Assert.IsFalse(lit);
+            Assert.IsFalse(lightOn, "sumber cahaya ikut padam");
+        }
     }
 }
