@@ -278,6 +278,47 @@ namespace Runecrypt.Tests
             Assert.IsTrue(lit, "Anglo dalam radius menyala");
         }
 
+        // ---------- Task 6: Nisan dan Sarkofagus ----------
+        [UnityTest]
+        public IEnumerator Tombstone_StopsFireball()
+        {
+            yield return new EnterPlayMode();
+            Spawn<Transform>("Tombstone", new Vector2(X + 3f, 0f));
+            yield return ProjectilePlayModeTests.Steps(2);
+            var fb = ProjectilePlayModeTests.MakeFireball(new Vector2(X, 0f));
+            fb.Launch(Vector2.right);
+            yield return ProjectilePlayModeTests.Steps(30);
+            bool stopped = fb == null;
+            yield return new ExitPlayMode();
+            Assert.IsTrue(stopped, "Bola Api berhenti di nisan, tidak terbang sampai jangkauan habis");
+        }
+
+        // Nisan di layer Walls juga menghalangi aturan cahaya (raycast LightFieldHost).
+        [UnityTest]
+        public IEnumerator Tombstone_BlocksLightRule()
+        {
+            yield return new EnterPlayMode();
+            var hostGo = new GameObject("LightFieldHost");
+            hostGo.SetActive(false);
+            var host = hostGo.AddComponent<LightFieldHost>();
+            var hso = new SerializedObject(host);
+            hso.FindProperty("wallMask").intValue = LayerMask.GetMask("Walls");
+            hso.ApplyModifiedPropertiesWithoutUndo();
+            hostGo.SetActive(true);
+            var lamp = new GameObject("Lamp");
+            lamp.transform.position = new Vector2(X, 0f);
+            lamp.AddComponent<LightSourceBehaviour>().Radius = 3f;
+            Spawn<Transform>("Tombstone", new Vector2(X + 1.5f, 0f));
+            yield return ProjectilePlayModeTests.Steps(2);
+            Physics2D.SyncTransforms();
+            bool behind = LightFieldHost.Field.IsLit(new Vector2(X + 2.5f, 0f));
+            bool beside = LightFieldHost.Field.IsLit(new Vector2(X, 2.5f));
+            Object.Destroy(lamp);
+            yield return new ExitPlayMode();
+            Assert.IsFalse(behind, "titik di balik nisan gelap");
+            Assert.IsTrue(beside, "titik pada jarak sama tanpa penghalang terang");
+        }
+
         // Review Focus 4: musuh yang menyentuh Bara Pemulih tidak menghabiskannya.
         [UnityTest]
         public IEnumerator HealingEmber_IgnoresEnemies()

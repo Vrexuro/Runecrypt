@@ -21,6 +21,9 @@ namespace Runecrypt.EditorTools
             public Brazier brazier;
             public AshUrn urn;
             public HealingEmber ember;
+            public GameObject tombstone;
+            public GameObject sarcophagus;
+            public Sprite pillarSprite;
         }
 
         [MenuItem("Runecrypt/M2.5/Build Crypt Assets")]
@@ -28,7 +31,13 @@ namespace Runecrypt.EditorTools
         {
             Directory.CreateDirectory(PrefabDir);
             var ember = BuildEmber();
-            var a = new Assets { brazier = BuildBrazier(), ember = ember, urn = BuildUrn(ember) };
+            var a = new Assets
+            {
+                brazier = BuildBrazier(), ember = ember, urn = BuildUrn(ember),
+                tombstone = BuildCover("Tombstone", "tombstone", new Vector2(0.75f, 0.8f), new Vector2(0f, -0.05f)),
+                sarcophagus = BuildCover("Sarcophagus", "sarcophagus", new Vector2(1.85f, 0.8f), new Vector2(0f, -0.05f)),
+                pillarSprite = Sprite("pillar"),
+            };
             AssetDatabase.SaveAssets();
             return a;
         }
@@ -138,6 +147,19 @@ namespace Runecrypt.EditorTools
             so.FindProperty("igniteProfile").objectReferenceValue = profile;
             so.ApplyModifiedPropertiesWithoutUndo();
             return Save(go).GetComponent<Brazier>();
+        }
+
+        // Tempat berlindung (spec §5.4): seperti dinding — menahan gerak dan tembakan, dan memotong cahaya di layar
+        // (ShadowCaster2D) maupun di aturan (raycast LightFieldHost membaca layer Walls).
+        static GameObject BuildCover(string name, string sprite, Vector2 size, Vector2 offset)
+        {
+            var go = new GameObject(name) { layer = LayerMask.NameToLayer("Walls") };
+            go.AddComponent<SpriteRenderer>().sprite = Sprite(sprite);
+            var box = go.AddComponent<BoxCollider2D>();
+            box.size = size;
+            box.offset = offset;
+            go.AddComponent<UnityEngine.Rendering.Universal.ShadowCaster2D>();
+            return Save(go);
         }
 
         static GameObject Save(GameObject go)
