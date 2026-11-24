@@ -21,7 +21,7 @@ namespace Runecrypt.Tests
             while (!done() && Time.realtimeSinceStartup < end) yield return null;
         }
 
-        static PlayerController MakePlayer(Vector2 pos)
+        internal static PlayerController MakePlayer(Vector2 pos)
         {
             var go = new GameObject("TestPlayer");
             go.transform.position = pos;
@@ -129,6 +129,166 @@ namespace Runecrypt.Tests
             yield return new ExitPlayMode();
             Assert.IsFalse(lit);
             Assert.IsFalse(lightOn, "sumber cahaya ikut padam");
+        }
+
+        // ---------- Task 5: Guci Abu dan Bara Pemulih ----------
+        static PlayerController PlayerAt(Vector2 pos)
+        {
+            var p = MakePlayer(pos);
+            p.gameObject.layer = LayerMask.NameToLayer("Player");
+            return p;
+        }
+
+        [UnityTest]
+        public IEnumerator Fireball_BreaksUrnAndIsSpent()
+        {
+            yield return new EnterPlayMode();
+            var urn = Spawn<AshUrn>("AshUrn", new Vector2(X + 3f, 0f));
+            yield return ProjectilePlayModeTests.Steps(2);
+            var fb = ProjectilePlayModeTests.MakeFireball(new Vector2(X, 0f));
+            fb.Launch(Vector2.right);
+            yield return ProjectilePlayModeTests.Steps(30);
+            bool broken = urn.IsBroken, spent = fb == null;
+            yield return new ExitPlayMode();
+            Assert.IsTrue(broken, "Bola Api dasar (damage 3) memecahkan guci HP 3");
+            Assert.IsTrue(spent, "tembakan habis");
+        }
+
+        [UnityTest]
+        public IEnumerator Urn_DropsEmberWhenRollUnderChance()
+        {
+            yield return new EnterPlayMode();
+            var lucky = Spawn<AshUrn>("AshUrn", new Vector2(X, 0f));
+            lucky.random = () => 0.1f;
+            lucky.TakeHit(Hit(Element.Fire, lucky.transform.position));
+            var unlucky = Spawn<AshUrn>("AshUrn", new Vector2(X + 10f, 0f));
+            unlucky.random = () => 0.5f;
+            unlucky.TakeHit(Hit(Element.Fire, unlucky.transform.position));
+            var embers = Object.FindObjectsByType<HealingEmber>(FindObjectsSortMode.None);
+            int nearLucky = embers.Count(e => Vector2.Distance(e.transform.position, lucky.transform.position) < 1f);
+            int nearUnlucky = embers.Count(e => Vector2.Distance(e.transform.position, unlucky.transform.position) < 1f);
+            yield return new ExitPlayMode();
+            Assert.AreEqual(1, nearLucky, "undian 0,1 < 0,15: jatuh");
+            Assert.AreEqual(0, nearUnlucky, "undian 0,5: tidak jatuh");
+        }
+
+        [UnityTest]
+        public IEnumerator HealingEmber_HealsOneCappedAtMax()
+        {
+            yield return new EnterPlayMode();
+            var hurt = PlayerAt(new Vector2(X + 20f, 0f));
+            hurt.Health.TakeDamage(2f);                                   // 4/6
+            var full = PlayerAt(new Vector2(X + 30f, 0f));                // 6/6
+            var e1 = Spawn<HealingEmber>("HealingEmber", hurt.transform.position);
+            var e2 = Spawn<HealingEmber>("HealingEmber", full.transform.position);
+            yield return ProjectilePlayModeTests.Steps(3);
+            float hurtHp = hurt.Health.Current, fullHp = full.Health.Current;
+            bool gone1 = e1 == null, gone2 = e2 == null;
+            yield return new ExitPlayMode();
+            Assert.AreEqual(5f, hurtHp, 1e-4f);
+            Assert.AreEqual(6f, fullHp, 1e-4f, "tidak melewati HP maksimal");
+            Assert.IsTrue(gone1 && gone2, "bara habis saat diambil");
+        }
+
+        [UnityTest]
+        public IEnumerator HealingEmber_ExpiresAfterTenSeconds()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<HealingEmber>(Prefabs + "HealingEmber.prefab");
+            float lifetime = new SerializedObject(prefab).FindProperty("lifetime").floatValue;
+            yield return new EnterPlayMode();
+            var ember = Spawn<HealingEmber>("HealingEmber", new Vector2(X, 0f));
+            var so = new SerializedObject(ember);
+            so.FindProperty("lifetime").floatValue = 0.2f; // diperpendek supaya test cepat
+            so.ApplyModifiedPropertiesWithoutUndo();
+            yield return WaitUntilOrTimeout(() => ember == null, 3f);
+            bool gone = ember == null;
+            yield return new ExitPlayMode();
+            Assert.AreEqual(10f, lifetime, 1e-4f, "spec §5.3: 10 detik");
+            Assert.IsTrue(gone);
+        }
+
+        [UnityTest]
+        public IEnumerator RoomStarted_RestoresUrn()
+        {
+            yield return new EnterPlayMode();
+            var urn = Spawn<AshUrn>("AshUrn", new Vector2(X, 0f));
+            urn.random = () => 1f;
+            urn.TakeHit(Hit(Element.Fire, urn.transform.position));
+            RoomEvents.RaiseStarted();
+            yield return ProjectilePlayModeTests.Steps(2);
+            bool broken = urn.IsBroken;
+            yield return new ExitPlayMode();
+            Assert.IsFalse(broken);
+        }
+
+        // Review Focus 1: guci yang muncul lagi tidak boleh menjebak pemain di dalam collider.
+        [UnityTest]
+        public IEnumerator AshUrn_RespawnWaitsUntilPlayerClear()
+        {
+            yield return new EnterPlayMode();
+            var urn = Spawn<AshUrn>("AshUrn", new Vector2(X, 0f));
+            urn.random = () => 1f;
+            urn.TakeHit(Hit(Element.Fire, urn.transform.position));
+            var player = PlayerAt(urn.transform.position);
+            yield return ProjectilePlayModeTests.Steps(2);
+            RoomEvents.RaiseStarted();
+            yield return ProjectilePlayModeTests.Steps(3);
+            bool whileStanding = urn.IsBroken;
+            player.transform.position = new Vector2(X + 5f, 0f);
+            Physics2D.SyncTransforms();
+            yield return ProjectilePlayModeTests.Steps(3);
+            bool afterLeaving = urn.IsBroken;
+            yield return new ExitPlayMode();
+            Assert.IsTrue(whileStanding, "menunggu selama pemain berdiri di sana");
+            Assert.IsFalse(afterLeaving, "utuh lagi setelah pemain pergi");
+        }
+
+        // Review Focus 2: tembakan pierce tetap tembus guci dan mengenai musuh di belakangnya.
+        [UnityTest]
+        public IEnumerator PiercingShot_PassesUrnAndHitsEnemyBehind()
+        {
+            yield return new EnterPlayMode();
+            Spawn<AshUrn>("AshUrn", new Vector2(X + 2f, 0f));
+            var enemy = ProjectilePlayModeTests.MakeEnemy(new Vector2(X + 4f, 0f), 100f);
+            yield return ProjectilePlayModeTests.Steps(2);
+            var shot = new ShotStats { Damage = 3f, Speed = 12f, Range = 7f, Size = 1f, LightScale = 1f, Count = 1, Pierce = 1 };
+            ProjectilePlayModeTests.MakeFireball(new Vector2(X, 0f)).Launch(Vector2.right, shot);
+            yield return ProjectilePlayModeTests.Steps(40);
+            float hp = enemy.CurrentHp;
+            yield return new ExitPlayMode();
+            Assert.Less(hp, 100f, "musuh di belakang guci tetap kena");
+        }
+
+        // Review Focus 3: Kobaran mengenai semua benda dalam radiusnya.
+        [UnityTest]
+        public IEnumerator BlazeRing_BreaksEveryUrnInRadius()
+        {
+            yield return new EnterPlayMode();
+            var a = Spawn<AshUrn>("AshUrn", new Vector2(X + 1f, 0f));
+            var b = Spawn<AshUrn>("AshUrn", new Vector2(X - 1f, 0f));
+            var brazier = Spawn<Brazier>("Brazier", new Vector2(X, 1.5f));
+            a.random = b.random = () => 1f;
+            yield return ProjectilePlayModeTests.Steps(2);
+            var ring = new GameObject("Blaze").AddComponent<BlazeRing>();
+            ring.transform.position = new Vector2(X, 0f);
+            ring.Init(6f, 2.5f, 2f, 1f);
+            bool both = a.IsBroken && b.IsBroken, lit = brazier.IsLit;
+            yield return new ExitPlayMode();
+            Assert.IsTrue(both, "kedua guci pecah");
+            Assert.IsTrue(lit, "Anglo dalam radius menyala");
+        }
+
+        // Review Focus 4: musuh yang menyentuh Bara Pemulih tidak menghabiskannya.
+        [UnityTest]
+        public IEnumerator HealingEmber_IgnoresEnemies()
+        {
+            yield return new EnterPlayMode();
+            var ember = Spawn<HealingEmber>("HealingEmber", new Vector2(X, 0f));
+            ProjectilePlayModeTests.MakeEnemy(new Vector2(X, 0f), 10f);
+            yield return ProjectilePlayModeTests.Steps(5);
+            bool present = ember != null;
+            yield return new ExitPlayMode();
+            Assert.IsTrue(present);
         }
     }
 }

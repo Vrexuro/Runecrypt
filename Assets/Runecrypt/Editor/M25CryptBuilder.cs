@@ -19,15 +19,81 @@ namespace Runecrypt.EditorTools
         public class Assets
         {
             public Brazier brazier;
+            public AshUrn urn;
+            public HealingEmber ember;
         }
 
         [MenuItem("Runecrypt/M2.5/Build Crypt Assets")]
         public static Assets BuildAssets()
         {
             Directory.CreateDirectory(PrefabDir);
-            var a = new Assets { brazier = BuildBrazier() };
+            var ember = BuildEmber();
+            var a = new Assets { brazier = BuildBrazier(), ember = ember, urn = BuildUrn(ember) };
             AssetDatabase.SaveAssets();
             return a;
+        }
+
+        static FeedbackProfile Profile(string name, float shake, float volume)
+        {
+            var p = M1ActorBuilder.LoadOrCreate<FeedbackProfile>(FeedbackDir + name + ".asset", x =>
+            {
+                x.shakeTrauma = shake;
+                x.volume = volume;
+            });
+            return p;
+        }
+
+        static void SetFrames(SpriteFlipbook fb, string prefix, int count, float fps)
+        {
+            var so = new SerializedObject(fb);
+            var frames = so.FindProperty("frames");
+            frames.arraySize = count;
+            for (int i = 0; i < count; i++) frames.GetArrayElementAtIndex(i).objectReferenceValue = Sprite($"{prefix}{i}");
+            so.FindProperty("fps").floatValue = fps;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        static HealingEmber BuildEmber()
+        {
+            var go = new GameObject("HealingEmber");
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = Sprite("ember_pickup_0");
+            sr.sharedMaterial = AssetDatabase.LoadAssetAtPath<Material>(UnlitMat); // berpendar tanpa memancarkan cahaya
+            sr.sortingOrder = 1;
+            SetFrames(go.AddComponent<SpriteFlipbook>(), "ember_pickup_", 2, 3f);
+            var col = go.AddComponent<CircleCollider2D>();
+            col.isTrigger = true;
+            col.radius = 0.35f;
+            var e = go.AddComponent<HealingEmber>();
+            var so = new SerializedObject(e);
+            so.FindProperty("pickupProfile").objectReferenceValue = Profile("EmberPickup", 0f, 0.8f);
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return Save(go).GetComponent<HealingEmber>();
+        }
+
+        static AshUrn BuildUrn(HealingEmber ember)
+        {
+            var go = new GameObject("AshUrn") { layer = LayerMask.NameToLayer("Props") };
+            var body = go.AddComponent<SpriteRenderer>();
+            body.sprite = Sprite("urn_a");
+            var box = go.AddComponent<BoxCollider2D>();
+            box.size = new Vector2(0.6f, 0.7f);
+            box.offset = new Vector2(0f, -0.1f);
+            var flash = M1JuiceBuilder.AddHitFlash(go);
+            var breakProfile = Profile("UrnBreak", 0.05f, 0.8f);
+            breakProfile.particlePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabDir + "EmberBurst.prefab");
+            EditorUtility.SetDirty(breakProfile);
+            var urn = go.AddComponent<AshUrn>();
+            var so = new SerializedObject(urn);
+            so.FindProperty("emberPrefab").objectReferenceValue = ember;
+            so.FindProperty("body").objectReferenceValue = body;
+            so.FindProperty("wholeSprite").objectReferenceValue = Sprite("urn_a");
+            so.FindProperty("brokenSprite").objectReferenceValue = Sprite("urn_broken");
+            so.FindProperty("solid").objectReferenceValue = box;
+            so.FindProperty("hitFlash").objectReferenceValue = flash;
+            so.FindProperty("breakProfile").objectReferenceValue = breakProfile;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return Save(go).GetComponent<AshUrn>();
         }
 
         public static Sprite Sprite(string name) => AssetDatabase.LoadAssetAtPath<Sprite>(CryptArt + name + ".png");
