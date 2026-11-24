@@ -243,6 +243,23 @@ namespace Runecrypt.Tests
             Assert.IsFalse(afterLeaving, "utuh lagi setelah pemain pergi");
         }
 
+        // Review akhir Important 2: pemain yang hanya sebagian menempel di guci juga harus ditunggu.
+        [UnityTest]
+        public IEnumerator AshUrn_RespawnWaitsForPartlyOverlappingPlayer()
+        {
+            yield return new EnterPlayMode();
+            var urn = Spawn<AshUrn>("AshUrn", new Vector2(X, 0f));
+            urn.random = () => 1f;
+            urn.TakeHit(Hit(Element.Fire, urn.transform.position));
+            PlayerAt(new Vector2(X + 0.5f, 0f)); // radius 0,35: tepi pemain masuk ke kotak guci (setengah lebar 0,3)
+            yield return ProjectilePlayModeTests.Steps(2);
+            RoomEvents.RaiseStarted();
+            yield return ProjectilePlayModeTests.Steps(3);
+            bool waiting = urn.IsBroken;
+            yield return new ExitPlayMode();
+            Assert.IsTrue(waiting, "guci belum utuh selama pemain masih menyentuh tempatnya");
+        }
+
         // Review Focus 2: tembakan pierce tetap tembus guci dan mengenai musuh di belakangnya.
         [UnityTest]
         public IEnumerator PiercingShot_PassesUrnAndHitsEnemyBehind()

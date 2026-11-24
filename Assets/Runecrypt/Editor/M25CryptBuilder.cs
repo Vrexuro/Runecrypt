@@ -200,13 +200,13 @@ namespace Runecrypt.EditorTools
             (new Vector2(6.5f, 2.5f), "decor_candle"), (new Vector2(-1.5f, -4.5f), "decor_candle"),
         };
 
+        // Tidak menyimpan: penataan ditandai sebagai perubahan scene, user (atau "Build All") yang menyimpannya.
+        // Dengan begitu test yang memanggil menu ini tidak menulis ulang scene yang di-commit (review akhir Important 1).
         [MenuItem("Runecrypt/M2.5/Dress Arena")]
         static void DressArenaMenu()
         {
             DressArena(BuildAssets());
-            var scene = SceneManager.GetActiveScene();
-            EditorSceneManager.MarkSceneDirty(scene);
-            EditorSceneManager.SaveScene(scene);
+            EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
         }
 
         // Idempoten: root CryptKit dihapus lalu dibuat ulang; ubin dipilih dengan seed tetap.

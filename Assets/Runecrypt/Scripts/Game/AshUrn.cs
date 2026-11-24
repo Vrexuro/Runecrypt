@@ -14,7 +14,7 @@ namespace Runecrypt.Game
         [SerializeField] SpriteRenderer body;
         [SerializeField] Sprite wholeSprite;
         [SerializeField] Sprite brokenSprite;
-        [SerializeField] Collider2D solid;
+        [SerializeField] BoxCollider2D solid;
         [SerializeField] HitFlash hitFlash;
         [SerializeField] FeedbackProfile breakProfile;
 
@@ -70,8 +70,10 @@ namespace Runecrypt.Game
         // Guci tidak muncul di atas pemain (Review Focus 1); ditunda sampai area kosong.
         void TryRestore()
         {
-            var b = solid.bounds;
-            if (Physics2D.OverlapBox(b.center, b.size, 0f, playerMask) != null) return;
+            // Collider sedang nonaktif, jadi bounds-nya kosong; area dihitung dari offset dan ukuran kotak.
+            Vector2 center = transform.TransformPoint(solid.offset);
+            Vector2 size = Vector2.Scale(solid.size, transform.lossyScale);
+            if (Physics2D.OverlapBox(center, size, 0f, playerMask) != null) return;
             restorePending = false;
             state.Reset();
             body.sprite = wholeSprite;

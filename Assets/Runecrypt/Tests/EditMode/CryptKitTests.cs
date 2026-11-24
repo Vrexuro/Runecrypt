@@ -163,12 +163,16 @@ namespace Runecrypt.Tests
             }
         }
 
+        // Review akhir Important 1: menjalankan test tidak boleh menulis ulang scene yang di-commit.
         [Test]
         public void CryptKit_IsIdempotent()
         {
             Kit();
+            Assume.That(closeOnTearDown, "scene M1 sedang terbuka di editor; test ini tidak mengubahnya");
+            var before = System.IO.File.ReadAllBytes(Scene);
             EditorApplication.ExecuteMenuItem("Runecrypt/M2.5/Dress Arena");
             EditorApplication.ExecuteMenuItem("Runecrypt/M2.5/Dress Arena");
+            CollectionAssert.AreEqual(before, System.IO.File.ReadAllBytes(Scene), "file scene di disk tidak berubah");
             var kits = Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None)
                 .Where(t => t.name == "CryptKit" && t.parent == null).ToList();
             Assert.AreEqual(1, kits.Count, "satu root saja");
