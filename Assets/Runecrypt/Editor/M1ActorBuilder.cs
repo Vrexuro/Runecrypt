@@ -77,6 +77,8 @@ namespace Runecrypt.EditorTools
             Place(puddle, new Vector3(6.5f, -2.5f, 0f));
             BuildArenaDirector(enemy, m2);
             M1JuiceBuilder.BuildSceneServices();
+            // M2.5: kit makam (lantai, dinding, dekorasi, Anglo, Guci, nisan, debu, ambien).
+            M25CryptBuilder.DressArena(M25CryptBuilder.BuildAssets());
 
             var scene = SceneManager.GetActiveScene();
             EditorSceneManager.MarkSceneDirty(scene);

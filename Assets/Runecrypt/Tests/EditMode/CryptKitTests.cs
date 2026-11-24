@@ -1,6 +1,13 @@
+using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using Runecrypt.Core;
+using Runecrypt.Game;
+using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.Tilemaps;
 
 namespace Runecrypt.Tests
 {
@@ -74,6 +81,98 @@ namespace Runecrypt.Tests
             s.Reset();
             Assert.IsFalse(s.IsBroken);
             Assert.AreEqual(3f, s.Hp);
+        }
+
+        // ---------- Task 7: arena yang ditata (scene M1 setelah Build All) ----------
+        const string Scene = "Assets/Runecrypt/Scenes/M1_Prototype.unity";
+
+        // Scene M1 dibuka additive lalu ditutup lagi di TearDown. Membukanya sebagai scene tunggal membuat test play
+        // mode sesudahnya ikut memuat pemain M1.
+        Scene opened, previousActive;
+        bool closeOnTearDown;
+
+        Transform Kit()
+        {
+            previousActive = SceneManager.GetActiveScene();
+            opened = SceneManager.GetSceneByPath(Scene);
+            closeOnTearDown = !opened.isLoaded;
+            if (closeOnTearDown) opened = EditorSceneManager.OpenScene(Scene, OpenSceneMode.Additive);
+            SceneManager.SetActiveScene(opened);
+            var root = opened.GetRootGameObjects().FirstOrDefault(g => g.name == "CryptKit");
+            Assert.IsNotNull(root, "root CryptKit ada di scene");
+            return root.transform;
+        }
+
+        [TearDown]
+        public void CloseKitScene()
+        {
+            if (!opened.IsValid()) return;
+            if (previousActive.IsValid() && previousActive.isLoaded) SceneManager.SetActiveScene(previousActive);
+            if (closeOnTearDown) EditorSceneManager.CloseScene(opened, true);
+            opened = default;
+        }
+
+        static int CountNamed(Transform root, string prefix) =>
+            root.GetComponentsInChildren<Transform>(true).Count(t => t.name.StartsWith(prefix) && t.parent != null && t.parent.name == "Props");
+
+        [Test]
+        public void CryptKit_HasExpectedProps()
+        {
+            var kit = Kit();
+            Assert.AreEqual(2, kit.GetComponentsInChildren<Brazier>(true).Length, "Anglo");
+            Assert.AreEqual(3, kit.GetComponentsInChildren<AshUrn>(true).Length, "Guci");
+            Assert.AreEqual(2, CountNamed(kit, "Tombstone"), "Nisan");
+            Assert.AreEqual(1, CountNamed(kit, "Sarcophagus"), "Sarkofagus");
+        }
+
+        [Test]
+        public void CryptKit_FloorUsesVariants()
+        {
+            Kit();
+            var floor = GameObject.Find("Grid/Floor").GetComponent<Tilemap>();
+            var counts = new Dictionary<string, int>();
+            int total = 0;
+            foreach (var p in floor.cellBounds.allPositionsWithin)
+            {
+                var t = floor.GetTile(p);
+                if (t == null) continue;
+                counts[t.name] = counts.TryGetValue(t.name, out int n) ? n + 1 : 1;
+                total++;
+            }
+            Assert.GreaterOrEqual(counts.Count, 4, "beberapa variasi ubin dipakai");
+            Assert.That(counts.TryGetValue("CryptFloor_plain", out int plain) ? plain / (float)total : 0f, Is.InRange(0.6f, 0.8f),
+                "ubin polos dominan (~70%)");
+        }
+
+        // Review Focus 5: benda tidak menutupi titik spawn musuh maupun posisi awal pemain.
+        [Test]
+        public void CryptKit_KeepsSpawnsAndStartClear()
+        {
+            var kit = Kit();
+            var director = Object.FindFirstObjectByType<ArenaDirector>();
+            var points = new SerializedObject(director).FindProperty("spawnPoints");
+            var check = new List<Vector2> { PlayerController.FindFirstObjectByType<PlayerController>().transform.position };
+            for (int i = 0; i < points.arraySize; i++)
+                check.Add(((Transform)points.GetArrayElementAtIndex(i).objectReferenceValue).position);
+            foreach (var col in kit.GetComponentsInChildren<Collider2D>(true))
+            foreach (var p in check)
+            {
+                var b = col.bounds;
+                float d = Vector2.Distance(b.ClosestPoint(p), p);
+                Assert.GreaterOrEqual(d, 1.5f, $"{col.name} terlalu dekat ke {p}");
+            }
+        }
+
+        [Test]
+        public void CryptKit_IsIdempotent()
+        {
+            Kit();
+            EditorApplication.ExecuteMenuItem("Runecrypt/M2.5/Dress Arena");
+            EditorApplication.ExecuteMenuItem("Runecrypt/M2.5/Dress Arena");
+            var kits = Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+                .Where(t => t.name == "CryptKit" && t.parent == null).ToList();
+            Assert.AreEqual(1, kits.Count, "satu root saja");
+            Assert.AreEqual(3, kits[0].GetComponentsInChildren<AshUrn>(true).Length);
         }
 
         [Test]

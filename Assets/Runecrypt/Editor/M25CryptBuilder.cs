@@ -1,8 +1,12 @@
+using System.Collections.Generic;
 using System.IO;
 using Runecrypt.Core;
 using Runecrypt.Game;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.Tilemaps;
 
 namespace Runecrypt.EditorTools
 {
@@ -160,6 +164,193 @@ namespace Runecrypt.EditorTools
             box.offset = offset;
             go.AddComponent<UnityEngine.Rendering.Universal.ShadowCaster2D>();
             return Save(go);
+        }
+
+        // ---------- Task 7: menata arena M1/M2 ----------
+        const string TilesDir = "Assets/Runecrypt/Data/Tiles/";
+        const string LitMat = "Packages/com.unity.render-pipelines.universal/Runtime/Materials/Sprite-Lit-Default.mat";
+        const int DecorOrder = -8, WallOverlayOrder = 1, Seed = 2511;
+        const float TopWallY = 4.5f;     // baris dinding atas (sel y = 4)
+
+        // Bobot ubin lantai: polos dominan (~70%, spec §5.1).
+        static readonly (string name, int weight)[] FloorWeights =
+            { ("plain", 14), ("cracked", 2), ("moss", 2), ("bones", 1), ("rune", 1) };
+
+        // Posisi di pinggir dan sudut, menjauhi spawn point dan posisi awal pemain (spec §6, Review Focus 5).
+        static readonly Vector2[] BrazierAt = { new Vector2(-8.5f, 0.5f), new Vector2(7.5f, -0.5f) };
+        static readonly (Vector2 pos, string sprite)[] UrnAt =
+            { (new Vector2(-5.5f, -4.5f), "urn_a"), (new Vector2(-4.5f, -4.5f), "urn_b"), (new Vector2(5.5f, 3.5f), "urn_a") };
+        static readonly Vector2[] TombstoneAt = { new Vector2(-2.5f, 2.5f), new Vector2(2.5f, -3.5f) };
+        static readonly Vector2 SarcophagusAt = new Vector2(-5f, 2.5f);
+        static readonly (float x, string sprite)[] WallOverlays =
+        {
+            (-6.5f, "wall_niche"), (-3.5f, "wall_torch_dead"), (-0.5f, "wall_niche"), (2.5f, "wall_torch_dead"),
+            (5.5f, "wall_niche"), (7.5f, "wall_cracked"), (-8.5f, "wall_cracked"),
+        };
+        static readonly (Vector2 pos, string sprite)[] DecorAt =
+        {
+            (new Vector2(-9.5f, 3.5f), "decor_web_l"), (new Vector2(8.5f, 3.5f), "decor_web_r"),
+            (new Vector2(-8.5f, -5.5f + 1f), "decor_web_l"), (new Vector2(-3.5f, 3.5f), "decor_chain"),
+            (new Vector2(1.5f, 3.5f), "decor_chain"), (new Vector2(3.5f, 3.5f), "decor_banner"),
+            (new Vector2(-7.5f, -1.5f), "decor_bones"), (new Vector2(3.5f, -4.5f), "decor_bones"),
+            (new Vector2(6.5f, 2.5f), "decor_candle"), (new Vector2(-1.5f, -4.5f), "decor_candle"),
+        };
+
+        [MenuItem("Runecrypt/M2.5/Dress Arena")]
+        static void DressArenaMenu()
+        {
+            DressArena(BuildAssets());
+            var scene = SceneManager.GetActiveScene();
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+        }
+
+        // Idempoten: root CryptKit dihapus lalu dibuat ulang; ubin dipilih dengan seed tetap.
+        public static void DressArena(Assets a)
+        {
+            DressFloor();
+            DressPillars(a.pillarSprite);
+
+            var old = GameObject.Find("CryptKit");
+            if (old != null) Object.DestroyImmediate(old);
+            var root = new GameObject("CryptKit").transform;
+            var decor = Child(root, "Decor");
+            var props = Child(root, "Props");
+
+            foreach (var (x, sprite) in WallOverlays) Decor(decor, sprite, new Vector2(x, TopWallY), WallOverlayOrder);
+            foreach (var (pos, sprite) in DecorAt) Decor(decor, sprite, pos, DecorOrder);
+
+            foreach (var p in BrazierAt) Place(a.brazier.gameObject, props, p);
+            foreach (var (pos, sprite) in UrnAt)
+            {
+                var urn = Place(a.urn.gameObject, props, pos);
+                var so = new SerializedObject(urn.GetComponent<AshUrn>());
+                so.FindProperty("wholeSprite").objectReferenceValue = Sprite(sprite);
+                so.ApplyModifiedPropertiesWithoutUndo();
+                urn.GetComponent<SpriteRenderer>().sprite = Sprite(sprite);
+            }
+            foreach (var p in TombstoneAt) Place(a.tombstone, props, p);
+            Place(a.sarcophagus, props, SarcophagusAt);
+
+            BuildDust(Child(root, "Dust"));
+            var amb = Child(root, "Ambience").gameObject.AddComponent<AudioSource>();
+            amb.loop = true;
+            amb.playOnAwake = true;
+            amb.volume = 0.25f; // klip menyusul di Task 8
+            Debug.Log("[M25CryptBuilder] Arena ditata.");
+        }
+
+        static void DressFloor()
+        {
+            var floor = GameObject.Find("Grid/Floor").GetComponent<Tilemap>();
+            var tiles = new List<(Tile tile, int weight)>();
+            int sum = 0;
+            foreach (var (name, w) in FloorWeights)
+            {
+                tiles.Add((CryptTile("CryptFloor_" + name, "floor_" + name), w));
+                sum += w;
+            }
+            var rng = new System.Random(Seed);
+            foreach (var cell in floor.cellBounds.allPositionsWithin)
+            {
+                if (floor.GetTile(cell) == null) continue;
+                int roll = rng.Next(sum);
+                foreach (var (tile, w) in tiles)
+                {
+                    if (roll < w) { floor.SetTile(cell, tile); break; }
+                    roll -= w;
+                }
+            }
+        }
+
+        static Tile CryptTile(string asset, string sprite)
+        {
+            Directory.CreateDirectory(TilesDir);
+            string path = TilesDir + asset + ".asset";
+            var tile = AssetDatabase.LoadAssetAtPath<Tile>(path);
+            if (tile == null)
+            {
+                tile = ScriptableObject.CreateInstance<Tile>();
+                AssetDatabase.CreateAsset(tile, path);
+            }
+            tile.sprite = Sprite(sprite);
+            EditorUtility.SetDirty(tile);
+            return tile;
+        }
+
+        // Pilar lama digambar dengan tile dinding di tilemap Obstacles; diganti satu sprite pilar 2x2 per PillarBody.
+        static void DressPillars(Sprite pillar)
+        {
+            var obstacles = GameObject.Find("Grid/Obstacles").GetComponent<Tilemap>();
+            obstacles.ClearAllTiles();
+            foreach (var go in Object.FindObjectsByType<GameObject>(FindObjectsSortMode.None))
+            {
+                if (go.name != "PillarBody") continue;
+                var existing = go.transform.Find("PillarSprite");
+                var sr = existing != null ? existing.GetComponent<SpriteRenderer>()
+                    : Child(go.transform, "PillarSprite").gameObject.AddComponent<SpriteRenderer>();
+                sr.sprite = pillar;
+                sr.sortingOrder = 0;
+            }
+        }
+
+        static void BuildDust(Transform t)
+        {
+            t.position = M1Builder.RoomCenter;
+            var ps = t.gameObject.AddComponent<ParticleSystem>();
+            var main = ps.main;
+            main.loop = true;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(5f, 8f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.02f, 0.12f);
+            main.startSize = 0.125f;   // 2 piksel
+            main.maxParticles = 40;    // ringan untuk laptop booth (spec §2)
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.startColor = new Color(1f, 1f, 1f, 0.6f);
+            var emission = ps.emission;
+            emission.rateOverTime = 6f;
+            var shape = ps.shape;
+            shape.shapeType = ParticleSystemShapeType.Box;
+            shape.scale = new Vector3(18f, 9f, 0f);
+            var noise = ps.noise;
+            noise.enabled = true;
+            noise.strength = 0.08f;
+            noise.frequency = 0.3f;
+            var col = ps.colorOverLifetime;
+            col.enabled = true;
+            var g = new Gradient();
+            g.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.3f), new GradientAlphaKey(0f, 1f) });
+            col.color = g;
+            var sheet = ps.textureSheetAnimation;
+            sheet.enabled = true;
+            sheet.mode = ParticleSystemAnimationMode.Sprites;
+            sheet.AddSprite(Sprite("dust"));
+            var r = t.GetComponent<ParticleSystemRenderer>();
+            r.sharedMaterial = AssetDatabase.LoadAssetAtPath<Material>(LitMat); // Sprite-Lit: debu hanya tampak di area terang
+            r.sortingOrder = 3;
+        }
+
+        static Transform Child(Transform parent, string name)
+        {
+            var t = new GameObject(name).transform;
+            t.SetParent(parent, false);
+            return t;
+        }
+
+        static void Decor(Transform parent, string sprite, Vector2 pos, int order)
+        {
+            var t = Child(parent, sprite);
+            t.position = pos;
+            var sr = t.gameObject.AddComponent<SpriteRenderer>();
+            sr.sprite = Sprite(sprite);
+            sr.sortingOrder = order;
+        }
+
+        static GameObject Place(GameObject prefab, Transform parent, Vector2 pos)
+        {
+            var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
+            go.transform.position = pos;
+            return go;
         }
 
         static GameObject Save(GameObject go)
