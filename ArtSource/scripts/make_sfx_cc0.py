@@ -14,6 +14,10 @@ Sumber (semua CC0, unduh lalu ekstrak masing-masing ke <folder_cc0_raw>/<nama zi
       https://opengameart.org/content/bones-rattle               (bones_rattle.zip)
   - Steam Release Sounds, bart (atribusi diminta walau CC0)
       https://opengameart.org/content/steam-release-sounds       (steam_hisses.zip)
+  - M2.5: 75 CC0 breaking / falling / hit sfx, rubberduck
+      https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx   (sfx_breaking_and_falling.zip)
+  - M2.5: Loopable Dungeon Ambience, JaggedStone
+      https://opengameart.org/content/loopable-dungeon-ambience  (dungeon_ambient_1.ogg, taruh di dungeon_ambient/)
 Kredit dicatat di Docs/GDD.md §14.
 """
 import subprocess
@@ -107,3 +111,24 @@ write("sfx_death_tulang", death)
 # Uap: dua desis disambung tumpang tindih 60%, ujung atas diredam supaya tidak menusuk.
 h1, h2 = cut(load("steam hisses - Marker #1.wav")), cut(load("steam hisses - Marker #3.wav"))
 write("sfx_steam", lowpass(mix(norm(h1), norm(h2), len(h1) / SR * 0.6, 0.8), 9000))
+
+# ---------- M2.5 Isi Makam ----------
+# Anglo menyala: Fire Staff 1, "wus" yang membesar 0,3 dtk lalu reda; ujung atas diredam.
+write("sfx_brazier_ignite", lowpass(cut(load("LEGIT_FIR_Fire_Staff 1-Audio.wav"), dur=1.1, fade=0.25), 8000))
+
+# Guci pecah: retakan batu sebagai badan tanah liat, ditambah sedikit denting kaca untuk pecahan.
+body = norm(lowpass(cut(load("bfh1_rock_breaking_01.ogg")), 7000))
+shards = norm(cut(load("bfh1_glass_breaking_01.ogg")))
+write("sfx_urn_break", mix(body, shards, 0.02, 0.25))
+
+# Bara Pemulih diambil: letupan api pendek yang lembut.
+write("sfx_ember_pickup", lowpass(cut(load("LEGIT_FIR_Fire_Staff 8-Audio.wav"), dur=0.35, fade=0.1), 4000))
+
+# Ambien makam: 40 dtk pertama, ujungnya di-crossfade 2 dtk ke awal supaya loop tanpa sambungan.
+amb = cut(load("dungeon_ambient_1.ogg"), dur=42.0, fade=0.001)
+xf = int(2.0 * SR)
+head, tail = amb[:xf].copy(), amb[-xf:]
+ramp = np.linspace(0, 1, xf)
+amb = amb[:-xf].copy()
+amb[:xf] = head * ramp + tail * (1 - ramp)
+write("amb_crypt_loop", amb)

@@ -463,7 +463,9 @@ Usulan desain dari sesi baseline (belum diputuskan, dibahas lewat brainstorming)
 
 | Paket | Pembuat | Lisensi | Dipakai untuk |
 |---|---|---|---|
-| [Fire Staff Collection](https://opengameart.org/content/fire-staff-sound-effects) | LEGIT Audio | CC0 | Tembakan bola api, ekor desis saat kena |
+| [Fire Staff Collection](https://opengameart.org/content/fire-staff-sound-effects) | LEGIT Audio | CC0 | Tembakan bola api, ekor desis saat kena, Anglo menyala, Bara Pemulih diambil |
 | [Deep Bone Crack/Break SFX](https://opengameart.org/content/deep-bone-crackbreak-sfx) | Zane Little Music | CC0 | Kematian Tulang Penjaga |
 | [Bones Rattle](https://opengameart.org/content/bones-rattle) | congusbongus | CC0 | Klik tulang saat kena dan saat mati |
 | [Steam Release Sounds](https://opengameart.org/content/steam-release-sounds) | bart | CC0 (pembuat meminta atribusi) | Uap |
+| [75 CC0 breaking / falling / hit sfx](https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx) | rubberduck | CC0 | Guci Abu pecah |
+| [Loopable Dungeon Ambience](https://opengameart.org/content/loopable-dungeon-ambience) | JaggedStone | CC0 | Suara ambien makam (angin rendah dan tetesan air) |

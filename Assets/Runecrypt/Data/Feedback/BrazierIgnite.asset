@@ -18,6 +18,7 @@ MonoBehaviour:
   hitStop: 0
   shakeTrauma: 0.1
   particlePrefab: {fileID: 7934091373128563767, guid: 5bed6b443facb124fa467b97ce773f1b, type: 3}
-  clips: []
+  clips:
+  - {fileID: 8300000, guid: beb623b4eb2122845aa8e67092c3fc24, type: 3}
   volume: 0.8
   pitchJitter: 0.05

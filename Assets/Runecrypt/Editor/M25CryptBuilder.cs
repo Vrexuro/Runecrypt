@@ -46,13 +46,21 @@ namespace Runecrypt.EditorTools
             return a;
         }
 
-        static FeedbackProfile Profile(string name, float shake, float volume)
+        const string AudioDir = "Assets/Runecrypt/Audio/";
+
+        static AudioClip Clip(string name) => AssetDatabase.LoadAssetAtPath<AudioClip>(AudioDir + name + ".wav");
+
+        // Klip dipasang ulang setiap build (dari make_sfx_cc0.py, Task 8), nilai lain hanya saat aset dibuat.
+        static FeedbackProfile Profile(string name, float shake, float volume, string clip)
         {
             var p = M1ActorBuilder.LoadOrCreate<FeedbackProfile>(FeedbackDir + name + ".asset", x =>
             {
                 x.shakeTrauma = shake;
                 x.volume = volume;
             });
+            var c = Clip(clip);
+            p.clips = c != null ? new[] { c } : new AudioClip[0];
+            EditorUtility.SetDirty(p);
             return p;
         }
 
@@ -79,7 +87,7 @@ namespace Runecrypt.EditorTools
             col.radius = 0.35f;
             var e = go.AddComponent<HealingEmber>();
             var so = new SerializedObject(e);
-            so.FindProperty("pickupProfile").objectReferenceValue = Profile("EmberPickup", 0f, 0.8f);
+            so.FindProperty("pickupProfile").objectReferenceValue = Profile("EmberPickup", 0f, 0.8f, "sfx_ember_pickup");
             so.ApplyModifiedPropertiesWithoutUndo();
             return Save(go).GetComponent<HealingEmber>();
         }
@@ -93,7 +101,7 @@ namespace Runecrypt.EditorTools
             box.size = new Vector2(0.6f, 0.7f);
             box.offset = new Vector2(0f, -0.1f);
             var flash = M1JuiceBuilder.AddHitFlash(go);
-            var breakProfile = Profile("UrnBreak", 0.05f, 0.8f);
+            var breakProfile = Profile("UrnBreak", 0.05f, 0.8f, "sfx_urn_break");
             breakProfile.particlePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabDir + "EmberBurst.prefab");
             EditorUtility.SetDirty(breakProfile);
             var urn = go.AddComponent<AshUrn>();
@@ -135,11 +143,7 @@ namespace Runecrypt.EditorTools
             var pulse = light.gameObject.AddComponent<LightPulse>();
             fire.SetActive(false);
 
-            var profile = M1ActorBuilder.LoadOrCreate<FeedbackProfile>(FeedbackDir + "BrazierIgnite.asset", p =>
-            {
-                p.shakeTrauma = 0.1f;
-                p.volume = 0.8f;
-            });
+            var profile = Profile("BrazierIgnite", 0.1f, 0.8f, "sfx_brazier_ignite");
             profile.particlePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabDir + "EmberBurst.prefab");
             EditorUtility.SetDirty(profile);
 
@@ -236,7 +240,8 @@ namespace Runecrypt.EditorTools
             var amb = Child(root, "Ambience").gameObject.AddComponent<AudioSource>();
             amb.loop = true;
             amb.playOnAwake = true;
-            amb.volume = 0.25f; // klip menyusul di Task 8
+            amb.volume = 0.25f; // jauh di bawah SFX (spec §5.1)
+            amb.clip = Clip("amb_crypt_loop");
             Debug.Log("[M25CryptBuilder] Arena ditata.");
         }
 
