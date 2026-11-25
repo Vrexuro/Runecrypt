@@ -31,7 +31,7 @@ namespace Runecrypt.Tests
         }
 
         // Templat musuh diam jauh di luar arena uji; yang dibunuh hanya salinannya.
-        static (ArenaDirector director, Enemy template) MakeDirector(int maxAlive = 12)
+        static (ArenaDirector director, Enemy template) MakeDirector(int maxAlive = 12, Enemy second = null)
         {
             MakePlayer(new Vector2(X, 0f));
             var template = ProjectilePlayModeTests.MakeEnemy(new Vector2(X + 100f, 0f), hp: 5f);
@@ -41,7 +41,10 @@ namespace Runecrypt.Tests
             dirGo.SetActive(false);
             var director = dirGo.AddComponent<ArenaDirector>();
             var so = new SerializedObject(director);
-            so.FindProperty("enemyPrefab").objectReferenceValue = template;
+            var prefabs = so.FindProperty("enemyPrefabs");
+            prefabs.arraySize = second == null ? 1 : 2;
+            prefabs.GetArrayElementAtIndex(0).objectReferenceValue = template;
+            if (second != null) prefabs.GetArrayElementAtIndex(1).objectReferenceValue = second;
             var points = so.FindProperty("spawnPoints");
             points.arraySize = 1;
             points.GetArrayElementAtIndex(0).objectReferenceValue = spawn;
@@ -103,6 +106,33 @@ namespace Runecrypt.Tests
             Assert.AreEqual(1, waveBeforeKills, "gelombang 1 (3 musuh) tidak langsung disusul gelombang 2");
             Assert.Greater(pending, 0, "gelombang 2 (4) tertahan batas 3");
             Assert.Less(pendingAfter, pending, "sisa gelombang 2 keluar setelah ada yang mati");
+        }
+
+        // M3a Task 5 (Review Focus 3): antrean campuran yang tertahan batas keluar sesuai urutan.
+        [UnityTest]
+        public IEnumerator ArenaDirector_MixedQueueReleasesInOrderUnderCap()
+        {
+            yield return new EnterPlayMode();
+            var other = ProjectilePlayModeTests.MakeEnemy(new Vector2(X + 100f, 5f), hp: 7f);
+            var (director, template) = MakeDirector(maxAlive: 3, second: other);
+            director.gameObject.SetActive(true);
+            System.Func<Enemy[]> live = () => FindAll().Where(e => e != template && e != other && e.enabled).ToArray();
+            yield return WaitUntilOrTimeout(() => live().Length == 3, 5f);
+            foreach (var e in live().Take(2)) e.TakeHit(new HitInfo(999f, Element.None, false, e.transform.position));
+            yield return WaitUntilOrTimeout(() => director.Wave == 2 && director.Pending > 0, 5f);
+            var queued = director.PendingTypes;
+            yield return WaitUntilOrTimeout(() => live().Length == 3, 5f);
+            var before = live();
+            before[0].TakeHit(new HitInfo(999f, Element.None, false, before[0].transform.position));
+            yield return WaitUntilOrTimeout(() => director.Pending < queued.Length, 5f);
+            int pendingAfter = director.Pending;
+            yield return WaitUntilOrTimeout(() => live().Except(before).Any(), 5f);
+            var released = live().Except(before).FirstOrDefault();
+            var releasedDef = released != null ? released.Definition : null;
+            yield return new ExitPlayMode();
+            Assert.Greater(queued.Length, 0, "gelombang 2 tertahan batas 3");
+            Assert.AreEqual(queued.Length - 1, pendingAfter, "satu keluar setelah satu mati");
+            Assert.AreSame(queued[0].Definition, releasedDef, "yang keluar adalah elemen pertama antrean");
         }
 
         static Enemy[] FindAll() => Object.FindObjectsByType<Enemy>(FindObjectsInactive.Include, FindObjectsSortMode.None);

@@ -11,7 +11,8 @@ namespace Runecrypt.Game
     // layar tumbang, dan ulang dengan R.
     public class ArenaDirector : MonoBehaviour
     {
-        [SerializeField] Enemy enemyPrefab;
+        [Tooltip("Jenis musuh arena; susunan tiap gelombang dipilih dari budget (rencana M3a Task 5).")]
+        [SerializeField] List<Enemy> enemyPrefabs = new List<Enemy>();
         [SerializeField] Transform[] spawnPoints;
         [SerializeField] float minSpawnDistance = 4f;
         [SerializeField] float waveDelay = 3f;
@@ -33,10 +34,12 @@ namespace Runecrypt.Game
         RunecryptControls controls;
         PlayerController player;
         WaveSchedule schedule;
-        int alive, pending;   // alive termasuk musuh yang sedang fade masuk; pending = belum keluar karena batas
+        int alive;   // termasuk musuh yang sedang fade masuk
+        readonly Queue<Enemy> pending = new Queue<Enemy>(); // belum keluar karena batas musuh hidup
 
         internal int Wave => schedule.Wave;
-        internal int Pending => pending;
+        internal int Pending => pending.Count;
+        internal Enemy[] PendingTypes => pending.ToArray();
         float nextWaveAt, fps;
         bool playerDead;
 
@@ -81,35 +84,36 @@ namespace Runecrypt.Game
                 return;
             }
 
-            if (Time.time >= nextWaveAt && schedule.ShouldStartNextWave(alive, pending)) StartWave();
-            if (pending > 0) SpawnPending();
+            if (Time.time >= nextWaveAt && schedule.ShouldStartNextWave(alive, pending.Count)) StartWave();
+            if (pending.Count > 0) SpawnPending();
         }
 
         void StartWave()
         {
-            int count = schedule.NextWaveSize();
+            var costs = enemyPrefabs.Select(e => e.Definition.cost).ToList();
+            var picks = SpawnBudget.Compose(schedule.NextWaveSize(), costs, rng, maxPerWave);
+            if (picks.Count == 0) picks.Add(costs.IndexOf(costs.Min())); // gelombang tidak pernah kosong
             schedule.AdvanceWave();
             if (schedule.IsRoomStart) RoomEvents.RaiseStarted(); // satu ruangan = 3 gelombang (spec M2.6 §5.2)
-            pending += count;
+            foreach (int i in picks) pending.Enqueue(enemyPrefabs[i]);
         }
 
         // Keluarkan musuh yang menunggu sampai batas musuh hidup penuh.
         void SpawnPending()
         {
-            int n = Mathf.Min(pending, schedule.CanSpawnNow(alive));
+            int n = Mathf.Min(pending.Count, schedule.CanSpawnNow(alive));
             if (n <= 0) return;
             Vector2 p = player.transform.position;
             var far = spawnPoints.Where(s => Vector2.Distance(s.position, p) >= minSpawnDistance).ToList();
             if (far.Count == 0) far = spawnPoints.ToList();
             Shuffle(far);
-            pending -= n;
             alive += n;
-            for (int i = 0; i < n; i++) StartCoroutine(SpawnAfterFade(far[i % far.Count].position));
+            for (int i = 0; i < n; i++) StartCoroutine(SpawnAfterFade(pending.Dequeue(), far[i % far.Count].position));
         }
 
-        IEnumerator SpawnAfterFade(Vector3 pos)
+        IEnumerator SpawnAfterFade(Enemy prefab, Vector3 pos)
         {
-            var enemy = Instantiate(enemyPrefab, pos, Quaternion.identity);
+            var enemy = Instantiate(prefab, pos, Quaternion.identity);
             var body = enemy.GetComponent<Rigidbody2D>();
             var renderers = enemy.GetComponentsInChildren<SpriteRenderer>();
             enemy.enabled = false;
@@ -128,7 +132,7 @@ namespace Runecrypt.Game
         void OnEnemyDied(Enemy e)
         {
             alive = Mathf.Max(0, alive - 1);
-            if (schedule.RoomDone(alive, pending))
+            if (schedule.RoomDone(alive, pending.Count))
             {
                 nextWaveAt = Time.time + waveDelay;
                 SpawnRelicPickup();

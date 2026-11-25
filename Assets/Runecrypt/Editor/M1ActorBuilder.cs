@@ -205,7 +205,9 @@ namespace Runecrypt.EditorTools
                 new Vector3(0f, 5.5f), new Vector3(0f, -7.5f), new Vector3(-13f, -1f), new Vector3(13f, -1f),
             };
             var so = new SerializedObject(director);
-            so.FindProperty("enemyPrefab").objectReferenceValue = enemyPrefab.GetComponent<Enemy>();
+            var prefabs = so.FindProperty("enemyPrefabs"); // M3a: jenis lain ditambah builder M3a
+            prefabs.arraySize = 1;
+            prefabs.GetArrayElementAtIndex(0).objectReferenceValue = enemyPrefab.GetComponent<Enemy>();
             var arr = so.FindProperty("spawnPoints");
             arr.arraySize = points.Length;
             for (int i = 0; i < points.Length; i++)
