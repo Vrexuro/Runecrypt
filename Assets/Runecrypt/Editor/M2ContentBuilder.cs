@@ -93,8 +93,15 @@ namespace Runecrypt.EditorTools
 
             var light = M1Builder.MakePointLight("Light", go.transform, "#FF8A3D", 4.5f);
             light.gameObject.SetActive(false); // dinyalakan BlazeRing.Init sebelum damage
+            // M2.6: kilatan besar (visual, tanpa aturan cahaya), percikan, dan guncangan sedang.
+            M1JuiceBuilder.AddFlare(go.transform, "#FFB060", 5.5f, 2.2f, 0.2f);
+            var burst = M1ActorBuilder.LoadOrCreate<FeedbackProfile>("Assets/Runecrypt/Data/Feedback/BlazeBurst.asset", _ => { });
+            burst.shakeTrauma = 0.35f;
+            burst.particlePrefab = M1JuiceBuilder.BuildBlazeSparks();
+            EditorUtility.SetDirty(burst);
             var blaze = go.AddComponent<BlazeRing>();
             Set(blaze, "lightSource", light.GetComponent<LightSourceBehaviour>());
+            Set(blaze, "burstProfile", burst);
             return Save(go, "BlazeRing").GetComponent<BlazeRing>();
         }
 

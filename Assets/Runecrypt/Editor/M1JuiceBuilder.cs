@@ -64,8 +64,122 @@ namespace Runecrypt.EditorTools
                 p.flashColor = M1Builder.Hex("#E0474C"); p.flashAlpha = 1f; p.flashDuration = 0.1f;
                 p.hitStop = 0.08f; p.shakeTrauma = 0.45f; // belum ada SFX (spec §8)
             });
+            // M2.6: tembakan dan pukulan lebih heboh (spec M2.6 §5.4). Diset ulang setiap build karena
+            // LoadOrCreate di atas hanya mengisi nilai saat aset pertama kali dibuat.
+            var muzzle = BuildMuzzleFlash();
+            var hitBurst = BuildHitBurst();
+            a.shot.particlePrefab = muzzle;
+            a.hitLit.particlePrefab = hitBurst;
+            a.hitDark.particlePrefab = hitBurst;
+            foreach (var p in new[] { a.shot, a.hitLit, a.hitDark }) EditorUtility.SetDirty(p);
             AssetDatabase.SaveAssets();
             return a;
+        }
+
+        // ---------- M2.6: efek heboh yang tetap terbaca ----------
+        // Efek pemain di sorting order <= 5, visual <= 0,4 dtk; mata musuh di order 10 (EyesOrder).
+        public const int EyesOrder = 10;
+
+        // Kilatan visual: Light2D tanpa bayangan dan tanpa LightSourceBehaviour (tidak ikut aturan cahaya).
+        internal static Light2D AddFlare(Transform parent, string hex, float radius, float intensity, float duration)
+        {
+            var go = new GameObject("Flare");
+            go.transform.SetParent(parent, false);
+            var light = go.AddComponent<Light2D>();
+            light.lightType = Light2D.LightType.Point;
+            light.color = M1Builder.Hex(hex);
+            light.intensity = intensity;
+            light.pointLightInnerRadius = 0f;
+            light.pointLightOuterRadius = radius;
+            light.shadowsEnabled = false;
+            var fade = go.AddComponent<FlareFade>();
+            var so = new SerializedObject(fade);
+            so.FindProperty("duration").floatValue = duration;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return light;
+        }
+
+        // Semburan bara sekali pakai (umur <= 0,4 dtk).
+        internal static ParticleSystem AddSparks(GameObject go, int count, float minSpeed, float maxSpeed, float maxLife, float maxSize)
+        {
+            var ps = go.AddComponent<ParticleSystem>();
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            var main = ps.main;
+            main.duration = 0.3f;
+            main.loop = false;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(maxLife * 0.6f, maxLife);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(minSpeed, maxSpeed);
+            main.startSize = new ParticleSystem.MinMaxCurve(maxSize * 0.6f, maxSize);
+            main.startColor = new ParticleSystem.MinMaxGradient(M1Builder.Hex("#FF8A3D"), M1Builder.Hex("#FFE296"));
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            var emission = ps.emission;
+            emission.rateOverTime = 0f;
+            emission.SetBursts(new[] { new ParticleSystem.Burst(0f, (short)count) });
+            var shape = ps.shape;
+            shape.shapeType = ParticleSystemShapeType.Circle;
+            shape.radius = 0.1f;
+            SpriteSheet(ps, M1Builder.LoadSprite("fireball.png"));
+            var r = go.GetComponent<ParticleSystemRenderer>();
+            r.sharedMaterial = Mat(UnlitMat);
+            r.sortingOrder = 3;
+            return ps;
+        }
+
+        static GameObject BuildMuzzleFlash()
+        {
+            var go = new GameObject("MuzzleFlash");
+            AddSparks(go, 4, 1.5f, 3f, 0.18f, 0.25f);
+            AddFlare(go.transform, "#FFCC66", 1.25f, 1.6f, 0.08f);
+            return Save(go, "MuzzleFlash");
+        }
+
+        static GameObject BuildHitBurst()
+        {
+            var go = new GameObject("HitBurst");
+            AddSparks(go, 10, 2.5f, 5f, 0.35f, 0.45f);
+            AddFlare(go.transform, "#FF9A4A", 1.6f, 1.8f, 0.12f);
+            return Save(go, "HitBurst");
+        }
+
+        internal static GameObject BuildBlazeSparks()
+        {
+            var go = new GameObject("BlazeSparks");
+            var ps = AddSparks(go, 18, 5f, 8f, 0.35f, 0.4f);
+            var shape = ps.shape;
+            shape.radius = 0.5f;
+            return Save(go, "BlazeSparks");
+        }
+
+        // Ekor bara bola api: partikel per jarak, umur pendek.
+        internal static void AddTrail(GameObject fireball)
+        {
+            var go = new GameObject("Trail");
+            go.transform.SetParent(fireball.transform, false);
+            var ps = go.AddComponent<ParticleSystem>();
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            var main = ps.main;
+            main.loop = true;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.15f, 0.3f);
+            main.startSpeed = 0f;
+            main.startSize = new ParticleSystem.MinMaxCurve(0.12f, 0.25f);
+            main.startColor = new ParticleSystem.MinMaxGradient(M1Builder.Hex("#FF8A3D"), M1Builder.Hex("#FFCC66"));
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.maxParticles = 30;
+            var emission = ps.emission;
+            emission.rateOverTime = 0f;
+            emission.rateOverDistance = 12f;
+            var col = ps.colorOverLifetime;
+            col.enabled = true;
+            var g = new Gradient();
+            g.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) });
+            col.color = g;
+            var shape = ps.shape;
+            shape.enabled = false;
+            SpriteSheet(ps, M1Builder.LoadSprite("fireball.png"));
+            var r = go.GetComponent<ParticleSystemRenderer>();
+            r.sharedMaterial = Mat(UnlitMat);
+            r.sortingOrder = 1;
         }
 
         // Child "Flash" berisi overlay kedipan yang menyalin sprite induk.
@@ -192,7 +306,7 @@ namespace Runecrypt.EditorTools
             eyes.transform.SetParent(go.transform, false);
             eyes.sprite = M1Builder.LoadSprite("skeleton_eyes_0.png");
             eyes.sharedMaterial = Mat(UnlitMat);
-            eyes.sortingOrder = 2;
+            eyes.sortingOrder = EyesOrder;
 
             var so = new SerializedObject(fx);
             var arr = so.FindProperty("shards");

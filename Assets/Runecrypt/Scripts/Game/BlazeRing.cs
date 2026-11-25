@@ -13,6 +13,7 @@ namespace Runecrypt.Game
         [SerializeField] float lightRadius = 4.5f;  // M2.6: lebih luas dan lebih lama
         [SerializeField] float lightTime = 1.0f;
         [SerializeField] float lifetime = 0.6f;
+        [SerializeField] FeedbackProfile burstProfile; // M2.6: percikan dan guncangan
 
         static readonly HashSet<IDamageable> struck = new HashSet<IDamageable>();
 
@@ -27,6 +28,7 @@ namespace Runecrypt.Game
                 Destroy(lightSource.gameObject, lightTime);
             }
 
+            FeedbackPlayer.Play(burstProfile, pos);
             struck.Clear();
             foreach (var col in Physics2D.OverlapCircleAll(pos, radius))
             {

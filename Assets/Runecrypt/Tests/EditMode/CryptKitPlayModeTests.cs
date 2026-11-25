@@ -425,6 +425,18 @@ namespace Runecrypt.Tests
             Assert.IsTrue(beside, "titik pada jarak sama tanpa penghalang terang");
         }
 
+        // M2.6 Review Focus 4: kilatan efek terlihat terang tetapi tidak membuat musuh Tersingkap.
+        [UnityTest]
+        public IEnumerator HitFlare_DoesNotRevealEnemy()
+        {
+            yield return new EnterPlayMode();
+            Spawn<Transform>("HitBurst", new Vector2(X, 0f));
+            yield return null;
+            bool lit = LightFieldHost.Field.IsLit(new Vector2(X + 0.5f, 0f));
+            yield return new ExitPlayMode();
+            Assert.IsFalse(lit);
+        }
+
         // Review Focus 4: musuh yang menyentuh Bara Pemulih tidak menghabiskannya.
         [UnityTest]
         public IEnumerator HealingEmber_IgnoresEnemies()

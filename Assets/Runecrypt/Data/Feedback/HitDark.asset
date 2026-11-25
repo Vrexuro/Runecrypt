@@ -17,7 +17,7 @@ MonoBehaviour:
   flashDuration: 0.08
   hitStop: 0.03
   shakeTrauma: 0
-  particlePrefab: {fileID: 0}
+  particlePrefab: {fileID: 7050203084427490259, guid: 99c8d78bc33978f45a20b65f2666947e, type: 3}
   clips:
   - {fileID: 8300000, guid: 4edf544d579427a4c9ce5aa1d7ef0ce8, type: 3}
   volume: 0.63

@@ -189,7 +189,7 @@ namespace Runecrypt.EditorTools
             var sr = eyes.AddComponent<SpriteRenderer>();
             sr.sprite = LoadSprite(sprite);
             sr.sharedMaterial = AssetDatabase.LoadAssetAtPath<Material>(UnlitMat);
-            sr.sortingOrder = 1;
+            sr.sortingOrder = M1JuiceBuilder.EyesOrder; // M2.6: mata selalu di atas efek pemain
             return sr;
         }
 

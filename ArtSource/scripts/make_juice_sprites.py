@@ -119,12 +119,17 @@ for (x, y) in [(7, 3), (8, 3), (3, 7), (12, 8), (7, 12)]:   # empat titik rune d
     orb.putpixel((x, y), EMBER + (255,))
 made.append(save(orb, "relic_orb"))
 
-# Cincin Kobaran 48x48 (3 unit) setebal 2 piksel: luar jingga, dalam kuning.
+# Cincin Kobaran 48x48 (3 unit) setebal 4 piksel (M2.6): dalam putih-kuning, tengah kuning, luar jingga.
+BLAZE_CORE = (255, 240, 200)
 blaze = Image.new("RGBA", (48, 48), (0, 0, 0, 0))
 for y in range(48):
     for x in range(48):
         r = math.hypot(x - 23.5, y - 23.5)
-        if 21.5 <= r < 22.5:
+        if 19.5 <= r < 20.5:
+            blaze.putpixel((x, y), EMBER + (160,))
+        elif 20.5 <= r < 21.5:
+            blaze.putpixel((x, y), BLAZE_CORE + (255,))
+        elif 21.5 <= r < 22.5:
             blaze.putpixel((x, y), EMBER_HOT + (255,))
         elif 22.5 <= r < 23.5:
             blaze.putpixel((x, y), EMBER + (230,))

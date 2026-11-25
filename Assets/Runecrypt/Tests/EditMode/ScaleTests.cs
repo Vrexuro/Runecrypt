@@ -3,6 +3,7 @@ using Runecrypt.Core;
 using Runecrypt.Game;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 
 namespace Runecrypt.Tests
 {
@@ -147,5 +148,53 @@ namespace Runecrypt.Tests
         [Test]
         public void PlayerPrefab_BaseLightStaysThree() =>
             Assert.AreEqual(3f, Serialized(Prefab<LightSourceBehaviour>("Player"), "radius"), 1e-4f);
+
+        // ---------- Task 6: efek heboh yang tetap terbaca ----------
+        static readonly string[] PlayerEffects = { "MuzzleFlash", "HitBurst", "EmberBurst", "BlazeRing", "BlazeSparks", "Fireball" };
+
+        static GameObject Fx(string name)
+        {
+            var go = AssetDatabase.LoadAssetAtPath<GameObject>(Prefabs + name + ".prefab");
+            Assert.IsNotNull(go, name + " ada");
+            return go;
+        }
+
+        [Test]
+        public void EffectPrefabs_FlaresShortAndShadowless()
+        {
+            foreach (var name in new[] { "MuzzleFlash", "HitBurst", "BlazeRing" })
+                Assert.IsNotEmpty(Fx(name).GetComponentsInChildren<FlareFade>(true), name + " punya kilatan");
+            foreach (var name in PlayerEffects)
+            foreach (var flare in Fx(name).GetComponentsInChildren<FlareFade>(true))
+            {
+                Assert.LessOrEqual(Serialized(flare, "duration"), 0.2f, name);
+                Assert.IsFalse(flare.GetComponent<Light2D>().shadowsEnabled, name + " tanpa bayangan");
+                Assert.IsNull(flare.GetComponent<LightSourceBehaviour>(), name + " tidak ikut aturan cahaya");
+            }
+        }
+
+        [Test]
+        public void EffectPrefabs_VisualsShort()
+        {
+            foreach (var name in PlayerEffects)
+            {
+                foreach (var ps in Fx(name).GetComponentsInChildren<ParticleSystem>(true))
+                    Assert.LessOrEqual(ps.main.startLifetime.constantMax, 0.4f, name + "/" + ps.name);
+                foreach (var fade in Fx(name).GetComponentsInChildren<ExpandFade>(true))
+                    Assert.LessOrEqual(Serialized(fade, "duration"), 0.4f, name + "/" + fade.name);
+            }
+        }
+
+        // Spec M2.6 §5.4: mata musuh selalu di atas semua efek pemain.
+        [Test]
+        public void EnemyEyes_DrawAboveAllEffects()
+        {
+            int top = int.MinValue;
+            foreach (var name in PlayerEffects)
+            foreach (var r in Fx(name).GetComponentsInChildren<Renderer>(true))
+                top = Mathf.Max(top, r.sortingOrder);
+            var eyes = Fx("TulangPenjaga").transform.Find("Eyes").GetComponent<SpriteRenderer>();
+            Assert.Greater(eyes.sortingOrder, top);
+        }
     }
 }
