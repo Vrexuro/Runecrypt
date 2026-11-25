@@ -174,34 +174,38 @@ namespace Runecrypt.EditorTools
         const string TilesDir = "Assets/Runecrypt/Data/Tiles/";
         const string LitMat = "Packages/com.unity.render-pipelines.universal/Runtime/Materials/Sprite-Lit-Default.mat";
         const int DecorOrder = -8, WallOverlayOrder = 1, Seed = 2511;
-        const float TopWallY = 4.5f;     // baris dinding atas (sel y = 4)
+        const float TopWallY = M1Builder.MinY + M1Builder.H - 0.5f; // baris dinding atas
 
         // Bobot ubin lantai: polos dominan (~70%, spec §5.1).
         static readonly (string name, int weight)[] FloorWeights =
             { ("plain", 14), ("cracked", 2), ("moss", 2), ("bones", 1), ("rune", 1) };
 
-        // Posisi di pinggir dan sudut, menjauhi spawn point dan posisi awal pemain (spec §6, Review Focus 5).
-        static readonly Vector2[] BrazierAt = { new Vector2(-8.5f, 0.5f), new Vector2(7.5f, -0.5f) };
+        // Posisi di pinggir dan sudut arena 30x17 (M2.6), menjauhi spawn point dan posisi awal pemain (Review Focus 5).
+        static readonly Vector2[] BrazierAt = { new Vector2(-13.5f, 2.5f), new Vector2(13.5f, -3.5f), new Vector2(4.5f, 5.5f) };
         static readonly (Vector2 pos, string sprite)[] UrnAt =
-            { (new Vector2(-5.5f, -4.5f), "urn_a"), (new Vector2(-4.5f, -4.5f), "urn_b"), (new Vector2(5.5f, 3.5f), "urn_a") };
-        static readonly Vector2[] TombstoneAt = { new Vector2(-2.5f, 2.5f), new Vector2(2.5f, -3.5f) };
-        static readonly Vector2 SarcophagusAt = new Vector2(-5f, 2.5f);
+        {
+            (new Vector2(-10.5f, -7.5f), "urn_a"), (new Vector2(-9.5f, -7.5f), "urn_b"), (new Vector2(9.5f, 5.5f), "urn_a"),
+            (new Vector2(10.5f, 5.5f), "urn_b"), (new Vector2(-5.5f, 5.5f), "urn_a"),
+        };
+        static readonly Vector2[] TombstoneAt = { new Vector2(-3.5f, 2.5f), new Vector2(3.5f, -4.5f), new Vector2(9.5f, 0.5f) };
+        static readonly Vector2[] SarcophagusAt = { new Vector2(-10f, -2.5f), new Vector2(3.5f, 3.5f) };
         static readonly (float x, string sprite)[] WallOverlays =
         {
-            (-6.5f, "wall_niche"), (-3.5f, "wall_torch_dead"), (-0.5f, "wall_niche"), (2.5f, "wall_torch_dead"),
-            (5.5f, "wall_niche"), (7.5f, "wall_cracked"), (-8.5f, "wall_cracked"),
+            (-13.5f, "wall_cracked"), (-11.5f, "wall_niche"), (-8.5f, "wall_torch_dead"), (-5.5f, "wall_niche"),
+            (-2.5f, "wall_torch_dead"), (0.5f, "wall_niche"), (3.5f, "wall_torch_dead"), (6.5f, "wall_niche"),
+            (9.5f, "wall_torch_dead"), (12.5f, "wall_niche"), (13.5f, "wall_cracked"),
         };
         static readonly (Vector2 pos, string sprite)[] DecorAt =
         {
-            (new Vector2(-9.5f, 3.5f), "decor_web_l"), (new Vector2(8.5f, 3.5f), "decor_web_r"),
-            (new Vector2(-8.5f, -5.5f + 1f), "decor_web_l"), (new Vector2(-3.5f, 3.5f), "decor_chain"),
-            (new Vector2(1.5f, 3.5f), "decor_chain"), (new Vector2(3.5f, 3.5f), "decor_banner"),
-            (new Vector2(-7.5f, -1.5f), "decor_bones"), (new Vector2(3.5f, -4.5f), "decor_bones"),
-            (new Vector2(6.5f, 2.5f), "decor_candle"), (new Vector2(-1.5f, -4.5f), "decor_candle"),
+            (new Vector2(-14.5f, 6.5f), "decor_web_l"), (new Vector2(13.5f, 6.5f), "decor_web_r"),
+            (new Vector2(-14.5f, -8.5f), "decor_web_l"), (new Vector2(-6.5f, 6.5f), "decor_chain"),
+            (new Vector2(2.5f, 6.5f), "decor_chain"), (new Vector2(8.5f, 6.5f), "decor_chain"),
+            (new Vector2(-0.5f, 6.5f), "decor_banner"), (new Vector2(10.5f, 6.5f), "decor_banner"),
+            (new Vector2(-11.5f, 1.5f), "decor_bones"), (new Vector2(5.5f, -7.5f), "decor_bones"),
+            (new Vector2(11.5f, 1.5f), "decor_bones"), (new Vector2(8.5f, -6.5f), "decor_candle"),
+            (new Vector2(-2.5f, -7.5f), "decor_candle"), (new Vector2(-12.5f, 4.5f), "decor_candle"),
         };
 
-        // Tidak menyimpan: penataan ditandai sebagai perubahan scene, user (atau "Build All") yang menyimpannya.
-        // Dengan begitu test yang memanggil menu ini tidak menulis ulang scene yang di-commit (review akhir Important 1).
         [MenuItem("Runecrypt/M2.5/Dress Arena")]
         static void DressArenaMenu()
         {
@@ -234,7 +238,7 @@ namespace Runecrypt.EditorTools
                 urn.GetComponent<SpriteRenderer>().sprite = Sprite(sprite);
             }
             foreach (var p in TombstoneAt) Place(a.tombstone, props, p);
-            Place(a.sarcophagus, props, SarcophagusAt);
+            foreach (var p in SarcophagusAt) Place(a.sarcophagus, props, p);
 
             BuildDust(Child(root, "Dust"));
             var amb = Child(root, "Ambience").gameObject.AddComponent<AudioSource>();

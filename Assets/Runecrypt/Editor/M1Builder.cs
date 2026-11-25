@@ -18,10 +18,13 @@ namespace Runecrypt.EditorTools
         const string TilesDir = "Assets/Runecrypt/Data/Tiles/";
         const string UnlitMat = "Packages/com.unity.render-pipelines.universal/Runtime/Materials/Sprite-Unlit-Default.mat";
 
-        // Ruangan 20x11 tile, sel (MinX..MinX+W-1, MinY..MinY+H-1); pusatnya di (0, -0.5).
-        public const int W = 20, H = 11, MinX = -10, MinY = -6;
+        // Ruangan 30x17 tile (M2.6), sel (MinX..MinX+W-1, MinY..MinY+H-1); pusatnya di (0, -0.5).
+        public const int W = 30, H = 17, MinX = -15, MinY = -9;
         public static readonly Vector3 RoomCenter = new Vector3(0f, -0.5f, 0f);
-        static readonly RectInt[] Pillars = { new RectInt(-5, -2, 2, 2), new RectInt(3, 0, 2, 2) };
+        static readonly RectInt[] Pillars =
+        {
+            new RectInt(-8, 1, 2, 2), new RectInt(6, 1, 2, 2), new RectInt(-8, -5, 2, 2), new RectInt(6, -5, 2, 2),
+        };
 
         [MenuItem("Runecrypt/M1/1 Build Room")]
         public static void BuildRoom()

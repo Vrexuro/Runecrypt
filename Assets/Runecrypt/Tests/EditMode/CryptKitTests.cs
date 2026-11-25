@@ -119,10 +119,30 @@ namespace Runecrypt.Tests
         public void CryptKit_HasExpectedProps()
         {
             var kit = Kit();
-            Assert.AreEqual(2, kit.GetComponentsInChildren<Brazier>(true).Length, "Anglo");
-            Assert.AreEqual(3, kit.GetComponentsInChildren<AshUrn>(true).Length, "Guci");
-            Assert.AreEqual(2, CountNamed(kit, "Tombstone"), "Nisan");
-            Assert.AreEqual(1, CountNamed(kit, "Sarcophagus"), "Sarkofagus");
+            // M2.6: arena 30x17, kit diskalakan (spec M2.6 §5.1).
+            Assert.AreEqual(3, kit.GetComponentsInChildren<Brazier>(true).Length, "Anglo");
+            Assert.AreEqual(5, kit.GetComponentsInChildren<AshUrn>(true).Length, "Guci");
+            Assert.AreEqual(3, CountNamed(kit, "Tombstone"), "Nisan");
+            Assert.AreEqual(2, CountNamed(kit, "Sarcophagus"), "Sarkofagus");
+        }
+
+        [Test]
+        public void Arena_IsThirtyBySeventeenWithClosedWalls()
+        {
+            Kit();
+            var walls = GameObject.Find("Grid/Walls").GetComponent<Tilemap>();
+            int border = 0;
+            for (int x = -15; x < 15; x++)
+            for (int y = -9; y < 8; y++)
+            {
+                bool edge = x == -15 || x == 14 || y == -9 || y == 7;
+                Assert.AreEqual(edge, walls.HasTile(new Vector3Int(x, y, 0)), $"sel {x},{y}");
+                if (edge) border++;
+            }
+            Assert.AreEqual(90, border);
+            Assert.AreEqual(4, Object.FindObjectsByType<Transform>(FindObjectsSortMode.None).Count(t => t.name == "PillarBody"), "4 pilar");
+            var room = new SerializedObject(Object.FindFirstObjectByType<CameraFollow>()).FindProperty("room").rectValue;
+            Assert.AreEqual(new Rect(-15f, -9f, 30f, 17f), room, "batas kamera = arena");
         }
 
         [Test]
@@ -176,7 +196,7 @@ namespace Runecrypt.Tests
             var kits = Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None)
                 .Where(t => t.name == "CryptKit" && t.parent == null).ToList();
             Assert.AreEqual(1, kits.Count, "satu root saja");
-            Assert.AreEqual(3, kits[0].GetComponentsInChildren<AshUrn>(true).Length);
+            Assert.AreEqual(5, kits[0].GetComponentsInChildren<AshUrn>(true).Length);
         }
 
         [Test]

@@ -73,8 +73,8 @@ namespace Runecrypt.EditorTools
                     Object.DestroyImmediate(go);
 
             Place(player, M1Builder.RoomCenter);
-            Place(puddle, new Vector3(-2.5f, -3.5f, 0f));
-            Place(puddle, new Vector3(6.5f, -2.5f, 0f));
+            Place(puddle, new Vector3(-4f, -5.5f, 0f));
+            Place(puddle, new Vector3(9.5f, -3.5f, 0f));
             BuildArenaDirector(enemy, m2);
             M1JuiceBuilder.BuildSceneServices();
             // M2.5: kit makam (lantai, dinding, dekorasi, Anglo, Guci, nisan, debu, ambien).
@@ -194,8 +194,9 @@ namespace Runecrypt.EditorTools
             var director = go.AddComponent<ArenaDirector>();
             Vector3[] points =
             {
-                new Vector3(-8f, 3f), new Vector3(8f, 3f), new Vector3(-8f, -4.5f),
-                new Vector3(8f, -4.5f), new Vector3(-0.5f, 3.2f), new Vector3(-0.5f, -4.5f),
+                // M2.6: di dekat keempat tepi arena 30x17, sebagian di luar tampilan awal kamera.
+                new Vector3(-13f, 5f), new Vector3(13f, 5f), new Vector3(-13f, -7f), new Vector3(13f, -7f),
+                new Vector3(0f, 5.5f), new Vector3(0f, -7.5f), new Vector3(-13f, -1f), new Vector3(13f, -1f),
             };
             var so = new SerializedObject(director);
             so.FindProperty("enemyPrefab").objectReferenceValue = enemyPrefab.GetComponent<Enemy>();
