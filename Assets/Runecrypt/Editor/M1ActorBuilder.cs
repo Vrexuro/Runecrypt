@@ -101,6 +101,10 @@ namespace Runecrypt.EditorTools
             int props = EnsureLayer("Props");
             Physics2D.IgnoreLayerCollision(props, react, true);
             Physics2D.IgnoreLayerCollision(props, walls, true);
+
+            // M3a: serpih es musuh hanya menyentuh pemain (dinding dan benda padat dicek lewat cast di EnemyShot).
+            int shots = EnsureLayer("EnemyShots");
+            for (int i = 0; i < 32; i++) Physics2D.IgnoreLayerCollision(shots, i, i != player);
         }
 
         // Menambah layer di slot user pertama yang kosong (8–31) kalau belum ada.

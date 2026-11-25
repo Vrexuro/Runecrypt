@@ -60,5 +60,20 @@ namespace Runecrypt.Tests
             Assert.AreEqual(SwoopPhase.Hover, s.Phase);
             Assert.AreEqual(Vector2.zero, s.Tick(2.0f, Vector2.right));
         }
+
+        // Biarawan Beku: jarak nyaman 4-6 tile (keputusan Claude, rencana M3a Task 4).
+        [Test]
+        public void RangeKeeper_TooCloseBacksAway() => Assert.AreEqual(-1f, RangeKeeper.Direction(2f, 4f, 6f));
+
+        [Test]
+        public void RangeKeeper_TooFarApproaches() => Assert.AreEqual(1f, RangeKeeper.Direction(8f, 4f, 6f));
+
+        [Test]
+        public void RangeKeeper_InBandHolds()
+        {
+            Assert.AreEqual(0f, RangeKeeper.Direction(4f, 4f, 6f));
+            Assert.AreEqual(0f, RangeKeeper.Direction(5f, 4f, 6f));
+            Assert.AreEqual(0f, RangeKeeper.Direction(6f, 4f, 6f));
+        }
     }
 }

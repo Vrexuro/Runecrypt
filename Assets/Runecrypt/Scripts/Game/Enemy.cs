@@ -180,6 +180,8 @@ namespace Runecrypt.Game
                 if (death != null) death.Init(pos - lastHitPoint);
             }
             if (definition.remains != null) RemainsRegistry.Add(Instantiate(definition.remains, pos, Quaternion.identity));
+            // Setelah reaksi pukulan terakhir (TryReact dipanggil sebelum damage), jadi benda ini tidak ikut bereaksi.
+            if (definition.dropOnDeath != null) Instantiate(definition.dropOnDeath, pos, Quaternion.identity);
             AnyDied?.Invoke(this);
 
             // Tubuh bertahan sesaat supaya kedipan pukulan terakhir terlihat (spec §5.1 langkah 1), tapi sudah

@@ -96,5 +96,129 @@ namespace Runecrypt.Tests
             yield return new ExitPlayMode();
             Assert.AreEqual(0, clouds);
         }
+
+        // ---------- Task 4: Biarawan Beku dan serpih es ----------
+        static EnemyShot ShotTemplate()
+        {
+            var go = new GameObject("ShotTemplate");
+            go.SetActive(false);
+            go.AddComponent<Rigidbody2D>().gravityScale = 0f;
+            var col = go.AddComponent<CircleCollider2D>();
+            col.isTrigger = true;
+            col.radius = 0.15f;
+            return go.AddComponent<EnemyShot>();
+        }
+
+        static RangedBrain AddRanged(Enemy e, EnemyShot template)
+        {
+            var brain = e.gameObject.AddComponent<RangedBrain>();
+            var so = new SerializedObject(brain);
+            so.FindProperty("shotPrefab").objectReferenceValue = template;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return brain;
+        }
+
+        static EnemyShot[] Shots() => Object.FindObjectsByType<EnemyShot>(FindObjectsSortMode.None);
+
+        static IEnumerator WaitUntil(System.Func<bool> done, float seconds)
+        {
+            float end = Time.realtimeSinceStartup + seconds;
+            while (!done() && Time.realtimeSinceStartup < end) yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator RangedEnemy_FiresThreeShardsAtPlayer()
+        {
+            yield return new EnterPlayMode();
+            var player = CryptKitPlayModeTests.MakePlayer(new Vector2(X, 0f));
+            var monk = MakeElemental(new Vector2(X + 5f, 0f), 500f, Element.Ice);
+            AddRanged(monk, ShotTemplate());
+            yield return WaitUntil(() => Shots().Length >= 3, 5f);
+            var shots = Shots();
+            int count = shots.Length;
+            bool allTowardPlayer = shots.All(s => Vector2.Dot(s.GetComponent<Rigidbody2D>().linearVelocity.normalized, Vector2.left) > 0.9f);
+            yield return new ExitPlayMode();
+            Assert.AreEqual(3, count, "3 serpih per tembakan");
+            Assert.IsTrue(allTowardPlayer, "sebaran 15 derajat ke arah pemain");
+        }
+
+        [UnityTest]
+        public IEnumerator RangedEnemy_BlindOrStunned_DoesNotFire()
+        {
+            yield return new EnterPlayMode();
+            CryptKitPlayModeTests.MakePlayer(new Vector2(X, 0f));
+            var template = ShotTemplate();
+            var blind = MakeElemental(new Vector2(X + 5f, 0f), 500f, Element.Ice);
+            var stunned = MakeElemental(new Vector2(X, 5f), 500f, Element.Ice);
+            blind.Blind(Time.time + 10f);
+            stunned.Stun(Time.time + 10f);
+            AddRanged(blind, template);
+            AddRanged(stunned, template);
+            yield return WaitGameSeconds(3f); // lebih lama dari jeda tembak 2,2 dtk
+            int shots = Shots().Length;
+            yield return new ExitPlayMode();
+            Assert.AreEqual(0, shots);
+        }
+
+        [UnityTest]
+        public IEnumerator EnemyShot_DamagesPlayer_IgnoresEnemies_DiesOnWall()
+        {
+            yield return new EnterPlayMode();
+            var template = ShotTemplate();
+            EnemyShot Fire(Vector2 at)
+            {
+                var s = Object.Instantiate(template, at, Quaternion.identity);
+                s.gameObject.SetActive(true);
+                s.Launch(Vector2.right);
+                return s;
+            }
+            var player = CryptKitPlayModeTests.MakePlayer(new Vector2(X, 0f));
+            float hpBefore = player.Health.Current;
+            var atPlayer = Fire(new Vector2(X - 2f, 0f));
+            var enemy = ProjectilePlayModeTests.MakeEnemy(new Vector2(X + 20f, 10f), 50f);
+            var pastEnemy = Fire(new Vector2(X + 18f, 10f));
+            var wall = new GameObject("Wall") { layer = LayerMask.NameToLayer("Walls") };
+            wall.transform.position = new Vector2(X + 40f, 20f);
+            wall.AddComponent<BoxCollider2D>().size = new Vector2(1f, 4f);
+            var atWall = Fire(new Vector2(X + 38f, 20f));
+            yield return WaitGameSeconds(0.7f);
+            bool playerShotGone = atPlayer == null, wallShotGone = atWall == null, enemyShotAlive = pastEnemy != null;
+            float hpAfter = player.Health.Current, enemyHp = enemy.CurrentHp;
+            yield return new ExitPlayMode();
+            Assert.AreEqual(hpBefore - 1f, hpAfter, 1e-3f, "serpih: damage 1 ke pemain");
+            Assert.IsTrue(playerShotGone, "serpih hancur saat mengenai pemain");
+            Assert.AreEqual(50f, enemyHp, 1e-3f, "serpih tidak melukai musuh");
+            Assert.IsTrue(enemyShotAlive, "serpih menembus musuh");
+            Assert.IsTrue(wallShotGone, "serpih hancur di dinding");
+        }
+
+        [UnityTest]
+        public IEnumerator IceMonk_Death_LeavesFrostPuddle()
+        {
+            yield return new EnterPlayMode();
+            var monk = MakeElemental(new Vector2(X, 0f), 3f, Element.Ice);
+            monk.Definition.dropOnDeath = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Runecrypt/Prefabs/FrostPuddle.prefab");
+            monk.TakeHit(Fire(monk, 10f));
+            int puddles = Object.FindObjectsByType<FrostPuddle>(FindObjectsSortMode.None).Length;
+            yield return new ExitPlayMode();
+            Assert.AreEqual(1, puddles);
+        }
+
+        // Review Focus 4: genangan yang dijatuhkan tidak ikut bereaksi di frame pukulan terakhir.
+        [UnityTest]
+        public IEnumerator IceMonk_DroppedPuddle_DoesNotReactSameFrame()
+        {
+            yield return new EnterPlayMode();
+            var monk = MakeElemental(new Vector2(X, 0f), 3f, Element.Ice);
+            monk.Definition.dropOnDeath = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Runecrypt/Prefabs/FrostPuddle.prefab");
+            monk.TakeHit(Fire(monk, 10f));
+            yield return ProjectilePlayModeTests.Steps(2);
+            int clouds = Clouds();
+            var puddle = Object.FindFirstObjectByType<FrostPuddle>();
+            bool puddleReady = puddle != null && puddle.GetComponent<SpriteRenderer>().enabled;
+            yield return new ExitPlayMode();
+            Assert.AreEqual(1, clouds, "hanya Uap dari Biarawan");
+            Assert.IsTrue(puddleReady, "genangan masih utuh dan siap dipicu tembakan berikutnya");
+        }
     }
 }
