@@ -13,8 +13,8 @@ namespace Runecrypt.Game
         Vector3 basePos;
         Vector2 kick;
 
-        // shortcut: posisi dasar diambil sekali, karena kamera M1 diam; ganti ke offset relatif saat kamera mulai mengikuti ruangan (M4)
-        void Awake() => basePos = transform.position;
+        // Posisi lokal terhadap rig CameraFollow (M2.6), jadi guncangan ikut bergerak bersama kamera.
+        void Awake() => basePos = transform.localPosition;
 
         public void Add(float amount) => trauma.Add(amount);
 
@@ -26,7 +26,7 @@ namespace Runecrypt.Game
             Vector2 off = Random.insideUnitCircle.normalized * trauma.OffsetPixels + kick;
             kick = Vector2.zero;
             off = new Vector2(Mathf.Round(off.x), Mathf.Round(off.y)) * PixelSize;
-            transform.position = basePos + (Vector3)off;
+            transform.localPosition = basePos + (Vector3)off;
         }
     }
 }

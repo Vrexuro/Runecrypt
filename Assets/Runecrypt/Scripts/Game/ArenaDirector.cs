@@ -7,7 +7,8 @@ using UnityEngine.SceneManagement;
 
 namespace Runecrypt.Game
 {
-    // Loop arena prototipe M1: gelombang musuh tanpa akhir, layar tumbang, dan ulang dengan R.
+    // Loop arena prototipe: ruangan demi ruangan tanpa akhir, masing-masing 3 gelombang (spec M2.6 §5.2),
+    // layar tumbang, dan ulang dengan R.
     public class ArenaDirector : MonoBehaviour
     {
         [SerializeField] Enemy enemyPrefab;
@@ -15,9 +16,12 @@ namespace Runecrypt.Game
         [SerializeField] float minSpawnDistance = 4f;
         [SerializeField] float waveDelay = 3f;
         [SerializeField] float spawnFade = 0.5f;
-        [SerializeField] int maxPerWave = 6;
+        [SerializeField] int maxPerWave = 8;
+        [SerializeField] int wavesPerRoom = 3;
+        [SerializeField] int nextWaveAtAlive = 4;
+        [SerializeField] int maxAlive = 12;
 
-        // shortcut: pickup relic setiap gelombang hanya untuk mencoba relic di M2, diganti ruang harta di M4.
+        // shortcut: pickup relic setiap ruangan hanya untuk mencoba relic di M2, diganti ruang harta di M4.
         [Header("Relic (M2)")]
         [SerializeField] List<RelicDefinition> relicPool = new List<RelicDefinition>();
         [SerializeField] RelicPickup relicPickupPrefab;
@@ -28,7 +32,11 @@ namespace Runecrypt.Game
 
         RunecryptControls controls;
         PlayerController player;
-        int wave, alive;
+        WaveSchedule schedule;
+        int alive, pending;   // alive termasuk musuh yang sedang fade masuk; pending = belum keluar karena batas
+
+        internal int Wave => schedule.Wave;
+        internal int Pending => pending;
         float nextWaveAt, fps;
         bool playerDead;
 
@@ -38,6 +46,7 @@ namespace Runecrypt.Game
             RemainsRegistry.Clear();
             Time.timeScale = 1f;
             controls = new RunecryptControls();
+            schedule = new WaveSchedule(wavesPerRoom, nextWaveAtAlive, maxAlive, maxPerWave);
         }
 
         void OnEnable()
@@ -72,20 +81,30 @@ namespace Runecrypt.Game
                 return;
             }
 
-            if (alive == 0 && Time.time >= nextWaveAt) SpawnWave();
+            if (Time.time >= nextWaveAt && schedule.ShouldStartNextWave(alive, pending)) StartWave();
+            if (pending > 0) SpawnPending();
         }
 
-        void SpawnWave()
+        void StartWave()
         {
-            RoomEvents.RaiseStarted(); // satu gelombang = satu ruangan (spec Isi Makam §6)
-            wave++;
-            int count = Mathf.Min(2 + wave, maxPerWave);
+            int count = schedule.NextWaveSize();
+            schedule.AdvanceWave();
+            if (schedule.IsRoomStart) RoomEvents.RaiseStarted(); // satu ruangan = 3 gelombang (spec M2.6 §5.2)
+            pending += count;
+        }
+
+        // Keluarkan musuh yang menunggu sampai batas musuh hidup penuh.
+        void SpawnPending()
+        {
+            int n = Mathf.Min(pending, schedule.CanSpawnNow(alive));
+            if (n <= 0) return;
             Vector2 p = player.transform.position;
             var far = spawnPoints.Where(s => Vector2.Distance(s.position, p) >= minSpawnDistance).ToList();
             if (far.Count == 0) far = spawnPoints.ToList();
             Shuffle(far);
-            alive += count;
-            for (int i = 0; i < count; i++) StartCoroutine(SpawnAfterFade(far[i % far.Count].position));
+            pending -= n;
+            alive += n;
+            for (int i = 0; i < n; i++) StartCoroutine(SpawnAfterFade(far[i % far.Count].position));
         }
 
         IEnumerator SpawnAfterFade(Vector3 pos)
@@ -109,7 +128,7 @@ namespace Runecrypt.Game
         void OnEnemyDied(Enemy e)
         {
             alive = Mathf.Max(0, alive - 1);
-            if (alive == 0)
+            if (schedule.RoomDone(alive, pending))
             {
                 nextWaveAt = Time.time + waveDelay;
                 SpawnRelicPickup();
@@ -147,7 +166,7 @@ namespace Runecrypt.Game
             style.normal.textColor = Color.white;
             float hp = player != null ? player.Health.Current : 0f;
             float maxHp = player != null ? player.Health.Max : 6f;
-            GUI.Label(new Rect(16, 12, 600, 30), $"HP {hp:0.#}/{maxHp:0.#}   Gelombang {wave}   FPS {fps:0}", style);
+            GUI.Label(new Rect(16, 12, 600, 30), $"HP {hp:0.#}/{maxHp:0.#}   Ruangan {schedule.Room} gelombang {schedule.WaveInRoom}   FPS {fps:0}", style);
             if (player != null && player.Relics.Count > 0)
                 GUI.Label(new Rect(16, 40, 1200, 30), "Relic: " + string.Join(", ", player.Relics.Select(r => r.displayName)), style);
 

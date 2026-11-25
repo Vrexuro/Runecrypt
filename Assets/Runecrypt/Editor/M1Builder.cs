@@ -58,8 +58,16 @@ namespace Runecrypt.EditorTools
 
         static void BuildCamera()
         {
+            // M2.6: rig mengikuti pemain dalam batas ruangan; kamera anak hanya digeser CameraShake.
+            var rig = new GameObject("CameraRig");
+            rig.transform.position = new Vector3(RoomCenter.x, RoomCenter.y, 0f);
+            var follow = rig.AddComponent<CameraFollow>();
+            var fso = new SerializedObject(follow);
+            fso.FindProperty("room").rectValue = new Rect(MinX, MinY, W, H);
+            fso.ApplyModifiedPropertiesWithoutUndo();
             var go = new GameObject("Main Camera") { tag = "MainCamera" };
-            go.transform.position = new Vector3(RoomCenter.x, RoomCenter.y, -10f);
+            go.transform.SetParent(rig.transform, false);
+            go.transform.localPosition = new Vector3(0f, 0f, -10f);
             var cam = go.AddComponent<Camera>();
             cam.orthographic = true;
             cam.orthographicSize = 5.625f; // 180 px / 16 PPU / 2
