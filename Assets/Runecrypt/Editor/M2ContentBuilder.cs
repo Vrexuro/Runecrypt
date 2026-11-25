@@ -37,7 +37,7 @@ namespace Runecrypt.EditorTools
             return a;
         }
 
-        // GDD §5.2 relic 1–10. Relic 11–15 butuh perilaku baru di luar stat, menyusul di M3/M4.
+        // GDD §5.2 relic 1–11. Relic 12–15 butuh perilaku baru di luar stat, menyusul di M3b/M4.
         static List<RelicDefinition> BuildRelics() => new List<RelicDefinition>
         {
             Relic("BaraKembar", "Bara Kembar", "Setiap tembakan mengeluarkan 2 bola api yang menyebar 10°.", false,
@@ -61,6 +61,9 @@ namespace Runecrypt.EditorTools
                 M(Stat.LightRadius, StatOp.Percent, 0.25f)),
             Relic("JantungTungku", "Jantung Tungku", "Max HP +2 (satu hati) dan pulih penuh.", true,
                 M(Stat.MaxHp, StatOp.Add, 2f)),
+            // M3a: relic 11 (GDD §5.2).
+            Relic("MahkotaAsap", "Mahkota Asap", "Radius dan durasi Uap +50%.", false,
+                M(Stat.SteamRadius, StatOp.Percent, 0.5f), M(Stat.SteamDuration, StatOp.Percent, 0.5f)),
         };
 
         static StatMod M(Stat s, StatOp op, float v) => new StatMod { stat = s, op = op, value = v };

@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6cf18ae8ee0c68c4fa1d0f6d7199ae94, type: 3}
+  m_Name: BiarawanBeku
+  m_EditorClassIdentifier: Runecrypt.Core::Runecrypt.Core.EnemyDefinition
+  displayName: Biarawan Beku
+  maxHp: 10
+  moveSpeed: 1.6
+  contactDamage: 1
+  contactInterval: 1
+  element: 2
+  chargeCooldown: 4
+  dropOnDeath: {fileID: 7389842128354570647, guid: c9a32a6d7a58b524e8551927d2fcace7, type: 3}
+  cost: 2
+  hitLit: {fileID: 11400000, guid: f59e5c82c8053a6499c6630040857afe, type: 2}
+  hitDark: {fileID: 11400000, guid: c5d57477351240a4590a219051d37d18, type: 2}
+  deathProfile: {fileID: 11400000, guid: d2d921c4c8c97e647848974093d548ec, type: 2}
+  deathEffect: {fileID: 6129505565488490660, guid: dc98ab64daa80594893c516a709aac2c, type: 3}
+  remains: {fileID: 0}

@@ -110,6 +110,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 579cd6d40c40fc048a4e30c5d31fceb9, type: 3}
   - {fileID: 21300000, guid: f33667b6adafa41419f139da6f1e0062, type: 3}
   fps: 3
+  playOnce: 0
 --- !u!58 &6940255224679640559
 CircleCollider2D:
   m_ObjectHideFlags: 0

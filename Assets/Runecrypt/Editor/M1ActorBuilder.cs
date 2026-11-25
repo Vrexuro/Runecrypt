@@ -37,6 +37,7 @@ namespace Runecrypt.EditorTools
                 d.displayName = "Tulang Penjaga";
                 d.maxHp = 12f; d.moveSpeed = 2f; d.contactDamage = 1f; d.contactInterval = 1f; d.element = Element.None;
             });
+            tulang.cost = 1; // M3a: biaya dalam budget gelombang
 
             // M1.5: profil umpan balik dan prefab efek lebih dulu, karena prefab aktor menunjuknya.
             var juice = M1JuiceBuilder.BuildAssets();
@@ -67,15 +68,20 @@ namespace Runecrypt.EditorTools
             uap.spawnProfile = juice.steam;
             EditorUtility.SetDirty(uap);
             var puddle = BuildPuddlePrefab(uap);
+            // M3a: Pelita Sesat, Biarawan Beku, serpih es, Kristal Es.
+            var m3a = M3aContentBuilder.Build(juice, rules, uap, puddle);
 
-            foreach (var name in new[] { "TestLight", "SkeletonDummy", "Player", "TulangPenjaga", "FrostPuddle", "ArenaDirector", "Feedback" })
+            foreach (var name in new[] { "TestLight", "SkeletonDummy", "Player", "TulangPenjaga", "FrostPuddle", "IceCrystal", "ArenaDirector", "Feedback" })
                 foreach (var go in Object.FindObjectsByType<GameObject>(FindObjectsSortMode.None).Where(g => g != null && g.name == name && g.transform.parent == null).ToList())
                     Object.DestroyImmediate(go);
 
             Place(player, M1Builder.RoomCenter);
             Place(puddle, new Vector3(-4f, -5.5f, 0f));
             Place(puddle, new Vector3(9.5f, -3.5f, 0f));
-            BuildArenaDirector(enemy, m2);
+            // M3a: dua Kristal Es, >= 1,5 tile dari posisi awal, titik spawn, dan benda lain (keputusan Claude).
+            Place(m3a.crystal, new Vector3(-9.5f, 4.5f, 0f));
+            Place(m3a.crystal, new Vector3(11f, -5.5f, 0f));
+            BuildArenaDirector(new[] { enemy, m3a.pelita, m3a.biarawan }, m2);
             M1JuiceBuilder.BuildSceneServices();
             // M2.5: kit makam (lantai, dinding, dekorasi, Anglo, Guci, nisan, debu, ambien).
             M25CryptBuilder.DressArena(M25CryptBuilder.BuildAssets());
@@ -194,7 +200,7 @@ namespace Runecrypt.EditorTools
         }
 
         // Task 10: gelombang musuh dari 6 titik di sudut gelap ruangan.
-        static void BuildArenaDirector(GameObject enemyPrefab, M2ContentBuilder.Assets m2)
+        static void BuildArenaDirector(GameObject[] enemyPrefabs, M2ContentBuilder.Assets m2)
         {
             var go = new GameObject("ArenaDirector");
             var director = go.AddComponent<ArenaDirector>();
@@ -205,9 +211,10 @@ namespace Runecrypt.EditorTools
                 new Vector3(0f, 5.5f), new Vector3(0f, -7.5f), new Vector3(-13f, -1f), new Vector3(13f, -1f),
             };
             var so = new SerializedObject(director);
-            var prefabs = so.FindProperty("enemyPrefabs"); // M3a: jenis lain ditambah builder M3a
-            prefabs.arraySize = 1;
-            prefabs.GetArrayElementAtIndex(0).objectReferenceValue = enemyPrefab.GetComponent<Enemy>();
+            var prefabs = so.FindProperty("enemyPrefabs"); // M3a: gelombang campuran dari budget
+            prefabs.arraySize = enemyPrefabs.Length;
+            for (int i = 0; i < enemyPrefabs.Length; i++)
+                prefabs.GetArrayElementAtIndex(i).objectReferenceValue = enemyPrefabs[i].GetComponent<Enemy>();
             var arr = so.FindProperty("spawnPoints");
             arr.arraySize = points.Length;
             for (int i = 0; i < points.Length; i++)

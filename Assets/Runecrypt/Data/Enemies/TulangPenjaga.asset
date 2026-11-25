@@ -18,6 +18,9 @@ MonoBehaviour:
   contactDamage: 1
   contactInterval: 1
   element: 0
+  chargeCooldown: 4
+  dropOnDeath: {fileID: 0}
+  cost: 1
   hitLit: {fileID: 11400000, guid: f59e5c82c8053a6499c6630040857afe, type: 2}
   hitDark: {fileID: 11400000, guid: c5d57477351240a4590a219051d37d18, type: 2}
   deathProfile: {fileID: 11400000, guid: d2d921c4c8c97e647848974093d548ec, type: 2}

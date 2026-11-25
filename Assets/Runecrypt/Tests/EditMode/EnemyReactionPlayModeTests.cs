@@ -292,5 +292,33 @@ namespace Runecrypt.Tests
             Assert.AreEqual(3.75f, radius, 1e-3f);
             Assert.AreEqual(4.5f, duration, 1e-3f);
         }
+
+        // ---------- Task 8: efek mati sekali putar ----------
+        [UnityTest]
+        public IEnumerator SpriteFlipbook_PlayOnce_DestroysAfterLastFrame()
+        {
+            yield return new EnterPlayMode();
+            var tex = new Texture2D(2, 2);
+            var sprite = Sprite.Create(tex, new Rect(0, 0, 2, 2), Vector2.one * 0.5f);
+            var go = new GameObject("DeathFx");
+            go.SetActive(false);
+            go.AddComponent<SpriteRenderer>();
+            var fb = go.AddComponent<SpriteFlipbook>();
+            var so = new SerializedObject(fb);
+            var frames = so.FindProperty("frames");
+            frames.arraySize = 3;
+            for (int i = 0; i < 3; i++) frames.GetArrayElementAtIndex(i).objectReferenceValue = sprite;
+            so.FindProperty("fps").floatValue = 10f;
+            so.FindProperty("playOnce").boolValue = true;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            go.SetActive(true);
+            yield return WaitGameSeconds(0.15f);
+            bool aliveMid = go != null;
+            yield return WaitGameSeconds(0.4f);
+            bool goneAfter = go == null;
+            yield return new ExitPlayMode();
+            Assert.IsTrue(aliveMid, "masih tampil di tengah animasi");
+            Assert.IsTrue(goneAfter, "hilang setelah frame terakhir (3 frame / 10 fps = 0,3 dtk)");
+        }
     }
 }
