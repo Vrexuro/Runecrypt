@@ -43,8 +43,7 @@ namespace Runecrypt.Game
             var def = ReactionResolver.Find(hit.Element, element, reactionBook);
             if (def == null || def.effectPrefab == null) return;
             cooldown.Start(now); // sebelum spawn: tembakan lain di frame yang sama tidak memicu dua kali
-            var fx = Instantiate(def.effectPrefab, transform.position, Quaternion.identity);
-            fx.GetComponent<IReactionEffect>()?.Init(def);
+            ReactionSpawner.Spawn(def, transform.position);
             sr.enabled = false;
             col.enabled = false;
         }

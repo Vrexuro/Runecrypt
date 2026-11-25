@@ -11,6 +11,8 @@ namespace Runecrypt.Core
         public float contactDamage = 1f;
         public float contactInterval = 1f;
         public Element element = Element.None;
+        [Tooltip("Detik muatan elemen kosong setelah memicu reaksi (GDD §5.1).")]
+        public float chargeCooldown = 4f;
 
         [Header("Umpan balik (M1.5). Gaya mati per jenis musuh cukup diganti di sini.")]
         public FeedbackProfile hitLit;

@@ -18,8 +18,11 @@ namespace Runecrypt.Game
         [SerializeField] GameObject stunIcon;
         [SerializeField] float knockbackSpeed = 4f;
         [SerializeField] float knockbackDamping = 12f;
+        [Tooltip("Reaksi yang bisa dipicu musuh berelemen saat terkena api (M3a).")]
+        [SerializeField] List<ReactionDefinition> reactionBook = new List<ReactionDefinition>();
 
         const float KillFlashTime = 0.06f;
+        const float EmptyChargeAlpha = 0.6f; // keputusan Claude: tubuh memudar selama muatan kosong
 
         public static event Action<Enemy> AnyDied;
         static readonly List<Enemy> active = new List<Enemy>();
@@ -31,6 +34,8 @@ namespace Runecrypt.Game
         Rigidbody2D body;
         Health health;
         IEnemyBrain brain;
+        Cooldown charge;
+        SpriteRenderer bodySprite;
         readonly BurnStatus burn = new BurnStatus();
         float blindUntil, stunUntil, nextWanderChange, nextContact, markedUntil;
         Vector2 wanderDir, knock, lastHitPoint;
@@ -43,6 +48,8 @@ namespace Runecrypt.Game
         {
             body = GetComponent<Rigidbody2D>();
             brain = GetComponent<IEnemyBrain>();
+            bodySprite = GetComponent<SpriteRenderer>();
+            charge = new Cooldown(definition.chargeCooldown);
             health = new Health(definition.maxHp);
             health.Died += Die;
             if (burnLight != null) burnLight.SetActive(false);
@@ -66,6 +73,11 @@ namespace Runecrypt.Game
                 float applied = lightRules.ApplyDamage(burnDamage, IsLitNow);
                 DamageNumbers.Show(applied, HitKind.Burn, body.position);
                 health.TakeDamage(applied);
+            }
+            if (bodySprite != null && definition.element != Element.None)
+            {
+                float a = charge.IsReady(now) ? 1f : EmptyChargeAlpha;
+                if (!Mathf.Approximately(bodySprite.color.a, a)) bodySprite.color = new Color(1f, 1f, 1f, a);
             }
             bool burning = burn.IsActive(now) && !health.IsDead;
             if (burnLight != null && burnLight.activeSelf != burning) burnLight.SetActive(burning);
@@ -109,6 +121,7 @@ namespace Runecrypt.Game
             lastHitPoint = hit.Point;
             if (hit.Element == Element.Fire)
             {
+                TryReact(hit.Element, pos);
                 FeedbackPlayer.Play(lit ? definition.hitLit : definition.hitDark, pos, hitFlash);
                 DamageNumbers.Show(applied, lit ? HitKind.Lit : HitKind.Dark, pos);
                 Vector2 impulse = (pos - hit.Point).normalized * knockbackSpeed;
@@ -123,6 +136,18 @@ namespace Runecrypt.Game
             }
             health.TakeDamage(applied);
             if (hit.AppliesBurn && !health.IsDead) burn.Apply(Time.time, hit.BurnDuration, hit.BurnDamagePerTick);
+        }
+
+        // Muatan elemen (GDD §5.1): musuh berelemen memicu reaksi di posisinya, lalu kosong selama chargeCooldown.
+        // Dipanggil sebelum damage, jadi pukulan yang membunuh tetap memicu reaksi.
+        void TryReact(Element incoming, Vector2 pos)
+        {
+            float now = Time.time;
+            if (definition.element == Element.None || !charge.IsReady(now)) return;
+            var def = ReactionResolver.Find(incoming, definition.element, reactionBook);
+            if (def == null || def.effectPrefab == null) return;
+            charge.Start(now); // sebelum spawn: tembakan lain di frame yang sama tidak memicu dua kali
+            ReactionSpawner.Spawn(def, pos);
         }
 
         static void SetShown(GameObject go, bool shown)
