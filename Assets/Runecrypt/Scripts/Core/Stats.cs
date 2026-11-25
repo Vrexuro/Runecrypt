@@ -8,6 +8,7 @@ namespace Runecrypt.Core
     {
         Damage, FireRate, Range, ProjectileSpeed, ProjectileSize, ProjectileCount, Pierce, Bounce, HomingTurn,
         BurnDuration, BurnDamage, LightRadius, ProjectileLight, MaxHp, MoveSpeed, DashCooldown, BlazeCooldown, BlazeDamage,
+        SteamRadius, SteamDuration, // M3a, Mahkota Asap. Hanya boleh menambah di ujung: aset relic menyimpan angka enum.
     }
 
     public enum StatOp { Add, Percent }

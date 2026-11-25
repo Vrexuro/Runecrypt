@@ -10,15 +10,23 @@ namespace Runecrypt.Game
 
         ReactionDefinition def;
         float endTime, nextTick;
+
+        // Setelah relic (Mahkota Asap: +50%), tanpa pemain pakai nilai definisi.
+        internal float Radius { get; private set; }
+        internal float Duration { get; private set; }
         int enemyMask;
 
         public void Init(ReactionDefinition d)
         {
             def = d;
-            endTime = Time.time + d.duration;
+            var stats = PlayerController.Instance != null ? PlayerController.Instance.Stats : null;
+            Radius = stats != null ? stats.Get(Stat.SteamRadius, d.radius) : d.radius;
+            Duration = stats != null ? stats.Get(Stat.SteamDuration, d.duration) : d.duration;
+            if (d.radius > 0f) transform.localScale *= Radius / d.radius; // visual awan ikut radius
+            endTime = Time.time + Duration;
             nextTick = Time.time;
             enemyMask = LayerMask.GetMask("Enemies");
-            if (lightSource != null) lightSource.Radius = d.radius;
+            if (lightSource != null) lightSource.Radius = Radius;
             FeedbackPlayer.Play(d.spawnProfile, transform.position);
         }
 
@@ -37,7 +45,7 @@ namespace Runecrypt.Game
         void Tick(float now)
         {
             Vector2 pos = transform.position;
-            foreach (var hit in Physics2D.OverlapCircleAll(pos, def.radius, enemyMask))
+            foreach (var hit in Physics2D.OverlapCircleAll(pos, Radius, enemyMask))
             {
                 var enemy = hit.GetComponentInParent<Enemy>();
                 if (enemy == null) continue;

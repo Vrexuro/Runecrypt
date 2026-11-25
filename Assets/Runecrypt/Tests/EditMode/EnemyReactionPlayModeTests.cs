@@ -199,7 +199,7 @@ namespace Runecrypt.Tests
             var monk = MakeElemental(new Vector2(X, 0f), 3f, Element.Ice);
             monk.Definition.dropOnDeath = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Runecrypt/Prefabs/FrostPuddle.prefab");
             monk.TakeHit(Fire(monk, 10f));
-            int puddles = Object.FindObjectsByType<FrostPuddle>(FindObjectsSortMode.None).Length;
+            int puddles = Object.FindObjectsByType<ReactiveProp>(FindObjectsSortMode.None).Length;
             yield return new ExitPlayMode();
             Assert.AreEqual(1, puddles);
         }
@@ -214,11 +214,83 @@ namespace Runecrypt.Tests
             monk.TakeHit(Fire(monk, 10f));
             yield return ProjectilePlayModeTests.Steps(2);
             int clouds = Clouds();
-            var puddle = Object.FindFirstObjectByType<FrostPuddle>();
+            var puddle = Object.FindFirstObjectByType<ReactiveProp>();
             bool puddleReady = puddle != null && puddle.GetComponent<SpriteRenderer>().enabled;
             yield return new ExitPlayMode();
             Assert.AreEqual(1, clouds, "hanya Uap dari Biarawan");
             Assert.IsTrue(puddleReady, "genangan masih utuh dan siap dipicu tembakan berikutnya");
+        }
+
+        // ---------- Task 6: Kristal Es dan Mahkota Asap ----------
+        static ReactiveProp MakeCrystal(Vector2 pos)
+        {
+            var go = new GameObject("IceCrystal");
+            go.transform.position = pos;
+            go.AddComponent<SpriteRenderer>();
+            go.AddComponent<BoxCollider2D>().size = new Vector2(0.8f, 0.8f);
+            var prop = go.AddComponent<ReactiveProp>();
+            var so = new SerializedObject(prop);
+            var book = so.FindProperty("reactionBook");
+            book.arraySize = 1;
+            book.GetArrayElementAtIndex(0).objectReferenceValue = AssetDatabase.LoadAssetAtPath<ReactionDefinition>(Uap);
+            so.FindProperty("singleUse").boolValue = true;
+            so.FindProperty("shatterDamage").floatValue = 4f;
+            so.FindProperty("shatterRadius").floatValue = 1.5f;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return prop;
+        }
+
+        static HitInfo FireAt(Vector2 p) => new HitInfo(3f, Element.Fire, false, p + Vector2.left);
+
+        [UnityTest]
+        public IEnumerator IceCrystal_FireHit_SpawnsSteamOnce_AndBreaks()
+        {
+            yield return new EnterPlayMode();
+            var crystal = MakeCrystal(new Vector2(X, 0f));
+            crystal.TakeHit(FireAt(crystal.transform.position));
+            crystal.TakeHit(FireAt(crystal.transform.position)); // tembakan kedua di frame yang sama
+            int clouds = Clouds();
+            yield return null;
+            bool broken = crystal == null;
+            yield return new ExitPlayMode();
+            Assert.AreEqual(1, clouds, "Uap sekali");
+            Assert.IsTrue(broken, "Kristal Es pecah setelah bereaksi");
+        }
+
+        // Keputusan 25 Nov (GDD §5.1): objek elemen juga melukai musuh di dekatnya; pemain tidak (reaksi tidak melukai pemain).
+        [UnityTest]
+        public IEnumerator IceCrystal_Shatter_DamagesNearbyEnemy_NotPlayer()
+        {
+            yield return new EnterPlayMode();
+            var crystal = MakeCrystal(new Vector2(X, 0f));
+            var near = ProjectilePlayModeTests.MakeEnemy(new Vector2(X + 1f, 0f), 50f);
+            var far = ProjectilePlayModeTests.MakeEnemy(new Vector2(X + 3f, 0f), 50f);
+            var player = CryptKitPlayModeTests.MakePlayer(new Vector2(X - 1f, 0f));
+            float playerHp = player.Health.Current;
+            crystal.TakeHit(FireAt(crystal.transform.position));
+            float nearHp = near.CurrentHp, farHp = far.CurrentHp, playerAfter = player.Health.Current;
+            yield return new ExitPlayMode();
+            Assert.LessOrEqual(nearHp, 46f, "musuh dalam 1,5 tile kena pecahan (4, +25% kalau Tersingkap)");
+            Assert.AreEqual(50f, farHp, 1e-3f, "musuh di 3 tile utuh");
+            Assert.AreEqual(playerHp, playerAfter, 1e-3f, "pecahan tidak melukai pemain");
+        }
+
+        [UnityTest]
+        public IEnumerator SmokeCrown_SteamRadiusAndDurationPlusHalf()
+        {
+            yield return new EnterPlayMode();
+            var player = CryptKitPlayModeTests.MakePlayer(new Vector2(X, 0f));
+            player.Stats.Add(new[]
+            {
+                new StatMod { stat = Stat.SteamRadius, op = StatOp.Percent, value = 0.5f },
+                new StatMod { stat = Stat.SteamDuration, op = StatOp.Percent, value = 0.5f },
+            });
+            var cloud = ReactionSpawner.Spawn(AssetDatabase.LoadAssetAtPath<ReactionDefinition>(Uap), new Vector2(X + 10f, 0f))
+                .GetComponent<SteamCloud>();
+            float radius = cloud.Radius, duration = cloud.Duration;
+            yield return new ExitPlayMode();
+            Assert.AreEqual(3.75f, radius, 1e-3f);
+            Assert.AreEqual(4.5f, duration, 1e-3f);
         }
     }
 }

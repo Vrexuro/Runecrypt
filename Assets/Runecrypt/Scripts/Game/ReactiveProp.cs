@@ -10,12 +10,16 @@ namespace Runecrypt.Game
         void Init(ReactionDefinition def);
     }
 
-    // Genangan Beku (GDD §5.1): memicu reaksi saat kena elemen lain, hilang, lalu muncul lagi.
-    public class FrostPuddle : MonoBehaviour, IDamageable
+    // Benda reaksi (GDD §5.1). Genangan Beku: memicu reaksi saat kena elemen lain, hilang, lalu muncul lagi.
+    // Kristal Es (M3a): singleUse, pecah setelah bereaksi dan pecahannya melukai musuh di dekatnya, tidak pemain.
+    public class ReactiveProp : MonoBehaviour, IDamageable
     {
         [SerializeField] Element element = Element.Ice;
         [SerializeField] List<ReactionDefinition> reactionBook = new List<ReactionDefinition>();
         [SerializeField] float respawnSeconds = 8f;
+        [SerializeField] bool singleUse;
+        [SerializeField] float shatterDamage;
+        [SerializeField] float shatterRadius = 1.5f;
 
         Cooldown cooldown;
         SpriteRenderer sr;
@@ -46,6 +50,21 @@ namespace Runecrypt.Game
             ReactionSpawner.Spawn(def, transform.position);
             sr.enabled = false;
             col.enabled = false;
+            if (!singleUse) return;
+            Shatter();
+            Destroy(gameObject);
+        }
+
+        void Shatter()
+        {
+            if (shatterDamage <= 0f) return;
+            Vector2 pos = transform.position;
+            var struck = new HashSet<Enemy>();
+            foreach (var c in Physics2D.OverlapCircleAll(pos, shatterRadius))
+            {
+                var enemy = c.GetComponentInParent<Enemy>(); // hanya musuh; pemain tidak terluka (GDD §5.1)
+                if (enemy != null && struck.Add(enemy)) enemy.TakeHit(new HitInfo(shatterDamage, element, false, pos));
+            }
         }
     }
 }

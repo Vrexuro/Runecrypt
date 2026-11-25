@@ -264,7 +264,7 @@ namespace Runecrypt.EditorTools
             var box = go.AddComponent<BoxCollider2D>();
             box.size = new Vector2(0.9f, 0.5f);
             box.offset = new Vector2(0f, -0.1f);
-            var fp = go.AddComponent<FrostPuddle>();
+            var fp = go.AddComponent<ReactiveProp>();
             var so = new SerializedObject(fp);
             var book = so.FindProperty("reactionBook");
             book.arraySize = 1;
