@@ -19,7 +19,7 @@
 | | |
 |---|---|
 | **Technical Form** | 2D pixel art. Tile dan karakter 16x16 piksel, boss 48x48 piksel. |
-| **View** | Top-down tiga perempat. Kamera diam, satu layar untuk satu ruangan, lalu bergeser ke ruangan berikutnya saat pemain lewat pintu. |
+| **View** | Top-down tiga perempat. Ruangan lebih besar dari satu layar (sekitar 30x17 tile); kamera mengikuti pemain tanpa keluar dari batas ruangan, lalu pindah ke ruangan berikutnya saat pemain lewat pintu (M2.6). |
 | **Platform** | PC (Windows), build standalone |
 | **Language** | C# |
 | **Device** | Laptop. Di expo: 5 laptop dan 1 monitor eksternal. |
@@ -49,7 +49,7 @@ Setelah 8 sampai 12 ruangan, pemain sampai di depan **Sang Pemadam**: makhluk be
 | **Story synopsis** | Lihat bagian 2.2. |
 | **Modes** | *Run* (mode utama). Setelah boss kalah, pemain bisa memilih *Turun Lebih Dalam* (lanjut tanpa batas) atau *Keluar Makam* (selesai dengan skor). |
 | **Game elements** | Bergerak, menembak, dash, skill elemen, cahaya, reaksi elemen, relic, level-up, ruangan acak, boss. Rinciannya di bagian 4–6. |
-| **Game levels** | Satu lantai berisi 8–12 ruangan yang disusun acak dari prefab buatan tangan. Lapisan lebih dalam memakai prefab yang sama dengan tingkat kesulitan naik. Lihat bagian 9. |
+| **Game levels** | Satu lantai berisi 10–14 ruangan yang disusun acak dari prefab buatan tangan. Lapisan lebih dalam memakai prefab yang sama dengan tingkat kesulitan naik. Lihat bagian 9. |
 | **Player's controls** | Lihat bagian 8.1. |
 | **Winning** | Mengalahkan Sang Pemadam berarti run dianggap menang. Pemain lalu boleh lanjut untuk mengejar skor. |
 | **Losing** | HP habis. |
@@ -70,7 +70,7 @@ Naskah lengkap ada di `Docs/specs/2026-11-18-peti-pintu-cerita-design.md` §8–
 - **Cahaya adalah senjata.** Ruangan gelap gulita. Tubuh pemain dan setiap bola api adalah sumber cahaya. Musuh di gelap hanya terlihat dari mata merahnya dan bergerak lebih cepat, sedangkan musuh yang tersingkap cahaya menerima damage lebih besar (bagian 5.5).
 - **Reaksi elemen dari lingkungan.** Api yang mengenai es memicu Uap, api yang mengenai petir memicu Ledakan Cahaya. Ruangan berisi genangan, tiang, dan musuh berelemen yang bisa dipakai pemain.
 - **Relic yang mengubah cara menyerang.** Split, pierce, bounce, homing, dan lainnya. Efeknya bertumpuk dan terlihat langsung pada proyektil.
-- **Run 6–8 menit lengkap dengan boss 3 fase**, lalu lanjut tanpa batas untuk pemain yang jago.
+- **Satu lantai sampai boss 3 fase sekitar 20 menit**, lalu lanjut tanpa batas untuk pemain yang jago (bagian 9.4).
 - **Leaderboard expo** dengan nama 3 huruf ala arcade.
 - **Semua aset buatan sendiri.** Pixel art dan suara dibuat lewat script, jadi gayanya konsisten.
 
@@ -89,11 +89,11 @@ Naskah lengkap ada di `Docs/specs/2026-11-18-peti-pintu-cerita-design.md` §8–
 ### 3.2 Game Design Definitions
 - **Fokus utama:** bertahan dan membersihkan ruangan di dalam gelap dengan memanfaatkan cahaya dan reaksi elemen.
 - **Ruangan bersih:** semua musuh di ruangan mati. Jeruji pintu terbuka dan hadiah ruangan muncul.
-- **Transisi antar ruangan:** pemain berjalan melewati pintu yang terbuka. Kamera bergeser satu layar dan pintu ruangan baru (kalau ada musuh) tertutup setelah pemain masuk.
+- **Transisi antar ruangan:** pemain berjalan melewati pintu yang terbuka. Kamera pindah ke ruangan baru (di dalam ruangan kamera mengikuti pemain) dan pintu ruangan baru (kalau ada musuh) tertutup setelah pemain masuk.
 - **Transisi lantai:** setelah boss kalah, muncul tangga ke bawah. Melewatinya membuat lantai baru di kedalaman +1.
 - **Menang:** Sang Pemadam kalah di kedalaman 1.
 - **Kalah:** HP pemain mencapai 0.
-- **Skor:** `kedalaman × 1000 + musuh dikalahkan × 10 + bonus waktu`. Bonus waktu = maks(0, 600 − detik sampai boss pertama kalah) × 2. Memilih *Keluar Makam* setelah boss kalah memberi bonus **+1500**, lebih besar dari nilai satu kedalaman. Jadi lanjut ke bawah benar-benar soal risiko: bisa dapat skor lebih tinggi, tapi bonus keluar hilang kalau mati. *Angka ini awal dan disetel saat playtest. (keputusan Claude)*
+- **Skor:** `kedalaman × 1000 + musuh dikalahkan × 10 + bonus waktu`. Bonus waktu = maks(0, 600 − detik sampai boss pertama kalah) × 2 *(batas 600 detik dibuat saat run 6–8 menit; perlu disetel ulang untuk run 20 menit di M5)*. Memilih *Keluar Makam* setelah boss kalah memberi bonus **+1500**, lebih besar dari nilai satu kedalaman. Jadi lanjut ke bawah benar-benar soal risiko: bisa dapat skor lebih tinggi, tapi bonus keluar hilang kalau mati. *Angka ini awal dan disetel saat playtest. (keputusan Claude)*
 
 ### 3.3 Game Flowchart
 
@@ -136,15 +136,15 @@ flowchart TD
 
 ## 4. Player Definition
 
-**Pyromancer** adalah penyihir api berjubah, penjaga bara terakhir. Ia satu-satunya class di MVP. Frost Warden (es) dan Stormcaller (petir) masuk daftar "jika waktu cukup".
+**Pyromancer** adalah penyihir api berjubah, penjaga bara terakhir. Ia satu-satunya class di MVP. Frost Warden (es) dan Stormcaller (petir) masuk daftar "jika waktu cukup". Ketiga nama class dipertahankan (keputusan user, 25 Nov 2026): "Pyromancer" adalah istilah fantasi umum, dan Stormcaller berbeda dari Stormwarden/Stormblade di Soul Knight Prequel.
 
 ### 4.1 Player Definitions
 
 | Definisi | Nilai awal | Keterangan |
 |---|---|---|
 | **Health** | 6 HP, tampil sebagai 3 hati (1 hati = 2 HP) | Kena serangan biasa −1 HP. Serangan boss −2 HP. |
-| **Weapon: Bola Api** | Damage 3, 3 tembakan/detik, jangkauan 7 tile | Menembak ke arah bidikan. Memberi status **Terbakar** (1 damage/detik selama 2 detik). Bola api memancarkan cahaya kecil. |
-| **Skill: Kobaran** | Cooldown 6 detik | Cincin api di sekitar pemain dengan radius 2,5 tile dan damage 6. Ruangan sekitar ikut terang sesaat. Kobaran dihitung sebagai api, jadi bisa memicu reaksi. |
+| **Weapon: Bola Api** | Damage 3, 3 tembakan/detik, jangkauan 7 tile | Menembak ke arah bidikan. Memberi status **Terbakar** (1 damage/detik selama 2 detik). Bola api memancarkan cahaya radius 1,75 tile (M2.6) dan meninggalkan ekor bara. |
+| **Skill: Kobaran** | Cooldown 6 detik | Cincin api di sekitar pemain dengan radius 2,5 tile dan damage 6. Cahayanya menerangi radius 4,5 tile selama 1 detik (M2.6), lebih luas dari radius damage supaya musuh di tepi ikut Tersingkap. Kobaran dihitung sebagai api, jadi bisa memicu reaksi. |
 | **Action: Dash** | Jarak 3 tile, cooldown 0,8 detik | Kebal serangan (i-frame) selama 0,2 detik. |
 | **Cahaya pemain** | Radius 3 tile, jingga hangat | Sumber cahaya utama. Musuh di dalamnya Tersingkap (bagian 5.5). Radius bisa naik lewat relic atau upgrade, dan turun di lapisan dalam atau fase 3 boss. |
 | **Kecepatan gerak** | 5 tile/detik | |
@@ -189,6 +189,7 @@ Benda reaksi di lingkungan:
 - **Genangan Beku:** tile lantai yang memicu Uap lalu hilang. Muncul kembali setelah 8 detik.
 - **Kristal Es:** benda yang bisa dihancurkan. Memicu Uap sekali.
 - **Tiang Petir:** benda permanen. Memicu Ledakan Cahaya, lalu perlu 5 detik untuk mengisi muatan lagi. Saat penuh, ujungnya berkilat sehingga juga menjadi sumber cahaya kecil.
+- **Kristal Es dan Tiang Petir juga melukai siapa pun di dekatnya, termasuk musuh** (M3, pelajaran dari Soul Knight, keputusan user 25 Nov 2026). Pemain punya alasan memancing musuh ke dekat benda itu.
 
 ### 5.2 Relic (15 untuk MVP)
 
@@ -248,6 +249,7 @@ Akibatnya terhadap desain:
 - Cahaya yang menyempit di lapisan lebih dalam dan di fase 2–3 boss membuat pertarungan lebih sulit, bukan hanya lebih gelap.
 - **Cahaya dari musuh yang Terbakar ikut membuatnya Tersingkap** (keputusan user, 17 Nov 2026). Jadi setelah kena bola api pertama, musuh itu Tersingkap selama Terbakar aktif. Tembakan berikutnya mendapat +25%, dan damage Terbakar sendiri menjadi 1,25/detik. Api memang dirancang "menandai" sasarannya. Kalau di uji seru (bagian 13) damage api terasa terlalu kuat, angka yang disetel adalah damage dasar atau bonus Tersingkap, bukan aturan ini.
 - **Anglo** (M2.5, spec `Docs/specs/2026-11-24-isi-makam-design.md`) adalah sumber cahaya lingkungan. Anglo menyala kalau terkena Bola Api atau Kobaran, lalu menerangi radius 2,5 tile sampai ruangan dimulai ulang. Musuh di dekatnya jadi Tersingkap dan kehilangan bonus kecepatan gelap. Reaksi tidak menyalakan Anglo. Nisan, pilar, dan sarkofagus memotong cahaya seperti dinding.
+- **Pengecualian: kilatan efek** (M2.6). Kilatan moncong, kilatan di titik kena, dan kilatan besar Kobaran memakai Light2D tanpa bayangan dan **tidak** dihitung sebagai sumber cahaya aturan, sama seperti kilatan efek mati di M1.5. Durasinya paling lama 0,2 detik. Kalau ikut aturan, setiap tembakan akan menyingkap musuh di titik kena dan ketegangan gelap hilang *(keputusan Claude)*.
 
 ---
 
@@ -268,7 +270,7 @@ Semua musuh punya **mata merah yang selalu menyala** (sprite mata memakai materi
 Gaya mati ditentukan per jenis musuh (keputusan user, 17 Nov 2026): kerangka menjadi abu dan tulang, musuh berdaging berdarah. Mimik adalah satu-satunya musuh MVP yang berdaging, jadi gaya berdarah tampil lewat Mimik. Gaya ini cukup berupa prefab baru di `EnemyDefinition` (`deathEffect`, `remains`) tanpa mengubah kode.
 
 ### 6.2 Kemunculan
-Musuh muncul di titik spawn yang sudah ditandai di prefab ruangan, dengan efek asap gelap 0,5 detik supaya tidak muncul tiba-tiba di atas pemain. Jumlah dan jenisnya diatur oleh "budget" kesulitan ruangan yang naik seiring urutan ruangan dan kedalaman. Di dalam satu lantai, ruangan berikutnya hanya menambah **jumlah** musuh, tidak menaikkan HP dan damage (keputusan user, 18 Nov 2026). **Paling banyak 8 musuh per ruangan**, supaya layar tetap terbaca di gelap.
+Musuh muncul di titik spawn yang sudah ditandai di prefab ruangan, dengan efek asap gelap 0,5 detik supaya tidak muncul tiba-tiba di atas pemain. Jumlah dan jenisnya diatur oleh "budget" kesulitan ruangan yang naik seiring urutan ruangan dan kedalaman. Di dalam satu lantai, ruangan berikutnya hanya menambah **jumlah** musuh, tidak menaikkan HP dan damage (keputusan user, 18 Nov 2026). Musuh datang dalam **3 gelombang per ruangan**. Gelombang berikutnya mulai saat sisa musuh tinggal 4 atau kurang, dan ruangan selesai setelah gelombang terakhir habis. Satu gelombang paling banyak 8 musuh, dan **paling banyak 12 musuh hidup bersamaan** supaya layar tetap terbaca di gelap (M2.6, menggantikan batas 8 per ruangan).
 
 ### 6.3 Boss: Sang Pemadam
 Makhluk berjubah raksasa berukuran 48x48 piksel. Wajahnya hanya lubang gelap dengan mata merah, dan "tangan"-nya berupa asap. Semua serangannya didahului **telegraph terang** di lantai.
@@ -319,6 +321,8 @@ Keputusan user, 18 Nov 2026. Detail lengkap ada di `Docs/specs/2026-11-18-peti-p
   - Tembakan hanya menyentak kamera 1 piksel (tanpa guncangan) supaya tidak memicu mabuk gerak.
   - Squash and stretch dan dissolve belum dibuat.
 - **Kit makam (M2.5):** variasi lantai (biasa ±70%, retak, berlumut, ada tulang, rune pudar), overlay dinding atas (relung berisi tengkorak, obor padam, bata retak), dekorasi lepas (sarang laba-laba, rantai, tulang, panji, lilin padam), debu yang hanya tampak di area terang, dan suara ambien makam. Benda yang bisa dipakai: Anglo, Guci Abu (pecah, peluang 15% menjatuhkan Bara Pemulih +1 HP), serta nisan, sarkofagus, dan pilar sebagai tempat berlindung.
+- **Efek heboh yang tetap terbaca (M2.6):** tembakan memberi kilatan moncong dan ekor bara; bola api yang kena memberi semburan bara dan kilatan; Kobaran memberi cincin api tebal, kilatan besar, guncangan sedang, dan percikan ke segala arah. Aturannya: efek visual pemain hilang dalam ±0,4 detik; efek padat tidak lebih besar dari radius serangannya; kilatan cahaya ≤ 0,2 detik tanpa bayangan (bagian 5.5); **mata musuh dan telegraph selalu digambar di atas semua efek pemain** (sorting order 10, efek pemain ≤ 5); jumlah partikel dibatasi.
+- **Penghalang setengah tinggi (M4):** nisan rendah menahan gerak tetapi bisa ditembus tembakan; pilar dan sarkofagus menahan semuanya.
 - **Keterbacaan:** benda yang bisa dipakai punya garis terang 1 piksel di sisi atas dan bentuk lebih gemuk; dekorasi lebih gelap dan rata tanpa garis terang. Tidak ada merah terang selain mata musuh.
 
 ### 7.2 Audio
@@ -357,9 +361,9 @@ Uji tata letak terburuk: pemain yang hanya memakai keyboard laptop tanpa mouse t
 ## 9. Level Specs
 
 ### 9.1 Generator Lantai
-- Lantai disusun di grid. Random walk dari ruang awal menghasilkan **8–12 ruangan**.
+- Lantai disusun di grid. Random walk dari ruang awal menghasilkan **10–14 ruangan**.
 - **Ruang boss** ditempatkan di ujung buntu terjauh dari ruang awal. **Ruang harta** pasti ada 1 di ujung buntu lain. Ruang harta kedua muncul dengan peluang 10%, kalau masih ada ujung buntu tersisa (bagian 4.3).
-- Setiap ruangan adalah **prefab Tilemap buatan tangan** berukuran satu layar. Prefab menandai titik pintu (atas, bawah, kiri, kanan), titik spawn musuh, dan posisi benda reaksi. Pintu yang tidak terhubung ditutup tembok.
+- Setiap ruangan adalah **prefab Tilemap buatan tangan** berukuran **lebih besar dari satu layar** (sekitar 30x17 tile, kamera mengikuti pemain; M2.6). Prefab menandai titik pintu (atas, bawah, kiri, kanan), titik spawn musuh, dan posisi benda reaksi. Pintu yang tidak terhubung ditutup tembok.
 - Target MVP: **10 prefab ruang musuh**, 1 ruang awal/tutorial, 2 ruang harta, dan 1 arena boss.
 - Prefab ruangan memakai kit makam M2.5 (prefab Anglo, Guci Abu, nisan, sarkofagus, dan sprite dekorasi). Benda yang menahan gerak ditaruh di pinggir dan sudut, menjauhi titik spawn dan pintu. Saat pemain masuk ruangan, sinyal `RoomEvents.Started` mengembalikan Anglo dan guci ke keadaan awal.
 
@@ -370,7 +374,9 @@ Kontrol terukir di lantai, dengan ikon yang menyesuaikan perangkat input yang te
 Setiap kedalaman +1: radius cahaya pemain −10% (minimal 60%), budget musuh +25%, HP musuh +15%, dan boss muncul lagi dengan HP lebih tinggi. Damage pukulan musuh naik setengah hati (1 HP) setiap 2 lantai: 1 HP di lantai 1–2, 2 HP di lantai 3–4, dan 3 HP di lantai 5–6. Damage boss naik dengan cara yang sama (2 → 3 → 4 HP). Prefab yang dipakai tetap sama.
 
 ### 9.4 Target Durasi
-Ruang musuh 20–35 detik, ruang harta 10 detik, boss 90–120 detik. Total sampai boss pertama kalah sekitar 6–8 menit.
+Satu lantai sampai boss sekitar **20 menit** (keputusan user, 25 Nov 2026). Hitungan kasar: 10–14 ruangan × 60–90 detik, ditambah boss sekitar 2 menit. Ruang harta sekitar 10 detik. Lantai lebih dalam tetap opsional tanpa batas.
+
+Catatan untuk tim: dengan 20 menit per run, satu laptop booth melayani sekitar 3 pengunjung per jam.
 
 ---
 
@@ -378,12 +384,13 @@ Ruang musuh 20–35 detik, ruang harta 10 detik, boss 90–120 detik. Total samp
 
 **Tujuan**
 - Inti game seru: bertarung di gelap dengan cahaya dan reaksi elemen.
-- Pengunjung paham dalam 30 detik, mendapat run lengkap dalam sekitar 8 menit, dan ingin mencoba lagi.
+- Pengunjung paham dalam 30 detik, mendapat satu lantai lengkap dalam sekitar 20 menit, dan ingin mencoba lagi.
 - GDD lengkap sesuai kaidah dosen (CPMK 3). Hasil playtest dan perbaikannya terdokumentasi (CPMK 4). Game memperlihatkan materi Unity yang diajarkan: scene, kondisional, input, timer, animasi, dan suara (CPMK 2).
 - Mudah ditambah konten dan fitur setelah expo.
 
 **Bukan tujuan (MVP)**
 - Mode online, leaderboard bersama lewat jaringan, progres yang tersimpan antar run, cutscene, dukungan platform selain Windows.
+- Bantuan bidik (aim assist) untuk gamepad (keputusan user, 25 Nov 2026).
 
 **Dianggap gagal walaupun game jalan**
 - Terlihat atau terasa seperti tiruan The Binding of Isaac.
@@ -446,6 +453,7 @@ Playtest dilakukan minimal sekali seminggu setelah prototipe jalan, terutama di 
 | 17 Nov 2026 | User (anggota tim, belum penguji luar) | M1-baseline (`feature/m1-prototipe`, tanpa juice dan SFX), ±5 menit, charger tercolok | (1) 30 detik pertama tidak membingungkan. (2) Tidak ada bagian yang terlalu gelap, tetapi tembok kiri dan kanan sulit dibedakan dari latar, sehingga pemain kadang tersangkut. (3) Mulai bosan karena hanya satu arena, tanpa ruangan berikutnya dan tanpa SFX. (4) Perbedaan musuh terang dan gelap terasa. Pertanyaan "ingin mencoba lagi?" dan "sengaja menembak genangan es?" belum terjawab jelas. | SFX dan efek pukulan: M1.5. Ruangan berikutnya: M2 (generator). Kontras tembok: kandidat perbaikan, misalnya rim light atau tepi terang pada tile tembok. | Dibandingkan pada uji M1.5 (Task 9) |
 | 18 Nov 2026 | User (anggota tim) | M2 (`feature/m2-mesin-konten`, relic 1–10, Kobaran, garis tepi Tersingkap) | (1) Garis tepi jingga pada musuh terang dirasa tidak perlu. (2) Relic dari setiap gelombang terasa salah; relic seharusnya langka. (3) Dinding ruangan bisa ditembus di keempat sisi. | (1) Garis tepi dihapus (899604f). (2) Relic sebelum boss hanya dari ruang harta, 1 pasti dan ruang kedua 10% (§4.3, dikerjakan di M4; pickup tiap gelombang tetap dipakai sementara untuk mencoba relic). (3) Bug sejak M1: collider dinding tidak pernah dibangun builder, diperbaiki dengan test regresi (7de92dd). | Belum diuji ulang |
 | *(menunggu)* | User | M2.5 Isi Makam (`feature/m2-5-isi-makam`) | Pertanyaan: (1) apakah ruangan masih terasa sepi; (2) apakah pemain sengaja menyalakan Anglo; (3) apakah mata merah musuh tetap mudah terlihat; (4) apakah benda yang bisa dipakai bisa dibedakan dari dekorasi | | |
+| *(menunggu)* | User | M2.6 Skala dan Efek (`feature/m2-6-skala-dan-efek`) | Pertanyaan: (1) apakah game masih terasa sepi atau kecil; (2) apakah efek terasa heboh tanpa membingungkan; (3) berapa lama sampai bosan dalam satu sesi | | |
 | | | | | | |
 
 Pertanyaan tetap untuk penguji: Apa yang membingungkan di 30 detik pertama? Bagian mana yang terlalu gelap? Kapan terasa bosan? Apakah ingin mencoba lagi? Khusus prototipe M1: apakah genangan es sengaja ditembak, dan apakah terasa beda musuh di terang dan di gelap?
@@ -463,6 +471,7 @@ Usulan desain dari sesi baseline (belum diputuskan, dibahas lewat brainstorming)
 | 0.3 | 18 Nov 2026 | Dari usulan user setelah baseline M1: kenaikan kesulitan per ruangan dan per lantai, batas 8 musuh, 3 jenis pintu dan Gerbang Segel, peti boss (hadiah, Mimik, kutukan), cutscene peti, komik pembuka, cerita per lantai |
 | 0.4 | 18 Nov 2026 | M2 mesin konten: relic sebagai data (daftar modifier stat yang bertumpuk), relic 1–10 bisa dimainkan, Kobaran (klik kanan / RT / Shift kiri), status Stun, garis tepi jingga untuk musuh Tersingkap |
 | 0.5 | 18 Nov 2026 | Dari uji user M2: relic sebelum boss hanya dari ruang harta (1 pasti, ruang kedua 10%), ruang musuh tidak menjatuhkan relic, garis tepi Tersingkap dihapus |
+| 0.7 | 25 Nov 2026 | M2.6 Skala dan Efek, dari analisis Soul Knight: arena 30x17 dengan kamera mengikuti pemain, 3 gelombang per ruangan dengan batas 12 musuh hidup, satu lantai sampai boss sekitar 20 menit, cahaya bola api 1,75 dan Kobaran 4,5 tile, efek heboh dengan aturan keterbacaan, pengecualian kilatan efek dari aturan cahaya, rencana objek elemen yang melukai semua dan penghalang setengah tinggi, nama class dipertahankan, tanpa aim assist |
 | 0.6 | 24 Nov 2026 | M2.5 Isi Makam: kit makam (variasi lantai dan dinding, dekorasi, debu, ambien), Anglo sebagai sumber cahaya lingkungan, Guci Abu dan Bara Pemulih, nisan dan sarkofagus sebagai tempat berlindung; versi expo tetap 2D |
 
 **Kredit aset:** semua sprite dibuat sendiri lewat script Python. SFX memakai paket berikut, semuanya berlisensi CC0 (domain publik), dipotong dan dicampur lewat `ArtSource/scripts/make_sfx_cc0.py`:
