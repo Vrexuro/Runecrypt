@@ -39,13 +39,24 @@ namespace Runecrypt.Tests
             Assert.IsTrue(s.ShouldStartNextWave(0, 0));
         }
 
+        // Gelombang penuh (8): gelombang berikutnya saat sisa 4.
         [Test]
         public void Waves_NextInRoomWhenFourLeft()
         {
-            var s = After(1);
+            var s = After(14);
             Assert.IsFalse(s.ShouldStartNextWave(5, 0));
             Assert.IsTrue(s.ShouldStartNextWave(4, 0));
             Assert.IsFalse(s.ShouldStartNextWave(4, 2), "gelombang sebelumnya belum habis keluar");
+        }
+
+        // Review akhir: gelombang kecil (3) tidak langsung disusul gelombang berikutnya; butuh separuhnya terbunuh.
+        [Test]
+        public void Waves_SmallWaveNeedsKills()
+        {
+            var s = After(1);
+            Assert.IsFalse(s.ShouldStartNextWave(3, 0));
+            Assert.IsFalse(s.ShouldStartNextWave(2, 0));
+            Assert.IsTrue(s.ShouldStartNextWave(1, 0));
         }
 
         [Test]

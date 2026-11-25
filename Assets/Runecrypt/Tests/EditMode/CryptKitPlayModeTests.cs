@@ -78,24 +78,31 @@ namespace Runecrypt.Tests
             yield return new ExitPlayMode();
         }
 
-        // M2.6 Task 3: gelombang menunggu kalau batas musuh hidup penuh.
+        // M2.6 Task 3 + review akhir: gelombang 2 menunggu musuh terbunuh, lalu tertahan batas musuh hidup,
+        // dan sisanya keluar setelah ada yang mati.
         [UnityTest]
         public IEnumerator ArenaDirector_RespectsAliveCap()
         {
             yield return new EnterPlayMode();
-            var (director, template) = MakeDirector(maxAlive: 5);
+            var (director, template) = MakeDirector(maxAlive: 3);
             director.gameObject.SetActive(true);
-            int maxSeen = 0;
-            float end = Time.realtimeSinceStartup + 4f;
-            while (Time.realtimeSinceStartup < end)
-            {
-                maxSeen = Mathf.Max(maxSeen, FindAll().Count(e => e != template));
-                yield return null;
-            }
+            System.Func<Enemy[]> live = () => FindAll().Where(e => e != template && e.enabled).ToArray();
+            yield return WaitUntilOrTimeout(() => live().Length == 3, 5f);
+            float settle = Time.realtimeSinceStartup + 0.5f;
+            while (Time.realtimeSinceStartup < settle) yield return null;
+            int waveBeforeKills = director.Wave;
+            foreach (var e in live().Take(2)) e.TakeHit(new HitInfo(999f, Element.None, false, e.transform.position));
+            yield return WaitUntilOrTimeout(() => director.Wave == 2 && director.Pending > 0, 5f);
             int pending = director.Pending;
+            yield return WaitUntilOrTimeout(() => live().Length == 3, 5f);
+            var one = live()[0];
+            one.TakeHit(new HitInfo(999f, Element.None, false, one.transform.position));
+            yield return WaitUntilOrTimeout(() => director.Pending < pending, 5f);
+            int pendingAfter = director.Pending;
             yield return new ExitPlayMode();
-            Assert.AreEqual(5, maxSeen, "gelombang 1 (3) + sebagian gelombang 2 sampai batas 5");
-            Assert.Greater(pending, 0, "sisa gelombang 2 menunggu");
+            Assert.AreEqual(1, waveBeforeKills, "gelombang 1 (3 musuh) tidak langsung disusul gelombang 2");
+            Assert.Greater(pending, 0, "gelombang 2 (4) tertahan batas 3");
+            Assert.Less(pendingAfter, pending, "sisa gelombang 2 keluar setelah ada yang mati");
         }
 
         static Enemy[] FindAll() => Object.FindObjectsByType<Enemy>(FindObjectsInactive.Include, FindObjectsSortMode.None);
@@ -114,6 +121,9 @@ namespace Runecrypt.Tests
             camGo.transform.SetParent(rig.transform, false);
             camGo.transform.localPosition = new Vector3(0f, 0f, -10f);
             var cam = camGo.AddComponent<Camera>();
+            cam.orthographic = true;
+            cam.orthographicSize = 5.625f;
+            cam.aspect = 16f / 9f;
             camGo.AddComponent<CameraShake>();
             rig.SetActive(true);
             return (follow, cam);
@@ -136,6 +146,23 @@ namespace Runecrypt.Tests
             Assert.AreEqual(1f, mid.y, 1e-3f);
             Assert.AreEqual(X + 5f, corner.x, 1e-3f, "tepi kanan tampilan = tepi ruangan");
             Assert.AreEqual(2.375f, corner.y, 1e-3f);
+        }
+
+        // Review akhir: layar bukan 16:9 (mis. 1366x768 memperlihatkan area lebih luas); batas dihitung dari kamera.
+        [UnityTest]
+        public IEnumerator CameraFollow_UsesActualViewAtCorners()
+        {
+            yield return new EnterPlayMode();
+            var target = new GameObject("Target").transform;
+            target.position = new Vector2(X + 40f, 40f);
+            var (follow, cam) = MakeRig(target);
+            cam.orthographicSize = 6f;
+            cam.aspect = 2f;
+            yield return null; yield return null;
+            Vector2 corner = follow.transform.position;
+            yield return new ExitPlayMode();
+            Assert.AreEqual(X + 3f, corner.x, 1e-3f, "tepi kanan tampilan (setengah lebar 12) = tepi ruangan");
+            Assert.AreEqual(2f, corner.y, 1e-3f, "tepi atas tampilan (setengah tinggi 6) = tepi ruangan");
         }
 
         // Review Focus 2: guncangan tidak menggeser kamera secara permanen dari posisi ikut.

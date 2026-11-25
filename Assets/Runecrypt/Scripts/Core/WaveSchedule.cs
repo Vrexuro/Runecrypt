@@ -7,6 +7,7 @@ namespace Runecrypt.Core
     public class WaveSchedule
     {
         readonly int wavesPerRoom, nextWaveAtAlive, maxAlive, maxPerWave;
+        int lastSize; // ukuran gelombang yang terakhir dimulai
 
         public int Wave { get; private set; }   // 0 = belum mulai
         public int Room => Wave == 0 ? 0 : (Wave - 1) / wavesPerRoom + 1;
@@ -34,12 +35,16 @@ namespace Runecrypt.Core
         {
             if (pending > 0) return false;
             if (Wave == 0 || LastInRoom) return alive == 0;
-            return alive <= nextWaveAtAlive;
+            return alive <= Math.Min(nextWaveAtAlive, lastSize / 2); // gelombang kecil tidak langsung disusul
         }
 
         public int CanSpawnNow(int alive) => Math.Max(0, maxAlive - alive);
 
-        public void AdvanceWave() => Wave++;
+        public void AdvanceWave()
+        {
+            lastSize = NextWaveSize();
+            Wave++;
+        }
 
         public bool RoomDone(int alive, int pending) => Wave > 0 && LastInRoom && alive == 0 && pending == 0;
     }

@@ -9,16 +9,24 @@ namespace Runecrypt.Game
     {
         [SerializeField] Transform target;
         [SerializeField] Rect room;
-        [SerializeField] Vector2 halfView = new Vector2(10f, 5.625f); // 320x180 px pada 16 PPU (Pixel Perfect Camera)
+        [SerializeField] Vector2 halfView = new Vector2(10f, 5.625f); // cadangan kalau tidak ada kamera ortografik anak
         [SerializeField] float smoothTime = 0.08f;
 
         const int Ppu = 16;
         Vector2 pos, velocity;
+        Camera cam;
+
+        // Area tampil sebenarnya: Pixel Perfect Camera tanpa crop menulis orthographicSize sesuai layar,
+        // jadi layar bukan 16:9 (mis. 1366x768) bisa melihat lebih dari 320x180.
+        Vector2 HalfView() => cam != null && cam.orthographic
+            ? new Vector2(cam.orthographicSize * cam.aspect, cam.orthographicSize)
+            : halfView;
 
         void Start()
         {
+            cam = GetComponentInChildren<Camera>();
             if (target == null && PlayerController.Instance != null) target = PlayerController.Instance.transform;
-            pos = target != null ? CameraBounds.Clamp(target.position, room, halfView) : (Vector2)transform.position;
+            pos = target != null ? CameraBounds.Clamp(target.position, room, HalfView()) : (Vector2)transform.position;
             Apply();
         }
 
@@ -29,7 +37,7 @@ namespace Runecrypt.Game
                 if (PlayerController.Instance == null) return;
                 target = PlayerController.Instance.transform;
             }
-            Vector2 goal = CameraBounds.Clamp(target.position, room, halfView);
+            Vector2 goal = CameraBounds.Clamp(target.position, room, HalfView());
             pos = smoothTime > 0f ? Vector2.SmoothDamp(pos, goal, ref velocity, smoothTime, Mathf.Infinity, Time.unscaledDeltaTime) : goal;
             Apply();
         }
