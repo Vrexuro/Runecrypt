@@ -247,6 +247,24 @@ namespace Runecrypt.Tests
             Assert.IsFalse(lightOn, "sumber cahaya ikut padam");
         }
 
+        // Petunjuk Anglo (spec 2026-11-25-petunjuk-anglo): bara berkedip hanya saat Anglo padam.
+        [UnityTest]
+        public IEnumerator BrazierHint_ShowsOnlyWhileUnlit()
+        {
+            yield return new EnterPlayMode();
+            var brazier = Spawn<Brazier>("Brazier", new Vector2(X, 0f));
+            var hint = brazier.transform.Find("Hint").gameObject;
+            bool atStart = hint.activeInHierarchy;
+            brazier.TakeHit(Hit(Element.Fire, brazier.transform.position));
+            bool whileLit = hint.activeInHierarchy;
+            RoomEvents.RaiseStarted();
+            bool afterReset = hint.activeInHierarchy;
+            yield return new ExitPlayMode();
+            Assert.IsTrue(atStart, "padam: bara petunjuk terlihat");
+            Assert.IsFalse(whileLit, "menyala: bara petunjuk hilang");
+            Assert.IsTrue(afterReset, "ruangan dimulai ulang: bara petunjuk kembali");
+        }
+
         // ---------- Task 5: Guci Abu dan Bara Pemulih ----------
         static PlayerController PlayerAt(Vector2 pos)
         {

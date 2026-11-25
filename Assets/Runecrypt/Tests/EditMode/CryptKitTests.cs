@@ -126,6 +126,34 @@ namespace Runecrypt.Tests
             Assert.AreEqual(2, CountNamed(kit, "Sarcophagus"), "Sarkofagus");
         }
 
+        // Petunjuk Anglo: bara unlit tanpa cahaya (aturan cahaya tidak berubah), di bawah mata musuh.
+        [Test]
+        public void BrazierPrefab_HintIsUnlitSpriteWithoutLight()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Runecrypt/Prefabs/Brazier.prefab");
+            var hint = prefab.transform.Find("Hint");
+            Assert.IsNotNull(hint, "anak Hint ada");
+            var sr = hint.GetComponent<SpriteRenderer>();
+            Assert.IsNotNull(sr.sprite);
+            StringAssert.Contains("Unlit", sr.sharedMaterial.name, "terlihat di gelap seperti mata musuh");
+            Assert.IsNotNull(hint.GetComponent<SpriteFlipbook>(), "berkedip");
+            Assert.IsEmpty(hint.GetComponentsInChildren<UnityEngine.Rendering.Universal.Light2D>(true), "tanpa Light2D");
+            Assert.IsEmpty(hint.GetComponentsInChildren<LightSourceBehaviour>(true), "tidak ikut aturan cahaya");
+            var eyes = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Runecrypt/Prefabs/TulangPenjaga.prefab")
+                .transform.Find("Eyes").GetComponent<SpriteRenderer>();
+            Assert.Less(sr.sortingOrder, eyes.sortingOrder, "mata musuh tetap di atas");
+        }
+
+        // Petunjuk Anglo: satu Anglo sudah berada di dalam cahaya pemain (radius 3) saat permainan dimulai.
+        [Test]
+        public void Arena_HasBrazierWithinStartingLight()
+        {
+            var kit = Kit();
+            Vector2 start = PlayerController.FindFirstObjectByType<PlayerController>().transform.position;
+            float nearest = kit.GetComponentsInChildren<Brazier>(true).Min(b => Vector2.Distance(b.transform.position, start));
+            Assert.LessOrEqual(nearest, 3f);
+        }
+
         [Test]
         public void Arena_IsThirtyBySeventeenWithClosedWalls()
         {

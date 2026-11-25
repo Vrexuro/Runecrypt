@@ -143,6 +143,21 @@ namespace Runecrypt.EditorTools
             var pulse = light.gameObject.AddComponent<LightPulse>();
             fire.SetActive(false);
 
+            // Petunjuk Anglo (spec 2026-11-25-petunjuk-anglo): bara unlit berkedip saat padam, tanpa Light2D.
+            var hint = new GameObject("Hint");
+            hint.transform.SetParent(go.transform, false);
+            var hsr = hint.AddComponent<SpriteRenderer>();
+            hsr.sprite = Sprite("brazier_hint_0");
+            hsr.sharedMaterial = AssetDatabase.LoadAssetAtPath<Material>(UnlitMat);
+            hsr.sortingOrder = 1; // di bawah mata musuh (10)
+            var hfb = hint.AddComponent<SpriteFlipbook>();
+            var hso = new SerializedObject(hfb);
+            var hframes = hso.FindProperty("frames");
+            hframes.arraySize = 4;
+            for (int i = 0; i < 4; i++) hframes.GetArrayElementAtIndex(i).objectReferenceValue = Sprite($"brazier_hint_{i}");
+            hso.FindProperty("fps").floatValue = 6f;
+            hso.ApplyModifiedPropertiesWithoutUndo();
+
             var profile = Profile("BrazierIgnite", 0.1f, 0.8f, "sfx_brazier_ignite");
             profile.particlePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabDir + "EmberBurst.prefab");
             EditorUtility.SetDirty(profile);
@@ -151,6 +166,7 @@ namespace Runecrypt.EditorTools
             var so = new SerializedObject(b);
             so.FindProperty("unlitBody").objectReferenceValue = body;
             so.FindProperty("fire").objectReferenceValue = fire;
+            so.FindProperty("hint").objectReferenceValue = hint;
             so.FindProperty("pulse").objectReferenceValue = pulse;
             so.FindProperty("igniteProfile").objectReferenceValue = profile;
             so.ApplyModifiedPropertiesWithoutUndo();
@@ -181,7 +197,7 @@ namespace Runecrypt.EditorTools
             { ("plain", 14), ("cracked", 2), ("moss", 2), ("bones", 1), ("rune", 1) };
 
         // Posisi di pinggir dan sudut arena 30x17 (M2.6), menjauhi spawn point dan posisi awal pemain (Review Focus 5).
-        static readonly Vector2[] BrazierAt = { new Vector2(-13.5f, 2.5f), new Vector2(13.5f, -3.5f), new Vector2(4.5f, 5.5f) };
+        static readonly Vector2[] BrazierAt = { new Vector2(-13.5f, 2.5f), new Vector2(13.5f, -3.5f), new Vector2(2.5f, -1.5f) }; // yang ketiga di dalam cahaya awal pemain (petunjuk Anglo)
         static readonly (Vector2 pos, string sprite)[] UrnAt =
         {
             (new Vector2(-10.5f, -7.5f), "urn_a"), (new Vector2(-9.5f, -7.5f), "urn_b"), (new Vector2(9.5f, 5.5f), "urn_a"),

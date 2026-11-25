@@ -10,6 +10,7 @@ namespace Runecrypt.Game
     {
         [SerializeField] SpriteRenderer unlitBody;   // sprite anglo padam
         [SerializeField] GameObject fire;            // flipbook anglo menyala + Light2D + LightSourceBehaviour
+        [SerializeField] GameObject hint;            // bara petunjuk unlit, hanya saat padam (tanpa cahaya aturan)
         [SerializeField] LightPulse pulse;
         [SerializeField] FeedbackProfile igniteProfile;
 
@@ -41,6 +42,7 @@ namespace Runecrypt.Game
         {
             if (fire != null) fire.SetActive(state.IsLit);
             if (unlitBody != null) unlitBody.enabled = !state.IsLit;
+            if (hint != null) hint.SetActive(!state.IsLit);
         }
     }
 }
