@@ -91,7 +91,7 @@ namespace Runecrypt.EditorTools
             so.FindProperty("targetScale").floatValue = 5f / 3f; // sprite 48 px = 3 unit
             so.ApplyModifiedPropertiesWithoutUndo();
 
-            var light = M1Builder.MakePointLight("Light", go.transform, "#FF8A3D", 3.5f);
+            var light = M1Builder.MakePointLight("Light", go.transform, "#FF8A3D", 4.5f);
             light.gameObject.SetActive(false); // dinyalakan BlazeRing.Init sebelum damage
             var blaze = go.AddComponent<BlazeRing>();
             Set(blaze, "lightSource", light.GetComponent<LightSourceBehaviour>());

@@ -133,7 +133,7 @@ namespace Runecrypt.EditorTools
             col.isTrigger = true;
             col.radius = 0.2f;
             go.AddComponent<Fireball>();
-            M1Builder.MakePointLight("Light", go.transform, "#FFCC66", 1f);
+            M1Builder.MakePointLight("Light", go.transform, "#FFCC66", 1.75f); // M2.6: cahaya bola api diperluas
             return SavePrefab(go, "Fireball").GetComponent<Fireball>();
         }
 

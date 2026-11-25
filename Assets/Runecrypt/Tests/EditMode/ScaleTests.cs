@@ -1,5 +1,7 @@
 using NUnit.Framework;
 using Runecrypt.Core;
+using Runecrypt.Game;
+using UnityEditor;
 using UnityEngine;
 
 namespace Runecrypt.Tests
@@ -120,5 +122,30 @@ namespace Runecrypt.Tests
             Assert.AreEqual(1f, p.x, 1e-5f);
             Assert.AreEqual(-0.9375f, p.y, 1e-5f);
         }
+
+        // ---------- Task 5: cahaya skill ----------
+        const string Prefabs = "Assets/Runecrypt/Prefabs/";
+
+        static T Prefab<T>(string name) where T : Component =>
+            AssetDatabase.LoadAssetAtPath<GameObject>(Prefabs + name + ".prefab").GetComponentInChildren<T>(true);
+
+        static float Serialized(Object o, string field) => new SerializedObject(o).FindProperty(field).floatValue;
+
+        [Test]
+        public void FireballPrefab_LightRadius175() =>
+            Assert.AreEqual(1.75f, Serialized(Prefab<LightSourceBehaviour>("Fireball"), "radius"), 1e-4f);
+
+        [Test]
+        public void BlazeRingPrefab_LightFourAndHalfForOneSecond()
+        {
+            var ring = Prefab<BlazeRing>("BlazeRing");
+            Assert.AreEqual(4.5f, Serialized(ring, "lightRadius"), 1e-4f);
+            Assert.AreEqual(1.0f, Serialized(ring, "lightTime"), 1e-4f);
+        }
+
+        // Penjaga: cahaya dasar pemain tidak ikut diperluas (spec M2.6 §5.3).
+        [Test]
+        public void PlayerPrefab_BaseLightStaysThree() =>
+            Assert.AreEqual(3f, Serialized(Prefab<LightSourceBehaviour>("Player"), "radius"), 1e-4f);
     }
 }

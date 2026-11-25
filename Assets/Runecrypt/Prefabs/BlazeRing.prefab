@@ -180,7 +180,7 @@ MonoBehaviour:
   m_PointLightInnerAngle: 360
   m_PointLightOuterAngle: 360
   m_PointLightInnerRadius: 0
-  m_PointLightOuterRadius: 3.5
+  m_PointLightOuterRadius: 4.5
   m_ShapeLightParametricSides: 5
   m_ShapeLightParametricAngleOffset: 0
   m_ShapeLightParametricRadius: 1
@@ -203,7 +203,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e5901ac587cd8ab4aae6e5e304ab6eed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Runecrypt.Game::Runecrypt.Game.LightSourceBehaviour
-  radius: 3.5
+  radius: 4.5
   light2D: {fileID: 2134678681702349203}
 --- !u!1 &7649133820037501465
 GameObject:
@@ -252,6 +252,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Runecrypt.Game::Runecrypt.Game.BlazeRing
   lightSource: {fileID: 8148031956571495790}
-  lightRadius: 3.5
-  lightTime: 0.5
+  lightRadius: 4.5
+  lightTime: 1
   lifetime: 0.6

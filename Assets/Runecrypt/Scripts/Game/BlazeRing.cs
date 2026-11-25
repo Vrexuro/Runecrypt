@@ -10,8 +10,8 @@ namespace Runecrypt.Game
         [SerializeField] LightSourceBehaviour lightSource;
         // Cahaya sedikit lebih luas dan lebih lama dari ring, supaya musuh di tepinya tetap Tersingkap
         // untuk tembakan lanjutan (keputusan rencana M2).
-        [SerializeField] float lightRadius = 3.5f;
-        [SerializeField] float lightTime = 0.5f;
+        [SerializeField] float lightRadius = 4.5f;  // M2.6: lebih luas dan lebih lama
+        [SerializeField] float lightTime = 1.0f;
         [SerializeField] float lifetime = 0.6f;
 
         static readonly HashSet<IDamageable> struck = new HashSet<IDamageable>();
