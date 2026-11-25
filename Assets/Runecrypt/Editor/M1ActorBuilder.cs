@@ -179,6 +179,7 @@ namespace Runecrypt.EditorTools
             go.AddComponent<CircleCollider2D>().radius = 0.4f;
             var burn = M1Builder.MakePointLight("BurnLight", go.transform, "#FF8A3D", 0.75f);
             burn.shadowsEnabled = false;
+            go.AddComponent<ChaseBrain>(); // M3a: perilaku gerak sebagai komponen otak
             var enemy = go.AddComponent<Enemy>();
             Set(enemy, "definition", def);
             Set(enemy, "lightRules", rules);

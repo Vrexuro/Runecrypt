@@ -203,6 +203,7 @@ GameObject:
   - component: {fileID: 7209291360893075453}
   - component: {fileID: 599213445954182897}
   - component: {fileID: 5643623557816684185}
+  - component: {fileID: 9091218236131746993}
   - component: {fileID: 1136332823261891761}
   m_Layer: 9
   m_Name: TulangPenjaga
@@ -372,6 +373,18 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.4
+--- !u!114 &9091218236131746993
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6941099835358971307}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ae07dd539ec9014dbd297e3c71efb82, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Runecrypt.Game::Runecrypt.Game.ChaseBrain
 --- !u!114 &1136332823261891761
 MonoBehaviour:
   m_ObjectHideFlags: 0

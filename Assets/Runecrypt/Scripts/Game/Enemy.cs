@@ -30,15 +30,19 @@ namespace Runecrypt.Game
 
         Rigidbody2D body;
         Health health;
+        IEnemyBrain brain;
         readonly BurnStatus burn = new BurnStatus();
         float blindUntil, stunUntil, nextWanderChange, nextContact, markedUntil;
         Vector2 wanderDir, knock, lastHitPoint;
 
         bool IsLitNow => LightFieldHost.Field.IsLit(body.position);
+        // Otak yang menyerang dari jauh menahan serangannya selama ini (GDD §5.4).
+        internal bool IsStunnedOrBlind => Time.time < stunUntil || Time.time < blindUntil;
 
         void Awake()
         {
             body = GetComponent<Rigidbody2D>();
+            brain = GetComponent<IEnemyBrain>();
             health = new Health(definition.maxHp);
             health.Died += Die;
             if (burnLight != null) burnLight.SetActive(false);
@@ -84,9 +88,12 @@ namespace Runecrypt.Game
             else
             {
                 var player = PlayerController.Instance;
-                dir = player != null && !player.Health.IsDead
-                    ? ((Vector2)player.transform.position - body.position).normalized
-                    : Vector2.zero;
+                bool alive = player != null && !player.Health.IsDead;
+                Vector2 toPlayer = alive ? (Vector2)player.transform.position - body.position : Vector2.zero;
+                // Prefab tanpa otak tetap mengejar seperti sebelum M3a.
+                dir = brain != null
+                    ? brain.Steer(new EnemyContext { Position = body.position, ToPlayer = toPlayer, PlayerAlive = alive, Now = now, Lit = IsLitNow })
+                    : (alive ? toPlayer.normalized : Vector2.zero);
             }
             Vector2 chase = dir * definition.moveSpeed * lightRules.SpeedMultiplier(IsLitNow);
             body.linearVelocity = Knockback.Combine(chase, knock, knockbackSpeed);
