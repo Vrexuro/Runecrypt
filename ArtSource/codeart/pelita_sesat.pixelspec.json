@@ -1,0 +1,177 @@
+{
+  "schema": "codeart2d.pixelspec.v1",
+  "name": "pelita_sesat",
+  "canvas": [
+    16,
+    16
+  ],
+  "anchor_px": [
+    8,
+    15
+  ],
+  "palette": {
+    "k": "#1A1420",
+    "s": "#0E0A14",
+    "d": "#1E2A40",
+    "m": "#2F4C70",
+    "l": "#5A86B5",
+    "g": "#3A3348"
+  },
+  "poses": {
+    "f0": [
+      ".........k......",
+      "........kmk.....",
+      ".......kmlk.....",
+      "...k..kmmlk.....",
+      "...kk.kdmmlk.k..",
+      "...kmkdmmmmlkk..",
+      "....kdmsmmsmlk..",
+      "...kdmssmmssmlk.",
+      "...kdmmmmmmmmlk.",
+      "...kdmskskskmlk.",
+      "....kdmsmsmsmk..",
+      "....kddmmmmmk...",
+      ".....kddmmmk....",
+      "......kddk......",
+      ".......gk.......",
+      "......g........."
+    ],
+    "f1": [
+      "........k.......",
+      ".......kmk......",
+      ".......kmlk.....",
+      "..k...kmmlk.....",
+      "..kk..kdmmlk.k..",
+      "...kmkdmmmmlkk..",
+      "....kdmsmmsmlk..",
+      "...kdmssmmssmlk.",
+      "...kdmmmmmmmmlk.",
+      "...kdmskskskmlk.",
+      "....kdmsmsmsmk..",
+      "....kddmmmmmk...",
+      ".....kddmmmk....",
+      "......kddk......",
+      "......gk........",
+      ".......g........"
+    ],
+    "f2": [
+      "..........k.....",
+      ".........kmk....",
+      "........kmlk....",
+      "...k...kmmlk....",
+      "...kk..kdmmlkk..",
+      "...kmkdmmmmlkk..",
+      "....kdmsmmsmlk..",
+      "...kdmssmmssmlk.",
+      "...kdmmmmmmmmlk.",
+      "...kdmskskskmlk.",
+      "....kdmsmsmsmk..",
+      "....kddmmmmmk...",
+      ".....kddmmmk....",
+      "......kddk......",
+      ".......kg.......",
+      "........g......."
+    ],
+    "f3": [
+      ".........k......",
+      "........kmk.....",
+      ".......kmlk.....",
+      "...k..kmmlk.....",
+      "...kk.kdmmlk..k.",
+      "...kmkdmmmmlk.k.",
+      "....kdmsmmsmlk..",
+      "...kdmssmmssmlk.",
+      "...kdmmmmmmmmlk.",
+      "...kdmskskskmlk.",
+      "....kdmsmsmsmk..",
+      "....kddmmmmmk...",
+      ".....kddmmmk....",
+      "......kddk......",
+      ".......gk.......",
+      "........g......."
+    ]
+  },
+  "layers": [
+    {
+      "name": "art",
+      "z": 0,
+      "origin": [
+        0,
+        0
+      ],
+      "rows": [
+        ".........k......",
+        "........kmk.....",
+        ".......kmlk.....",
+        "...k..kmmlk.....",
+        "...kk.kdmmlk.k..",
+        "...kmkdmmmmlkk..",
+        "....kdmsmmsmlk..",
+        "...kdmssmmssmlk.",
+        "...kdmmmmmmmmlk.",
+        "...kdmskskskmlk.",
+        "....kdmsmsmsmk..",
+        "....kddmmmmmk...",
+        ".....kddmmmk....",
+        "......kddk......",
+        ".......gk.......",
+        "......g........."
+      ]
+    }
+  ],
+  "frames": [
+    {
+      "name": "f0",
+      "layers": {
+        "art": {
+          "rows": "f0",
+          "dy": 0
+        }
+      }
+    },
+    {
+      "name": "f1",
+      "layers": {
+        "art": {
+          "rows": "f1",
+          "dy": 0
+        }
+      }
+    },
+    {
+      "name": "f2",
+      "layers": {
+        "art": {
+          "rows": "f2",
+          "dy": 0
+        }
+      }
+    },
+    {
+      "name": "f3",
+      "layers": {
+        "art": {
+          "rows": "f3",
+          "dy": 0
+        }
+      }
+    }
+  ],
+  "clips": {
+    "loop": {
+      "frames": [
+        "f0",
+        "f1",
+        "f2",
+        "f3"
+      ],
+      "duration_ms": [
+        150,
+        150,
+        150,
+        150
+      ],
+      "loop": true
+    }
+  }
+}

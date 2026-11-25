@@ -1,0 +1,138 @@
+{
+  "schema": "codeart2d.pixelspec.v1",
+  "name": "biarawan_beku",
+  "canvas": [
+    16,
+    16
+  ],
+  "anchor_px": [
+    8,
+    15
+  ],
+  "palette": {
+    "k": "#1A1420",
+    "s": "#0E0A14",
+    "h": "#2A3550",
+    "B": "#5E8FB0",
+    "b": "#9FD3E6",
+    "W": "#FFFFFF"
+  },
+  "poses": {
+    "a": [
+      "................",
+      "......kkkk......",
+      ".....kBBBBk.....",
+      "....kBhhhhBk....",
+      "....kBhsshBk....",
+      "....kBssssBk....",
+      "...kBBhsshBBk...",
+      "..kWkBBBBBBkWk..",
+      "..kWkbBBBBbkWk..",
+      "...kbbbBBbbbk...",
+      "...kbbbbbbbbk...",
+      "...kbBbbbbBbk...",
+      "..kbbBbbbbBbbk..",
+      "..kWbWbWbWbWbk..",
+      "...W.W.W.W.W...."
+    ],
+    "b": [
+      "................",
+      "......kkkk......",
+      ".....kBBBBk.....",
+      "....kBhhhhBk....",
+      "....kBhsshBk....",
+      "....kBssssBk....",
+      "...kBBhsshBBk...",
+      "..kWkBBBBBBkWk..",
+      "..kWkbBBBBbkWk..",
+      "...kbbbBBbbbk...",
+      "...kbbbbbbbbk...",
+      "...kbBbbbbBbk...",
+      "..kbbBbbbbBbbk..",
+      "..kWbWbWbWbWbk..",
+      "....W.W.W.W.W..."
+    ]
+  },
+  "layers": [
+    {
+      "name": "art",
+      "z": 0,
+      "origin": [
+        0,
+        0
+      ],
+      "rows": [
+        "................",
+        "......kkkk......",
+        ".....kBBBBk.....",
+        "....kBhhhhBk....",
+        "....kBhsshBk....",
+        "....kBssssBk....",
+        "...kBBhsshBBk...",
+        "..kWkBBBBBBkWk..",
+        "..kWkbBBBBbkWk..",
+        "...kbbbBBbbbk...",
+        "...kbbbbbbbbk...",
+        "...kbBbbbbBbk...",
+        "..kbbBbbbbBbbk..",
+        "..kWbWbWbWbWbk..",
+        "...W.W.W.W.W...."
+      ]
+    }
+  ],
+  "frames": [
+    {
+      "name": "f0",
+      "layers": {
+        "art": {
+          "rows": "a",
+          "dy": 0
+        }
+      }
+    },
+    {
+      "name": "f1",
+      "layers": {
+        "art": {
+          "rows": "b",
+          "dy": 1
+        }
+      }
+    },
+    {
+      "name": "f2",
+      "layers": {
+        "art": {
+          "rows": "a",
+          "dy": 1
+        }
+      }
+    },
+    {
+      "name": "f3",
+      "layers": {
+        "art": {
+          "rows": "b",
+          "dy": 0
+        }
+      }
+    }
+  ],
+  "clips": {
+    "loop": {
+      "frames": [
+        "f0",
+        "f1",
+        "f2",
+        "f3"
+      ],
+      "duration_ms": [
+        180,
+        180,
+        180,
+        180
+      ],
+      "loop": true
+    }
+  }
+}
