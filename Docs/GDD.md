@@ -189,7 +189,7 @@ Benda reaksi di lingkungan:
 - **Genangan Beku:** tile lantai yang memicu Uap lalu hilang. Muncul kembali setelah 8 detik.
 - **Kristal Es:** benda yang bisa dihancurkan. Memicu Uap sekali, lalu pecah. Pecahannya memberi 4 damage ke musuh dalam 1,5 tile dan **tidak melukai pemain** (M3a, *keputusan Claude*: konsisten dengan "reaksi tidak melukai pemain"). Arena prototipe punya dua Kristal Es.
 - **Tiang Petir:** benda permanen. Memicu Ledakan Cahaya, lalu perlu 5 detik untuk mengisi muatan lagi. Saat penuh, ujungnya berkilat sehingga juga menjadi sumber cahaya kecil.
-- **Kristal Es dan Tiang Petir juga melukai siapa pun di dekatnya, termasuk musuh** (M3, pelajaran dari Soul Knight, keputusan user 25 Nov 2026). Pemain punya alasan memancing musuh ke dekat benda itu.
+- **Kristal Es dan Tiang Petir juga melukai musuh di dekatnya** (M3, pelajaran dari Soul Knight, keputusan user 25 Nov 2026). Pemain punya alasan memancing musuh ke dekat benda itu. Pemain sendiri tidak terluka, sesuai aturan "reaksi tidak melukai pemain" (disetujui user bersama rencana M3a, 25 Nov 2026).
 
 ### 5.2 Relic (15 untuk MVP)
 

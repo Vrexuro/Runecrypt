@@ -59,6 +59,17 @@ namespace Runecrypt.Tests
             Assert.IsTrue(s.ShouldStartNextWave(1, 0));
         }
 
+        // Review akhir M3a: aturan separuh memakai jumlah musuh yang benar-benar keluar, bukan budget.
+        // Ruangan 2 gelombang 1: budget 4 bisa menjadi 2 Biarawan (biaya 2), jadi ambangnya 1, bukan 2.
+        [Test]
+        public void Waves_HalfRuleUsesSpawnedCount()
+        {
+            var s = After(3);
+            s.AdvanceWave(2);
+            Assert.IsFalse(s.ShouldStartNextWave(2, 0), "belum ada yang terbunuh dari 2 musuh");
+            Assert.IsTrue(s.ShouldStartNextWave(1, 0));
+        }
+
         [Test]
         public void Waves_NextRoomOnlyWhenEmpty()
         {

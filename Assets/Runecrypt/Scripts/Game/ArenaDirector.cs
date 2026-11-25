@@ -93,7 +93,7 @@ namespace Runecrypt.Game
             var costs = enemyPrefabs.Select(e => e.Definition.cost).ToList();
             var picks = SpawnBudget.Compose(schedule.NextWaveSize(), costs, rng, maxPerWave);
             if (picks.Count == 0) picks.Add(costs.IndexOf(costs.Min())); // gelombang tidak pernah kosong
-            schedule.AdvanceWave();
+            schedule.AdvanceWave(picks.Count);
             if (schedule.IsRoomStart) RoomEvents.RaiseStarted(); // satu ruangan = 3 gelombang (spec M2.6 §5.2)
             foreach (int i in picks) pending.Enqueue(enemyPrefabs[i]);
         }

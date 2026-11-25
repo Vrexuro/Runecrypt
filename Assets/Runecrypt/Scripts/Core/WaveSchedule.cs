@@ -7,7 +7,7 @@ namespace Runecrypt.Core
     public class WaveSchedule
     {
         readonly int wavesPerRoom, nextWaveAtAlive, maxAlive, maxPerWave;
-        int lastSize; // ukuran gelombang yang terakhir dimulai
+        int lastSize; // jumlah musuh gelombang yang terakhir dimulai
 
         public int Wave { get; private set; }   // 0 = belum mulai
         public int Room => Wave == 0 ? 0 : (Wave - 1) / wavesPerRoom + 1;
@@ -40,9 +40,13 @@ namespace Runecrypt.Core
 
         public int CanSpawnNow(int alive) => Math.Max(0, maxAlive - alive);
 
-        public void AdvanceWave()
+        public void AdvanceWave() => AdvanceWave(NextWaveSize());
+
+        // spawned: jumlah musuh yang benar-benar keluar. Dengan gelombang campuran (M3a) budget bisa lebih besar
+        // dari jumlah musuh (Biarawan berbiaya 2), dan aturan separuh harus memakai jumlah musuh.
+        public void AdvanceWave(int spawned)
         {
-            lastSize = NextWaveSize();
+            lastSize = spawned;
             Wave++;
         }
 
