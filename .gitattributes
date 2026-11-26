@@ -14,3 +14,8 @@
 *.anim          text eol=lf
 *.controller    text eol=lf
 *.inputactions  text eol=lf
+
+# Scene dibangun ulang dari kode (Runecrypt/M1/Build All); fileID dan urutan tile berganti tiap build
+# walaupun isinya sama. Sumber kebenarannya adalah builder di Assets/Runecrypt/Editor/, jadi diff scene
+# disembunyikan. Merge tetap memakai teks; kalau bentrok, ambil salah satu versi lalu jalankan Build All lagi.
+Assets/Runecrypt/Scenes/*.unity  -diff linguist-generated=true
