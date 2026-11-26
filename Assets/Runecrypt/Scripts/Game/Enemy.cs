@@ -79,6 +79,7 @@ namespace Runecrypt.Game
             {
                 if (now >= nextWanderChange)
                 {
+                    // Sengaja tidak ikut seed: gerak per frame bergantung pada fisika, seed hanya mengatur isi run.
                     wanderDir = UnityEngine.Random.insideUnitCircle.normalized;
                     nextWanderChange = now + 0.5f;
                 }

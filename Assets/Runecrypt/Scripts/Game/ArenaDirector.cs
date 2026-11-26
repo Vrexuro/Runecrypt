@@ -27,7 +27,10 @@ namespace Runecrypt.Game
         [SerializeField] RelicPickup relicPickupPrefab;
         [SerializeField] Vector2 pickupPoint;
 
-        readonly System.Random rng = new System.Random();
+        [Header("Seed")]
+        [Tooltip("Kosong = seed acak tiap run. Isi kode seperti K7Q2-9XMA untuk mengulang run yang sama (debug).")]
+        [SerializeField] string debugSeed = "";
+
         RelicPickup currentPickup;
 
         RunecryptControls controls;
@@ -45,6 +48,9 @@ namespace Runecrypt.Game
             GamePause.IsPaused = false; // state statis dari run sebelumnya (ulang dengan R)
             RemainsRegistry.Clear();
             Time.timeScale = 1f;
+            // Satu scene arena = satu run. Seed baru tiap run (termasuk ulang dengan R), kecuali dipaksa.
+            if (RunSeed.TryParse(debugSeed, out var forced)) Run.ForceNextSeed(forced);
+            Run.BeginNext();
             controls = new RunecryptControls();
             schedule = new WaveSchedule(wavesPerRoom, nextWaveAtAlive, maxAlive, maxPerWave);
         }
@@ -101,7 +107,7 @@ namespace Runecrypt.Game
             Vector2 p = player.transform.position;
             var far = spawnPoints.Where(s => Vector2.Distance(s.position, p) >= minSpawnDistance).ToList();
             if (far.Count == 0) far = spawnPoints.ToList();
-            Shuffle(far);
+            Shuffle(far, Run.Random.Stream("spawn"));
             pending -= n;
             alive += n;
             for (int i = 0; i < n; i++) StartCoroutine(SpawnAfterFade(far[i % far.Count].position));
@@ -138,7 +144,7 @@ namespace Runecrypt.Game
         void SpawnRelicPickup()
         {
             if (relicPickupPrefab == null || player == null || currentPickup != null) return;
-            var relic = RelicPicker.PickUnowned(relicPool, player.Relics, rng);
+            var relic = RelicPicker.PickUnowned(relicPool, player.Relics, Run.Random.Stream("relic"));
             if (relic == null) return; // semua relic sudah dimiliki
             currentPickup = Instantiate(relicPickupPrefab, pickupPoint, Quaternion.identity);
             currentPickup.Init(relic);
@@ -151,11 +157,11 @@ namespace Runecrypt.Game
             Time.timeScale = 0f;
         }
 
-        static void Shuffle<T>(IList<T> list)
+        static void Shuffle<T>(IList<T> list, System.Random rng)
         {
             for (int i = list.Count - 1; i > 0; i--)
             {
-                int j = Random.Range(0, i + 1);
+                int j = rng.Next(i + 1);
                 (list[i], list[j]) = (list[j], list[i]);
             }
         }
@@ -166,7 +172,7 @@ namespace Runecrypt.Game
             style.normal.textColor = Color.white;
             float hp = player != null ? player.Health.Current : 0f;
             float maxHp = player != null ? player.Health.Max : 6f;
-            GUI.Label(new Rect(16, 12, 600, 30), $"HP {hp:0.#}/{maxHp:0.#}   Ruangan {schedule.Room} gelombang {schedule.WaveInRoom}   FPS {fps:0}", style);
+            GUI.Label(new Rect(16, 12, 1000, 30), $"HP {hp:0.#}/{maxHp:0.#}   Ruangan {schedule.Room} gelombang {schedule.WaveInRoom}   FPS {fps:0}   Seed {Run.Seed}", style);
             if (player != null && player.Relics.Count > 0)
                 GUI.Label(new Rect(16, 40, 1200, 30), "Relic: " + string.Join(", ", player.Relics.Select(r => r.displayName)), style);
 

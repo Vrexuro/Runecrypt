@@ -21,8 +21,8 @@ namespace Runecrypt.Game
         const int WholeOrder = 0, BrokenOrder = -8; // pecahan di bawah karakter, di atas lantai
         const float FlashTime = 0.08f;
 
-        // Bisa diganti test supaya undian jatuhan deterministik.
-        internal Func<float> random = () => UnityEngine.Random.value;
+        // Undian ke-n run ini dari stream "loot" (mengikuti seed). Bisa diganti test.
+        internal Func<float> random = () => (float)Run.Random.Stream("loot").NextDouble();
 
         BreakableState state;
         bool restorePending;
