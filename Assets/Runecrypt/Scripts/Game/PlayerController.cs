@@ -144,6 +144,7 @@ namespace Runecrypt.Game
         internal void Shoot(Vector2 direction)
         {
             var shot = Stats.Shot(fireballPrefab.Defaults);
+            if (bodySprite != null) bodySprite.flipX = Facing.FlipForAttack(direction, bodySprite.flipX);
             Vector2 muzzle = body.position + direction * muzzleOffset;
             foreach (var dir in SpreadPattern.Directions(direction, shot.Count, SpreadDegrees))
                 Instantiate(fireballPrefab, muzzle, Quaternion.identity).Launch(dir, shot);
