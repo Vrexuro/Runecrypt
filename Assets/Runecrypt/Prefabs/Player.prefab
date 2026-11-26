@@ -220,6 +220,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: cc0ae11065c4ccd4fa56ab037d86dd5a, type: 3}
   - {fileID: 21300000, guid: 39e360c42da090c43b6d908c59162aa5, type: 3}
   fps: 6
+  playOnce: 0
 --- !u!50 &1941574574918421403
 Rigidbody2D:
   serializedVersion: 5
