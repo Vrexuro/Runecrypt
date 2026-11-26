@@ -380,8 +380,11 @@ namespace Runecrypt.EditorTools
 
         static GameObject Save(GameObject go)
         {
-            var prefab = PrefabUtility.SaveAsPrefabAsset(go, PrefabDir + go.name + ".prefab");
+            var path = PrefabDir + go.name + ".prefab";
+            var prefab = PrefabUtility.SaveAsPrefabAsset(go, path);
             Object.DestroyImmediate(go);
+            // rid ShadowCaster2D acak tiap build; stabilkan supaya prefab tidak tampil berubah di git.
+            if (StableRefIds.RewriteFile(path)) prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
             return prefab;
         }
     }
