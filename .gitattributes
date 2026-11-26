@@ -3,3 +3,14 @@
 *.wav binary
 *.ogg binary
 *.gif binary
+
+# File YAML Unity: Unity selalu menulis LF. Paksa LF di working copy supaya
+# file yang ditulis ulang builder tidak tampil "berubah" karena CRLF (core.autocrlf=true).
+*.prefab        text eol=lf
+*.unity         text eol=lf
+*.asset         text eol=lf
+*.meta          text eol=lf
+*.mat           text eol=lf
+*.anim          text eol=lf
+*.controller    text eol=lf
+*.inputactions  text eol=lf
