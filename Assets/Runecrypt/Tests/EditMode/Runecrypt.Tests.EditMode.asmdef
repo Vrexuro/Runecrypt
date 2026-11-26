@@ -4,6 +4,7 @@
     "references": [
         "Runecrypt.Core",
         "Runecrypt.Game",
+        "Runecrypt.EditorTools",
         "Unity.RenderPipelines.Universal.Runtime",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
