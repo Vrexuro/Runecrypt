@@ -33,12 +33,15 @@ namespace Runecrypt.Game
         readonly BurnStatus burn = new BurnStatus();
         float blindUntil, stunUntil, nextWanderChange, nextContact, markedUntil;
         Vector2 wanderDir, knock, lastHitPoint;
+        float bodyRadius = 0.4f;
 
         bool IsLitNow => LightFieldHost.Field.IsLit(body.position);
 
         void Awake()
         {
             body = GetComponent<Rigidbody2D>();
+            var circle = GetComponent<CircleCollider2D>();
+            if (circle != null) bodyRadius = circle.radius * Mathf.Abs(transform.lossyScale.x);
             health = new Health(definition.maxHp);
             health.Died += Die;
             if (burnLight != null) burnLight.SetActive(false);
@@ -85,7 +88,7 @@ namespace Runecrypt.Game
             {
                 var player = PlayerController.Instance;
                 dir = player != null && !player.Health.IsDead
-                    ? ((Vector2)player.transform.position - body.position).normalized
+                    ? EnemyNav.Direction(body.position, player.transform.position, bodyRadius)
                     : Vector2.zero;
             }
             Vector2 chase = dir * definition.moveSpeed * lightRules.SpeedMultiplier(IsLitNow);
