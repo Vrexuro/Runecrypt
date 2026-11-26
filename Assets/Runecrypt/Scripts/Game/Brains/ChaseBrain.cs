@@ -2,9 +2,9 @@ using UnityEngine;
 
 namespace Runecrypt.Game
 {
-    // Tulang Penjaga: berjalan lurus mengejar pemain.
+    // Tulang Penjaga: mengejar pemain, memutari penghalang lewat EnemyNav.
     public class ChaseBrain : MonoBehaviour, IEnemyBrain
     {
-        public Vector2 Steer(in EnemyContext c) => c.PlayerAlive ? c.ToPlayer.normalized : Vector2.zero;
+        public Vector2 Steer(in EnemyContext c) => c.PlayerAlive ? c.ChaseDir : Vector2.zero;
     }
 }

@@ -6,6 +6,7 @@ namespace Runecrypt.Game
     public struct EnemyContext
     {
         public Vector2 Position, ToPlayer;
+        public Vector2 ChaseDir; // arah kejar yang memutari penghalang (EnemyNav), satuan
         public bool PlayerAlive;
         public float Now;
         public bool Lit;

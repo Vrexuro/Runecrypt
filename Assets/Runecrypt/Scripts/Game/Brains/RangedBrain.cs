@@ -24,8 +24,13 @@ namespace Runecrypt.Game
             fire.Start(Time.time); // tembakan pertama setelah satu jeda, bukan tepat saat muncul
         }
 
-        public Vector2 Steer(in EnemyContext c) =>
-            c.PlayerAlive ? c.ToPlayer.normalized * RangeKeeper.Direction(c.ToPlayer.magnitude, minRange, maxRange) : Vector2.zero;
+        public Vector2 Steer(in EnemyContext c)
+        {
+            if (!c.PlayerAlive) return Vector2.zero;
+            float d = RangeKeeper.Direction(c.ToPlayer.magnitude, minRange, maxRange);
+            // Mendekat memutari penghalang; menjauh lurus berlawanan arah pemain.
+            return d > 0f ? c.ChaseDir : c.ToPlayer.normalized * d;
+        }
 
         void Update()
         {

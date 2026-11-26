@@ -308,17 +308,17 @@ namespace Runecrypt.Tests
             var frames = so.FindProperty("frames");
             frames.arraySize = 3;
             for (int i = 0; i < 3; i++) frames.GetArrayElementAtIndex(i).objectReferenceValue = sprite;
-            so.FindProperty("fps").floatValue = 10f;
+            so.FindProperty("fps").floatValue = 2f; // 3 frame = 1,5 dtk: tahan terhadap frame lambat saat suite berat
             so.FindProperty("playOnce").boolValue = true;
             so.ApplyModifiedPropertiesWithoutUndo();
             go.SetActive(true);
-            yield return WaitGameSeconds(0.15f);
+            yield return null;
             bool aliveMid = go != null;
-            yield return WaitGameSeconds(0.4f);
+            yield return WaitGameSeconds(2.5f);
             bool goneAfter = go == null;
             yield return new ExitPlayMode();
             Assert.IsTrue(aliveMid, "masih tampil di tengah animasi");
-            Assert.IsTrue(goneAfter, "hilang setelah frame terakhir (3 frame / 10 fps = 0,3 dtk)");
+            Assert.IsTrue(goneAfter, "hilang setelah frame terakhir (3 frame / 2 fps = 1,5 dtk)");
         }
     }
 }
