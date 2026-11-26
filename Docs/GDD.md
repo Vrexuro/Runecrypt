@@ -91,6 +91,7 @@ Naskah lengkap ada di `Docs/specs/2026-11-18-peti-pintu-cerita-design.md` §8–
 - **Ruangan bersih:** semua musuh di ruangan mati. Jeruji pintu terbuka dan hadiah ruangan muncul.
 - **Transisi antar ruangan:** pemain berjalan melewati pintu yang terbuka. Kamera pindah ke ruangan baru (di dalam ruangan kamera mengikuti pemain) dan pintu ruangan baru (kalau ada musuh) tertutup setelah pemain masuk.
 - **Transisi lantai:** setelah boss kalah, muncul tangga ke bawah. Melewatinya membuat lantai baru di kedalaman +1.
+- **Seed:** kode 8 karakter (misalnya `K7Q2-9XMA`) yang menentukan isi satu run: susunan lantai, urutan titik spawn, tawaran relic, isi peti, dan jatuhan. Setiap run mendapat seed acak baru. Run dengan seed yang sama berisi hal yang sama, tetapi jalannya pertarungan tetap ditentukan pemain. Rinciannya di bagian 9.1.
 - **Menang:** Sang Pemadam kalah di kedalaman 1.
 - **Kalah:** HP pemain mencapai 0.
 - **Skor:** `kedalaman × 1000 + musuh dikalahkan × 10 + bonus waktu`. Bonus waktu = maks(0, 600 − detik sampai boss pertama kalah) × 2 *(batas 600 detik dibuat saat run 6–8 menit; perlu disetel ulang untuk run 20 menit di M5)*. Memilih *Keluar Makam* setelah boss kalah memberi bonus **+1500**, lebih besar dari nilai satu kedalaman. Jadi lanjut ke bawah benar-benar soal risiko: bisa dapat skor lebih tinggi, tapi bonus keluar hilang kalau mati. *Angka ini awal dan disetel saat playtest. (keputusan Claude)*
@@ -352,8 +353,8 @@ Uji tata letak terburuk: pemain yang hanya memakai keyboard laptop tanpa mouse t
 - **Layar Judul:** Mulai, Leaderboard, Pengaturan, Keluar. Attract mode setelah 60 detik tanpa input.
 - **HUD:** hati (kiri atas), bar XP dan level (bawah), ikon cooldown Kobaran dan dash (kiri bawah), deretan ikon relic (atas), minimap ruangan yang sudah dikunjungi (kanan atas), kedalaman dan timer (kanan atas di bawah minimap).
 - **Panel Level-up:** 3 kartu upgrade. Game berhenti sejenak selama memilih.
-- **Jeda:** Lanjut, Pengaturan, Keluar ke Judul.
-- **Layar Akhir:** statistik run, input nama 3 huruf (bisa dipakai dengan gamepad), lalu leaderboard 10 besar.
+- **Jeda:** Lanjut, Pengaturan, Keluar ke Judul. Seed run ditampilkan kecil di pojok.
+- **Layar Akhir:** statistik run termasuk seed, input nama 3 huruf (bisa dipakai dengan gamepad), lalu leaderboard 10 besar.
 - **Leaderboard:** disimpan lokal per laptop di file JSON (`Application.persistentDataPath`). Tidak memakai jaringan.
 
 ---
@@ -361,6 +362,11 @@ Uji tata letak terburuk: pemain yang hanya memakai keyboard laptop tanpa mouse t
 ## 9. Level Specs
 
 ### 9.1 Generator Lantai
+- **Seed run** (keputusan user, 26 Nov 2026): semua keacakan isi run berasal dari satu seed 32 bit, supaya tiap run berbeda tetapi bisa diulang persis.
+  - Setiap sistem memakai **stream acak sendiri** yang diturunkan dari seed: `floor` (susunan lantai), `spawn` (urutan titik spawn), `relic` (tawaran relic), `loot` (jatuhan guci), `chest` (isi peti boss), dan sistem baru dengan nama sendiri. Dengan begitu, undian ke-n setiap sistem selalu sama untuk seed yang sama, dan undian tambahan di satu sistem tidak menggeser sistem lain.
+  - Kodenya 8 karakter Crockford base32 (tanpa I, L, O, U) dengan 1 karakter checksum, jadi seed yang diketik dengan satu huruf salah ditolak.
+  - Saat ini seed tampil di HUD, dan untuk debug bisa dipaksa lewat field `debugSeed` di ArenaDirector. Input seed oleh pemain di layar judul direncanakan menyusul (M5 atau sesudahnya).
+  - Yang **tidak** mengikuti seed: efek kosmetik (guncangan, serpihan, pitch suara) dan gerak musuh per frame, karena gerak bergantung pada fisika dan input pemain.
 - Lantai disusun di grid. Random walk dari ruang awal menghasilkan **10–14 ruangan**.
 - **Ruang boss** ditempatkan di ujung buntu terjauh dari ruang awal. **Ruang harta** pasti ada 1 di ujung buntu lain. Ruang harta kedua muncul dengan peluang 10%, kalau masih ada ujung buntu tersisa (bagian 4.3).
 - Setiap ruangan adalah **prefab Tilemap buatan tangan** berukuran **lebih besar dari satu layar** (sekitar 30x17 tile, kamera mengikuti pemain; M2.6). Prefab menandai titik pintu (atas, bawah, kiri, kanan), titik spawn musuh, dan posisi benda reaksi. Pintu yang tidak terhubung ditutup tembok.
@@ -473,6 +479,7 @@ Usulan desain dari sesi baseline (belum diputuskan, dibahas lewat brainstorming)
 | 0.5 | 18 Nov 2026 | Dari uji user M2: relic sebelum boss hanya dari ruang harta (1 pasti, ruang kedua 10%), ruang musuh tidak menjatuhkan relic, garis tepi Tersingkap dihapus |
 | 0.6 | 24 Nov 2026 | M2.5 Isi Makam: kit makam (variasi lantai dan dinding, dekorasi, debu, ambien), Anglo sebagai sumber cahaya lingkungan, Guci Abu dan Bara Pemulih, nisan dan sarkofagus sebagai tempat berlindung; versi expo tetap 2D |
 | 0.7 | 25 Nov 2026 | M2.6 Skala dan Efek, dari analisis Soul Knight: arena 30x17 dengan kamera mengikuti pemain, 3 gelombang per ruangan dengan batas 12 musuh hidup, satu lantai sampai boss sekitar 20 menit, cahaya bola api 1,75 dan Kobaran 4,5 tile, efek heboh dengan aturan keterbacaan, pengecualian kilatan efek dari aturan cahaya, rencana objek elemen yang melukai semua dan penghalang setengah tinggi, nama class dipertahankan, tanpa aim assist |
+| 0.8 | 26 Nov 2026 | Seed run: semua keacakan isi run dari satu seed dengan stream per sistem, kode seed 8 karakter dengan checksum, seed tampil di HUD (input seed oleh pemain menyusul). Perbaikan bug: musuh memutari penghalang alih-alih macet mengejar garis lurus |
 
 **Kredit aset:** semua sprite dibuat sendiri lewat script Python. Sejak 25 Nov 2026 sebagian sprite baru digambar lewat kode dengan skill codeart2d dari [agent-sprite-forge](https://github.com/0x0funky/agent-sprite-forge) (MIT), tanpa model gambar; spesifikasinya di `ArtSource/codeart/`. SFX memakai paket berikut, semuanya berlisensi CC0 (domain publik), dipotong dan dicampur lewat `ArtSource/scripts/make_sfx_cc0.py`:
 
